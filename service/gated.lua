@@ -15,33 +15,37 @@ local agent_mgr
 
 -- login server disallow multi login, so login_handler never be reentry
 -- call by login server
-function server.login_handler(uid, secret, servername, serverid)
-	if users[uid] then
-		error(string.format("%s is already login", uid))
+function server.login_handler(info)
+	local id = info.id
+	if users[id] then
+		error(string.format("%d is already login", id))
 	end
 
 	internal_id = internal_id + 1
 	local sid = internal_id	-- don't use internal_id directly
-	local username = msgserver.username(uid, sid, servername)
+	local sname = info.server
+	local username = msgserver.username(id, sid, sname)
 
 	-- you can use a pool to alloc new agent
     local agent = skynet.call(agent_mgr, "lua", "get")
 	local u = {
 		username = username,
 		agent = agent,
-		uid = uid,
+		id = id,
 		subid = sid,
-        servername = servername,
-        serverid = serverid,
+        server = sname,
+        serverid = info.serverid,
 	}
 
 	-- trash subid (no used)
-	skynet.call(agent, "lua", "login", uid, sid, secret, serverid, servername)
+	info.gate = skynet.self()
+	info.subid = sid
+	skynet.call(agent, "lua", "login", info)
 
-	users[uid] = u
+	users[id] = u
 	username_map[username] = u
 
-	msgserver.login(username, secret)
+	msgserver.login(username, info.secret)
 
 	-- you should return unique subid
 	return sid
@@ -51,7 +55,7 @@ end
 function server.logout_handler(id)
 	local u = users[id]
 	if u then
-		local username = msgserver.username(u.uid, u.subid, u.servername)
+		local username = msgserver.username(u.id, u.subid, u.server)
 		assert(u.username == username)
 		msgserver.logout(username)
 		users[id] = nil
@@ -66,7 +70,7 @@ function server.kick_handler(id)
     skynet.error(string.format("kick user %d.", id))
 	local u = users[id]
 	if u then
-		local username = msgserver.username(u.uid, u.subid, u.servername)
+		local username = msgserver.username(u.uid, u.subid, u.server)
 		assert(u.username == username)
         skynet.call(u.agent, "lua", "logout")
 	end

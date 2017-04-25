@@ -144,8 +144,9 @@ local function accept(conf, s, fd, addr, log)
 
 		-- user_login[uid] = true
 	-- end
-
-	local ok, err, id, new = pcall(conf.login_handler, info, secret)
+	info.ip = addr
+	info.secret = secret
+	local ok, err, id, new = pcall(conf.login_handler, info)
 	-- unlock login
 	-- user_login[uid] = nil
 

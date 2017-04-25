@@ -74,8 +74,8 @@ function timer.del_day_routine(key)
     end
 end
 
-function timer.call_day_routine(key, od, nd, owd, nwd)
-    assert(day_routine_list[key], string.format("No day routine %s.", key))(od, nd, owd, nwd)
+function timer.call_day_routine(key, od, nd)
+    assert(day_routine_list[key], string.format("No day routine %s.", key))(od, nd)
 end
 
 function timer.add_second_routine(key, func)

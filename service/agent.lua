@@ -1,6 +1,6 @@
 local skynet = require "skynet"
-local role = require "role.role"
-local timer = require "timer"
+local game = require "game"
+local util = require "util"
 local share = require "share"
 local notify = require "notify"
 
@@ -15,126 +15,82 @@ skynet.register_protocol {
     unpack = skynet.tostring,
 }
 
-local proc = role.init_module()
+local proc = game.proc
 local msg
 local name_msg
-local base
 local sproto
 local error_code
+local cz
 
 local data
 
 local CMD = {}
+util.timer_wrap(CMD)
 
-function CMD.login(source, uid, sid, secret, serverid, servername)
+function CMD.login(info)
 	-- you may use secret to make a encrypted data stream
-	skynet.error(string.format("%d is login", uid))
-    data = {
-        gate = source,
-        userid = uid,
-        subid = sid,
-        secret = secret,
-        serverid = serverid,
-        servername = servername,
-    }
-    role.init(data)
+	skynet.error(string.format("%d is login", info.id))
+    game.init(info)
 end
 
 local function logout()
-    local d = data
-    data = nil
-    skynet.error(string.format("%d is logout from agent", d.userid))
-    role.exit()
-    skynet.call(d.gate, "lua", "logout", d.userid)
+	local data = game.data
+    skynet.error(string.format("%d is logout from agent", data.id))
+    game.exit()
+    skynet.call(data.gate, "lua", "logout", data.id)
 end
 
-function CMD.logout(source)
+function CMD.logout()
 	-- NOTICE: The logout MAY be reentry
-    if data then
+    if game.data then
         logout()
     end
 end
 
-function CMD.afk(source)
+function CMD.afk()
 	-- the connection is broken, but the user may back
+	local data = game.data
     if data then
-        skynet.error(string.format("%d afk", data.userid))
+        skynet.error(string.format("%d afk", data.id))
     end
 end
 
-function CMD.exit(source)
-    assert(not data, string.format("Agent exit error %d.", data.userid))
+function CMD.exit()
+	local data = game.data
+    assert(not data, string.format("Agent exit error %d.", data.id))
 	skynet.exit()
 end
 
-function CMD.routine(source, key)
-    timer.call_routine(key)
-end
-
-function CMD.once_routine(source, key)
-    timer.call_once_routine(key)
-end
-
-function CMD.day_routine(source, key, od, nd, owd, nwd)
-    timer.call_day_routine(key, od, nd, owd, nwd)
-end
-
-function CMD.second_routine(source, key)
-    timer.call_second_routine(key)
-end
-
-function CMD.notify(source, msg, info)
+function CMD.notify(msg, info)
     notify.add(msg, info)
 end
 
-function CMD.get_info(source)
-    return data.user
+function CMD.get_user()
+    return game.data.user
 end
 
-function CMD.get_rank_info(source)
-    return data.rank_info
+function CMD.get_info()
+    return game.data.info
 end
 
-function CMD.action(source, otype, info)
-    role.action(otype, info)
+function CMD.action(module, func, ...)
+	return game.one(module, func, ...)
 end
-
-function CMD.action_info(source, otype, id)
-    return role.action_info(otype, id)
-end
-
-function CMD.update_rank(source)
-    role.update_rank()
-end
-
-local function update_user(msg, info)
-    info.msgid = msg
-end
-local function stage_seed(msg, info)
-    local update = info.update
-    if update then
-        update.msgid = msg
-    end
-end
-local update_msg = {
-    update_user = update_user,
-    stage_seed = stage_seed,
-}
 
 skynet.start(function()
     msg = share.msg
     name_msg = share.name_msg
-    base = share.base
     sproto = share.sproto
     error_code = share.error_code
+	cz = share.cz
 
 	-- If you want to fork a work thread, you MUST do it in CMD.login
 	skynet.dispatch("lua", function(session, source, command, ...)
 		local f = assert(CMD[command])
         if session == 0 then
-            f(source, ...)
+            f(...)
         else
-            skynet.ret(skynet.pack(f(source, ...)))
+            skynet.retpack(f(...))
         end
 	end)
 
@@ -147,6 +103,7 @@ skynet.start(function()
         end
         local f = assert(proc[msgname], string.format("No protocol procedure %s.", msgname))
         local ok, rmsg, info = pcall(f, arg)
+		cz.over()
         if not ok then
             if type(rmsg) == "string" then
                 skynet.error(rmsg)
@@ -155,13 +112,7 @@ skynet.start(function()
                 assert(type(rmsg) == "table")
                 info = rmsg
             end
-            info.msgid = id
             rmsg = "error_code"
-        else
-            local u = update_msg[rmsg]
-            if u then
-                u(id, info)
-            end
         end
         if sproto:exist_type(rmsg) then
             info = sproto:pencode(rmsg, info)

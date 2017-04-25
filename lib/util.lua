@@ -1,4 +1,5 @@
 local crypt = require "crypt"
+local timer = require "timer"
 
 local pairs = pairs
 local ipairs = ipairs
@@ -227,6 +228,27 @@ function util.cmd_wrap(cmd, wrap)
             if v then
                 local f = function(...)
                     return v(wrap, ...)
+                end
+                cmd[key] = f
+                return f
+            end
+        end,
+    })
+end
+
+local timer_protocol = {
+	routine = "call_routine",
+	second_routine = "call_second_routine",
+	day_routine = "call_day_routine",
+	once_routine = "call_once_routine",
+}
+function util.timer_wrap(cmd)
+    setmetatable(cmd, {
+        __index = function(self, key)
+            local v = timer_protocol[key]
+            if v then
+                local f = function(...)
+					return timer[v](...)
                 end
                 cmd[key] = f
                 return f

@@ -20,7 +20,6 @@ config.redis = {
     port = 6379,
     base = 0,
     name = {
-        "rank",
     }
 }
 
@@ -28,9 +27,7 @@ config.mongo = {
     host = "127.0.0.1",
     name = {
 	    "account",
-        "accountname",
         "user",
-        "name",
         "info",
         "offline",
         "status",

@@ -15,22 +15,19 @@ config.gate = {
     servername = "gate01",
 }
 
-config.db = {
+config.redis = {
     host = "127.0.0.1",
     port = 6379,
-    base = 15,
+    base = 10,
     name = {
-		"rank",
     }
 }
 
-config.log = {
+config.mongo = {
     host = "127.0.0.1",
     name = {
 	    "account",
-        "accountname",
         "user",
-        "name",
         "info",
         "offline",
         "status",
