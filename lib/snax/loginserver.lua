@@ -156,7 +156,7 @@ local function accept(conf, s, fd, addr, log)
         if new then
             skynet.send(log, "lua", "safe_insert", {
                 account = info.uid,
-                loginType = LOGIN_TYPE_STR[info.loginType],
+                loginType = LOGIN_TYPE_STR[info.login_type],
                 server = info.server,
                 accountID = id,
                 ip = addr,

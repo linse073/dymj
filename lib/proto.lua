@@ -6,7 +6,6 @@ local msg = {
     [1003] = "heart_beat",
     [1004] = "heart_beat_response",
     [1005] = "response",
-    [1006] = "update_day",
 
     [2000] = "user_info",
     [2001] = "user_all",
@@ -15,12 +14,10 @@ local msg = {
     [2004] = "other_info",
     [2005] = "other_all",
     [2006] = "update_other",
-    [2007] = "get_role_info",
+    [2007] = "get_role",
     [2008] = "role_info",
 
     [2100] = "enter_game",
-
-    [3000] = "chat_info",
 }
 local name_msg = {}
 

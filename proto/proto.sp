@@ -1,14 +1,20 @@
 .user_info {
-    name 0 : string
+    account 0 : sting
     id 1 : integer
     sex 2 : integer
     create_time 3 : integer
+    room_card 4 : integer
+    nick_name 5 : string
+    head_img 6 : string
 }
 
 .other_info {
-    name 0 : string
+    account 0 : string
     id 1 : integer
     sex 2 : integer
+    nick_name 3 : string
+    head_img 4 : string
+    ip 5 : string
 }
 
 .other_all {
@@ -19,10 +25,13 @@
     id 0 : integer
 }
 
-.rank_info {
-    id 0 : integer
-    name 1 : string
+.brief_info {
+    account 0 : string
+    id 1 : integer
     sex 2 : integer
+    nick_name 3 : string
+    head_img 4 : string
+    ip 5 : string
 }
 
 .user_all {
@@ -38,9 +47,6 @@
     update 0 : user_all
 }
 
-.update_day {
-}
-
 .heart_beat {
     time 0 : integer
 }
@@ -54,23 +60,11 @@
     code 0 : integer
 }
 
-.enter_game {
-}
-
 .logout {
     id 0 : integer
 }
 
-.chat_info {
-    id 0 : integer
-    name 1 : string
-    sex 3 : integer
-    type 5 : integer
-    target 6 : integer
-    text 7 : string
-}
-
-.get_role_info {
+.get_role {
     id 0 : integer
 }
 

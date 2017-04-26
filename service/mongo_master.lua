@@ -3,25 +3,27 @@ local skynet = require "skynet"
 local assert = assert
 local string = string
 
-local log_list = {}
+local slave_list = {}
 
 local CMD = {}
 
 function CMD.open(conf)
     for k, v in ipairs(conf.name) do
-        local log = skynet.newservice("log")
-        skynet.call(log, "lua", "open", {host=conf.host}, v)
-        log_list[v] = log
+        local slave = skynet.newservice("mongo_slave")
+        skynet.call(slave, "lua", "open", {host=conf.host}, v)
+        slave_list[v] = slave
     end
-    skynet.call(log_list["ioscharge"], "lua", "ensureIndex", {"transaction_id", unique=true})
+    for k, v in ipairs(conf.index) do
+        skynet.call(slave_list[v[1]], "lua", "ensureIndex", v[2])
+    end
 end
 
 function CMD.get(name)
-    return assert(log_list[name], string.format("No log server %s.", name))
+    return assert(slave_list[name], string.format("No log server %s.", name))
 end
 
 function CMD.get_all()
-    return log_list
+    return slave_list
 end
 
 skynet.start(function()

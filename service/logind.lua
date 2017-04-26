@@ -48,9 +48,9 @@ local auth_proc = {
             error(content.errmsg)
         end
 		return {
-			nickName = content.nickname,
+			nick_name = content.nickname,
 			sex = content.sex,
-			headImg = content.headimgurl,
+			head_img = content.headimgurl,
 		}
     end,
     function(user, data) -- qq login
@@ -64,17 +64,17 @@ end)
 
 function server.auth_handler(token, other)
 	-- the token is base64(user)@base64(sname):loginType
-	local user, sname, loginType = token:match("([^@]+)@([^:]+):(.+)")
+	local user, sname, login_type = token:match("([^@]+)@([^:]+):(.+)")
 	user = crypt.base64decode(user)
 	sname = crypt.base64decode(sname)
-	loginType = tonumber(loginType)
-    local proc = auth_proc[loginType]
+	login_type = tonumber(login_type)
+    local proc = auth_proc[login_type]
     if not proc then
-        error(string.format("Unsupported login type %d.", loginType))
+        error(string.format("Unsupported login type %d.", login_type))
     end
 	local info = proc(user, other)
 	info.server = sname
-	info.loginType = loginType
+	info.login_type = login_type
 	info.uid = user
 	return info
 end

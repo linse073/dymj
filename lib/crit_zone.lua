@@ -2,6 +2,7 @@ local skynet = require "skynet"
 local coroutine = coroutine
 local table = table
 local getinfo = debug.getinfo
+local assert = assert
 
 local function crit_zone()
     local current_thread

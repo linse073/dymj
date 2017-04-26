@@ -22,7 +22,7 @@ end
 
 --------------------------protocol process-----------------------
 
-function proc.add_card(msg)
+function proc.add_room_card(msg)
     if game.data.user.gm_level == 0 then
         error{code = error_code.ROLE_NO_PERMIT}
     end
@@ -30,15 +30,8 @@ function proc.add_card(msg)
         error{code = error_code.ERROR_ARGS}
     end
     local p = update_user()
-    role.add_card(p, msg.num)
+    role.add_room_card(p, msg.num)
     return "update_user", {update=p}
-end
-
-function proc.test_update_day(msg)
-    if game.data.user.gm_level == 0 then
-        error{code = error_code.ROLE_NO_PERMIT}
-    end
-    return role.test_update_day()
 end
 
 return gm

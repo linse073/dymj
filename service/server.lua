@@ -18,7 +18,7 @@ local config
 local CMD = {}
 
 local function check_account(info)
-    local namekey = gen_account(info.loginType, config.serverid, info.uid)
+    local namekey = gen_account(info.login_type, config.serverid, info.uid)
     local account = skynet.call(account_db, "lua", "findOne", {key=namekey})
     if account then
         if info.register then
@@ -39,7 +39,7 @@ local function check_account(info)
         status.accountid = status.accountid + 1
         local account = {
 			key = namekey,
-			uid = info.uid,
+			account = info.uid,
             id = accountid,
             password = info.password,
         }

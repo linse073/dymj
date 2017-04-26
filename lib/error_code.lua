@@ -7,14 +7,6 @@ local error_code = {
     ALREADY_NOTIFY = 1100,
     ERROR_ARGS = 1101,
     ERROR_SIGN = 1102,
-
-    ROLE_NAME_EXIST = 2000,
-    ROLE_NOT_EXIST = 2001,
-    ROLE_IS_ENTERING = 2002,
-    ROLE_ALREADY_ENTER = 2003,
-    ROLE_NOT_ENTER = 2004,
-    ROLE_NO_PERMIT = 2005,
-    ROLE_OFFLINE = 2006,
 }
 
 return error_code

@@ -3,9 +3,6 @@ local timer = require "timer"
 local share = require "share"
 local notify = require "notify"
 local util = require "util"
-local func = require "func"
-local new_rand = require "random"
-local cjson = require "cjson"
 
 local pairs = pairs
 local ipairs = ipairs
@@ -24,8 +21,6 @@ local proc = {}
 local role = {proc = proc}
 
 local update_user = util.update_user
-local merge_table = util.merge_table
-local game_day
 local error_code
 local base
 local cz
@@ -40,7 +35,6 @@ skynet.init(function()
     error_code = share.error_code
     base = share.base
     cz = share.cz
-    game_day = func.game_day
     role_mgr = skynet.queryservice("role_mgr")
     offline_mgr = skynet.queryservice("offline_mgr")
 	local master = skynet.queryservice("mongo_master")
@@ -58,8 +52,8 @@ local function get_user()
     if not data.user then
 		local user = skynet.call(user_db, "lua", "findOne", {id=data.id})
 		if user then
-			user.nick_name = data.nickName
-			user.head_img = data.headImg
+			user.nick_name = data.nick_name
+			user.head_img = data.head_img
 			user.ip = data.ip
 			data.user = user
 			data.info = {
@@ -74,7 +68,7 @@ local function get_user()
 		else
 			local now = floor(skynet.time())
 			local user = {
-				_id = data.id
+				_id = data.id,
 				account = data.uid,
 				id = data.id,
 				sex = data.sex or math.random(2),
@@ -84,8 +78,8 @@ local function get_user()
 				gm_level = gm_level,
 				create_time = now,
 				room_card = 0,
-				nick_name = data.nickName,
-				head_img = data.headImg,
+				nick_name = data.nick_name,
+				head_img = data.head_img,
 				ip = data.ip,
 			}
 			skynet.call(user_db, "lua", "save_insert", user)
@@ -120,9 +114,7 @@ end
 
 function role.exit()
     timer.del_routine("save_role")
-    timer.del_day_routine("update_day")
     timer.del_routine("heart_beat")
-    timer.del_second_routine("update_second")
     local user = game.data.user
     if user then
         skynet.call(role_mgr, "lua", "logout", user.id)
@@ -130,22 +122,6 @@ function role.exit()
         role.save_user()
     end
     notify.exit()
-end
-
-local function update_day(user, od, nd)
-
-end
-
-function role.update_day(od, nd)
-
-end
-
-function role.test_update_day()
-
-end
-
-function role.update_second()
-
 end
 
 function role.save_user()
@@ -195,13 +171,6 @@ function proc.enter_game(msg)
     user.last_login_time = user.login_time
     user.login_time = now
 	game.iter("enter")
-    if user.logout_time > 0 then
-        local od = game_day(user.logout_time)
-        local nd = game_day(now)
-        if od ~= nd then
-            update_day(user, od, nd)
-        end
-    end
     local p = update_user()
     local ret = {user=user}
     local om = skynet.call(offline_mgr, "lua", "get", user.id)
@@ -210,42 +179,17 @@ function proc.enter_game(msg)
 			game.one(v[1], "add", v[2], p)
         end
     end
-    for k, v in ipairs(game.module) do
-        if v.pack_all then
-            local key, pack = v.pack_all()
-            ret[key] = pack
-        end
+    local pack = game.iter_ret("pack_all")
+    for _, v in ipairs(pack) do
+        ret[v[1]] = v[2]
     end
     timer.add_routine("save_role", role.save_routine, 300)
-    timer.add_day_routine("update_day", role.update_day)
-    timer.add_second_routine("update_second", role.update_second)
     skynet.call(role_mgr, "lua", "enter", data.info, skynet.self())
+    cz.finish()
     return "info_all", {user=ret, start_time=start_utc_time}
 end
 
-function proc.chat_info(msg)
-    local user = data.user
-    msg.id = user.id
-    msg.account = user.account
-    msg.sex = user.sex
-	msg.nick_name = user.nick_name
-    if msg.type == base.CHAT_TYPE_WORLD then
-        skynet.send(role_mgr, "lua", "broadcast", "chat_info", msg, user.id)
-        return "chat_info", msg
-    elseif msg.type == base.CHAT_TYPE_PRIVATE then
-        local agent = skynet.call(role_mgr, "lua", "get", msg.target)
-        if agent then
-            skynet.send(agent, "lua", "notify", "chat_info", msg)
-            return "chat_info", msg
-        else
-            error{code = error_code.ROLE_OFFLINE}
-        end
-    else
-        error{code = error_code.ERROR_CHAT_TYPE}
-    end
-end
-
-function proc.get_role_info(msg)
+function proc.get_role(msg)
     local user = skynet.call(role_mgr, "lua", "get_user", msg.id)
     if not user then
         error{code = error_code.ROLE_NOT_EXIST}

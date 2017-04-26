@@ -6,14 +6,10 @@ local game = {proc = proc}
 
 local name = {"role", "gm"}
 local module = {}
-game.module = module
-local revert_module = {}
 local name_module = {}
-local len = #name
 for k, v in ipairs(name) do
 	local m = require("game." .. v)
 	module[k] = m
-	revert_module[len-k+1] = m
 	name_module[v] = m
 	util.merge_table(proc, m.proc)
 end
@@ -28,12 +24,24 @@ function game.iter(fname, ...)
 end
 
 function game.riter(fname, ...)
-	for k, v in ipairs(revert_module) do
+    for i = #module, 1 do
+        local v = module[i]
 		local func = v[fname]
 		if func then
 			func(...)
 		end
-	end
+    end
+end
+
+function game.iter_ret(fname, ...)
+    local ret = {}
+    for k, v in ipairs(module) do
+        local func = v[fname]
+        if func then
+            ret[#ret+1] = {func(...)}
+        end
+    end
+    return ret
 end
 
 function game.one(mname, fname, ...)

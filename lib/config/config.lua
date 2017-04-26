@@ -20,7 +20,7 @@ config.redis = {
     port = 6379,
     base = 0,
     name = {
-    }
+    },
 }
 
 config.mongo = {
@@ -32,7 +32,14 @@ config.mongo = {
         "offline",
         "status",
         "register",
-    }
+    },
+    index = {
+        {"account", {"key", unique=true}},
+        {"user", {"id", unique=true}},
+        {"info", {"id", unique=true}},
+        {"offline", {"id", unique=true}},
+        {"status", {"key", unique=true}},
+    },
 }
 
 return config

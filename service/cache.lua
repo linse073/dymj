@@ -8,8 +8,6 @@ local pairs = pairs
 local ipairs = ipairs
 local assert = assert
 local tonumber = tonumber
-local os = os
-local time = os.time
 
 skynet.start(function()
     -- share data

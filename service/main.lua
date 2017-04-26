@@ -13,13 +13,6 @@ skynet.start(function()
     skynet.setenv("start_utc_time", t)
     skynet.setenv("start_routine_time", util.day_time(t))
 
-    -- ios charge
-    if skynet.getenv("ios_sandbox") == "true" then
-        skynet.setenv("ios_url", "https://sandbox.itunes.apple.com/verifyReceipt")
-    else
-        skynet.setenv("ios_url", "https://buy.itunes.apple.com/verifyReceipt")
-    end
-
     -- debug service
     if not skynet.getenv("daemon") then
         skynet.newservice("console")
@@ -28,50 +21,34 @@ skynet.start(function()
 
     -- service
     local config = require(skynet.getenv("config"))
-    local log_mgr = skynet.uniqueservice("log_mgr")
-    skynet.call(log_mgr, "lua", "open", config.log)
-    local master = skynet.uniqueservice("dbmaster")
-    local db = config.db
-    for k, v in ipairs(db.name) do
-        local dbslave = skynet.newservice("dbslave")
-        skynet.call(dbslave, "lua", "open", {host=db.host, port=db.port, db=db.base+k-1}, v)
-    end
-    local statusdb = skynet.call(master, "lua", "get", "statusdb")
-    local open_time = skynet.call(statusdb, "lua", "get", "open_time")
+    local mongo_master = skynet.uniqueservice("mongo_master")
+    skynet.call(mongo_master, "lua", "open", config.mongo)
+    local redis_master = skynet.uniqueservice("redis_master")
+    skynet.call(redis_master, "lua", "open", config.redis)
+
+    local status_db = skynet.call(mongo_master, "lua", "get", "status")
+    local open_time = skynet.call(status_db, "lua", "findOne", {key="open_time"})
     local now = floor(skynet.time())
-    if open_time then
-        open_time = tonumber(open_time)
-    else
-        open_time = now
+    if not open_time then
+        open_time = {time = now}
     end
-    skynet.call(statusdb, "lua", "set", "last_open_time", open_time)
-    skynet.setenv("last_open_time", open_time)
+    skynet.call(status_db, "lua", "update", {key="last_open_time"}, {["$set"]={time=open_time.time}})
+    skynet.setenv("last_open_time", open_time.time)
+    skynet.call(status_db, "lua", "update", {key="open_time"}, {["$set"]={time=now}})
     skynet.setenv("open_time", now)
-    local shutdown_time = skynet.call(statusdb, "lua", "get", "shutdown_time")
-    if shutdown_time then
-        shutdown_time = tonumber(shutdown_time)
-    else
-        shutdown_time = now
+    local shutdown_time = skynet.call(statusdb, "lua", "findOne", {key="shutdown_time"})
+    if not shutdown_time then
+        shutdown_time = {time = now}
     end
-    skynet.setenv("shutdown_time", shutdown_time)
+    skynet.setenv("shutdown_time", shutdown_time.time)
 
     skynet.uniqueservice("webclient")
 	skynet.uniqueservice("cache")
     skynet.uniqueservice("server_mgr")
     skynet.uniqueservice("routine")
     skynet.uniqueservice("role_mgr")
-    skynet.uniqueservice("arena_rank")
-    skynet.uniqueservice("fight_point_rank")
-    skynet.uniqueservice("rank_mgr")
     skynet.uniqueservice("offline_mgr")
-    skynet.uniqueservice("task_rank")
-    skynet.uniqueservice("guild_mgr")
-    local save_explore = skynet.uniqueservice("save_explore")
-    skynet.uniqueservice("explore_mgr")
     -- TODO: server shutdown time
-    skynet.call(save_explore, "lua", "open")
-    skynet.uniqueservice("trade_mgr")
-    skynet.uniqueservice("save_trade")
     skynet.uniqueservice("agent_mgr")
 
 	local loginserver = skynet.newservice("logind")

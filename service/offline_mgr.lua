@@ -4,53 +4,41 @@ local ipairs = ipairs
 local assert = assert
 local tonumber = tonumber
 
-local offlinedb
-local userdb
+local offline_db
+local user_db
 local role_mgr
 
 local CMD = {}
 
-function CMD.broadcast_mail(info)
-    local index = 0
-    local list = {}
-    repeat
-        local res = skynet.call(userdb, "lua", "scan", index)
-        index = res[1]
-        for k, v in ipairs(res[2]) do
-            if not list[v] then
-                local roleid = assert(tonumber(v), string.format("Error roleid %s.", v))
-                CMD.add("mail", roleid, info)
-                list[v] = true
-            end
-        end
-    until index == "0"
-end
-
-function CMD.add(otype, roleid, info)
-    local agent = skynet.call(role_mgr, "lua", "get", roleid)
-    if agent then
-        skynet.call(agent, "lua", "action", otype, info)
-    else
-        skynet.call(offlinedb, "lua", "rpush", roleid, skynet.packstring({otype, info}))
+function CMD.broadcast(module, info)
+    local cursor = skynet.call(user_db, "lua", "find", nil, {"id"})
+    while cursor:hasNext() do
+        local r = cursor:next()
+        CMD.add(module, r.id, info)
     end
 end
 
-function CMD.get(roleid)
-    local m = skynet.call(offlinedb, "lua", "lrange", roleid, 0, -1)
+function CMD.add(module, id, info)
+    local agent = skynet.call(role_mgr, "lua", "get", id)
+    if agent then
+        skynet.call(agent, "lua", "action", module, "add", info)
+    else
+        skynet.call(offline_db, "lua", "update", {id=id}, {["$push"]={data=info}}, true)
+    end
+end
+
+function CMD.get(id)
+    local m = skynet.call(offline_db, "lua", "findOne", {id=id})
     if m then
-        local r = {}
-        for k, v in ipairs(m) do
-            r[k] = skynet.unpack(v)
-        end
-        skynet.call(offlinedb, "lua", "del", roleid)
-        return r
+        skynet.call(offline_db, "lua", "delete", {id=id})
+        return m.data
     end
 end
 
 skynet.start(function()
-    local master = skynet.queryservice("dbmaster")
-    offlinedb = skynet.call(master, "lua", "get", "offlinedb")
-    userdb = skynet.call(master, "lua", "get", "userdb")
+    local master = skynet.queryservice("mongo_master")
+    offline_db = skynet.call(master, "lua", "get", "offline")
+    user_db = skynet.call(master, "lua", "get", "user")
     role_mgr = skynet.queryservice("role_mgr")
 
 	skynet.dispatch("lua", function(session, source, command, ...)
