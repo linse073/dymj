@@ -71,7 +71,7 @@ local function get_user()
 				_id = data.id,
 				account = data.uid,
 				id = data.id,
-				sex = data.sex or math.random(2),
+				sex = data.sex or random(2),
 				login_time = 0,
 				last_login_time = 0,
 				logout_time = 0,
