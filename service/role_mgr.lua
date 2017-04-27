@@ -20,7 +20,7 @@ local function notify(roleid, agent)
     local pack = {}
     for k, v in pairs(role_list) do
         if k ~= roleid then
-            pack[#pack+1] = v[2]
+            pack[#pack+1] = v
         end
     end
     skynet.send(agent, "lua", "notify", "other_all", {other=pack})
@@ -46,7 +46,10 @@ function CMD.logout(roleid)
 end
 
 function CMD.get(roleid)
-    return role_list[roleid]
+    local role = role_list[roleid]
+    if role then
+        return role.agent
+    end
 end
 
 function CMD.online(roleid)
