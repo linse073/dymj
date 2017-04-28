@@ -47,8 +47,12 @@
 }
 
 .chess_info {
-    user 0 : *chess_user
-    status 1 : integer
+    name 0 : string
+    number 1 : integer
+    rule 2 : string
+    banker 3 : integer
+    user 4 : *chess_user
+    status 5 : integer
 }
 
 .user_all {
