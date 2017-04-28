@@ -18,14 +18,14 @@ util.timer_wrap(CMD)
 
 local logic
 
-function CMD.start(name, rule, id, agent)
+function CMD.init(name, rule, info, agent)
     logic = setmetatable({}, require(name))
     logic:init(number, rule)
-    return logic:enter(id, agent)
+    return logic:enter(info, agent)
 end
 
-function CMD.finish()
-    logic:finish()
+function CMD.destroy()
+    logic:destroy()
     logic = nil
 end
 

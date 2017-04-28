@@ -215,7 +215,10 @@ function proc.new_chess(msg)
     local table = skynet.call(table_mgr, "lua", "new")
     data.table = table
     local user = data.user
-    return skynet.call(table, "lua", "start", name, msg.rule, user.id, skynet.self())
+    return skynet.call(table, "lua", "init", name, msg.rule, data.info, skynet.self())
+end
+
+function proc.join(msg)
 end
 
 return role

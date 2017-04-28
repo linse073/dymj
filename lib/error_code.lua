@@ -25,6 +25,7 @@ local type_code = {
         NO_CHESS="棋牌游戏不存在",
         NOT_IN_CHESS="不在棋局中",
         ALREADY_READY="已经准备好了",
+        ERROR_CHESS_STATUS="棋局状态错误",
     },
 }
 

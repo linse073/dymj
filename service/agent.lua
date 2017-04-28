@@ -109,7 +109,7 @@ skynet.start(function()
         else
             local data = game.data
             if data and data.table then
-                ok, rmsg, info = skynet.call(data.table, "lua", msgname, arg)
+                ok, rmsg, info = skynet.call(data.table, "lua", msgname, data.id, arg)
             else
                 ok, rmsg, info = true, "error_code", {code = error_code.NOT_JOIN_CHESS}
             end

@@ -34,8 +34,26 @@
     ip 5 : string
 }
 
+.chess_user {
+    account 0 : string
+    id 1 : integer
+    sex 2 : integer
+    nick_name 3 : string
+    head_img 4 : string
+    ip 5 : string
+    index 6 : integer
+    score 7 : integer
+    ready 8 : boolean
+}
+
+.chess_info {
+    user 0 : *chess_user
+    status 1 : integer
+}
+
 .user_all {
     user 0 : user_info
+    chess 1 : chess_info
 }
 
 .info_all {
