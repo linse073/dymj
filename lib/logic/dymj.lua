@@ -34,7 +34,7 @@ function dymj:init(number, rule)
     end
     self._magic_card = 45
     self._banker = random(base.MJ_FOUR)
-    self._status = base.CHESS_STATUS_FINISH
+    self._status = base.CHESS_STATUS_READY
 end
 
 function dymj:destroy()
@@ -47,13 +47,16 @@ function dymj:enter(info, agent)
     local index = #role + 1
     info.index = index
     info.score = 0
+    info.ready = false
+    info.card = {}
+    info.type_card = {}
     role[index] = info
     self._id[id] = info
     return "update_user", {}
 end
 
 function dymj:join(info, agent)
-    if self._status ~= base.CHESS_STATUS_FINISH then
+    if self._status ~= base.CHESS_STATUS_READY then
         error{code = error_code.ERROR_CHESS_STATUS}
     end
     local role = self._role
@@ -67,6 +70,9 @@ function dymj:join(info, agent)
 end
 
 function dymj:ready(id, msg)
+    if self._status ~= base.CHESS_STATUS_READY then
+        error{code = error_code.ERROR_CHESS_STATUS}
+    end
     local info = self._id[id]
     if not info then
         error{code = error_code.NOT_IN_CHESS}
@@ -78,6 +84,9 @@ function dymj:ready(id, msg)
 end
 
 function dymj:out_card(id, msg)
+    if self._status ~= base.CHESS_STATUS_START then
+        error{code = error_code.ERROR_CHESS_STATUS}
+    end
     local info = self._id[id]
 end
 
