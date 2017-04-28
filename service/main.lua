@@ -50,6 +50,7 @@ skynet.start(function()
     skynet.uniqueservice("offline_mgr")
     -- TODO: server shutdown time
     skynet.uniqueservice("agent_mgr")
+    skynet.uniqueservice("table_mgr")
 
 	local loginserver = skynet.newservice("logind")
     local gate = skynet.newservice("gated", loginserver)

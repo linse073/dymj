@@ -26,6 +26,7 @@ local base
 local cz
 local role_mgr
 local offline_mgr
+local table_mgr
 local gm_level = tonumber(skynet.getenv("gm_level"))
 local start_utc_time = tonumber(skynet.getenv("start_utc_time"))
 local user_db
@@ -37,6 +38,7 @@ skynet.init(function()
     cz = share.cz
     role_mgr = skynet.queryservice("role_mgr")
     offline_mgr = skynet.queryservice("offline_mgr")
+    table_mgr = skynet.queryservice("table_mgr")
 	local master = skynet.queryservice("mongo_master")
     user_db = skynet.call(master, "lua", "get", "user")
     info_db = skynet.call(master, "lua", "get", "info")
@@ -154,6 +156,7 @@ function proc.notify_info(msg)
 end
 
 function proc.heart_beat(msg)
+    local data = game.data
     data.heart_beat = data.heart_beat + 1
     return "heart_beat_response", {time=msg.time, server_time=skynet.time()*100}
 end
@@ -198,6 +201,21 @@ function proc.get_role(msg)
         user = user,
     }
     return "role_info", {info=puser}
+end
+
+function proc.new_chess(msg)
+    local data = game.data
+    if data.table then
+        error{code = error_code.ALREAD_IN_CHESS}
+    end
+    local name = "logic." .. msg.name
+    if not require(name) then
+        error{code = error_code.NO_CHESS}
+    end
+    local table = skynet.call(table_mgr, "lua", "new")
+    data.table = table
+    local user = data.user
+    return skynet.call(table, "lua", "start", name, msg.rule, user.id, skynet.self())
 end
 
 return role

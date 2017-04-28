@@ -1,16 +1,12 @@
 local skynet = require "skynet"
-local sharedata = require "sharedata"
-local sprotoloader = require "sprotoloader"
+local broadcast = require "broadcast"
 
 local assert = assert
 local string = string
-local ipairs = ipairs
 local pairs = pairs
 local type = type
 
 local role_list = {}
-local sproto
-local name_msg
 local user_db
 local info_db
 
@@ -56,31 +52,8 @@ function CMD.online(roleid)
     return role_list[roleid] ~= nil
 end
 
-local function pack_msg(msg, info)
-    if sproto:exist_type(msg) then
-        info = sproto:pencode(msg, info)
-    end
-    local id = assert(name_msg[msg], string.format("No protocol %s.", msg))
-    return string.pack(">s2", string.pack(">I2", id) .. info)
-end
-
 function CMD.broadcast(msg, info, exclude)
-    local c = pack_msg(msg, info)
-    for k, v in pairs(role_list) do
-        if k ~= exclude then
-            skynet.send(v.agent, "lua", "notify", c)
-        end
-    end
-end
-
-function CMD.broadcast_range(msg, info, range)
-    local c = pack_msg(msg, info)
-    for k, v in ipairs(range) do
-        local role = role_list[v]
-        if role then
-            skynet.send(role.agent, "lua", "notify", c)
-        end
-    end
+    broadcast(msg, info, role_list, exclude)
 end
 
 function CMD.get_user(roleid)
@@ -112,8 +85,6 @@ function CMD.get_info(roleid)
 end
 
 skynet.start(function()
-    sproto = sprotoloader.load(1)
-    name_msg = sharedata.query("name_msg")
     local master = skynet.queryservice("mongo_master")
     user_db = skynet.call(master, "lua", "get", "user")
     info_db = skynet.call(master, "lua", "get", "info")

@@ -6,7 +6,11 @@ local assert = assert
 local pcall = pcall
 local string = string
 local setmetatable = setmetatable
+local math = math
+local floor = math.floor
+local randomseed = math.randomseed
 
+local number = tonumber(...)
 local cz
 
 local CMD = {}
@@ -14,9 +18,10 @@ util.timer_wrap(CMD)
 
 local logic
 
-function CMD.start(name)
+function CMD.start(name, rule, id, agent)
     logic = setmetatable({}, require(name))
-    logic:init()
+    logic:init(number, rule)
+    return logic:enter(id, agent)
 end
 
 function CMD.finish()
@@ -29,6 +34,7 @@ function CMD.exit()
 end
 
 skynet.start(function()
+    randomseed(floor(skynet.time()))
     cz = share.cz
 
 	skynet.dispatch("lua", function(session, source, command, ...)

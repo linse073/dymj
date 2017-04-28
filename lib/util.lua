@@ -17,6 +17,8 @@ local os = os
 local date = os.date
 local time = os.time
 local setmetatable = setmetatable
+local math = math
+local random = math.random
 
 local util = {}
 
@@ -255,6 +257,14 @@ function util.timer_wrap(cmd)
             end
         end,
     })
+end
+
+function util.shuffle(card)
+    local len = #card
+    for i = 1, len-1 do
+        local r = random(i+1, len)
+        card[i], card[r] = card[r], card[i]
+    end
 end
 
 return util

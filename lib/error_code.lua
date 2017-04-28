@@ -1,5 +1,7 @@
 
 local pairs = pairs
+local ipairs = ipairs
+local table = table
 
 local type_code = {
     [0] = {
@@ -18,6 +20,11 @@ local type_code = {
 
     [3000] = {
         NOT_JOIN_CHESS="尚未加入棋局",
+        CHESS_ROLE_FULL="棋局人数已满",
+        ALREAD_IN_CHESS="已经在棋局中",
+        NO_CHESS="棋牌游戏不存在",
+        NOT_IN_CHESS="不在棋局中",
+        ALREADY_READY="已经准备好了",
     },
 }
 
@@ -25,11 +32,16 @@ local code = {}
 local code_string = {}
 
 for k, v in pairs(type_code) do
-    local i = k
+    local t = {}
     for k1, v1 in pairs(v) do
-        i = i + 1
-        code[k1] = i
-        code_string[i] = v1
+        t[#t+1] = k1
+    end
+    table.sort(t)
+    for k1, v1 in ipairs(t) do
+        local i = k + k1
+        local s = v[v1]
+        code[s] = i
+        code_string[i] = s
     end
 end
 

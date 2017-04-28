@@ -36,17 +36,17 @@ end
 local function new_table(count)
     local t = {}
     for i = 1, count do
-        t[i] = skynet.newservice("chess_table")
-    end
-    for k, v in ipairs(t) do
-        local info = {
-            agent = v,
-            number = new_number(),
+        local number = new_number()
+        t[i] = {
+            agent = skynet.newservice("chess_table", number),
+            number = number,
             use = false,
         }
-        table_list[v] = info
-        number_list[info.number] = info
-        free_list.push(info)
+    end
+    for k, v in ipairs(t) do
+        table_list[v.agent] = v
+        number_list[v.number] = v
+        free_list.push(v)
     end
 end
 
@@ -71,16 +71,17 @@ function CMD.new()
             skynet.fork(new_table, 50)
         end
     else
-        local agent = skynet.newservice("chess_table")
+        local number = new_number()
+        local agent = skynet.newservice("chess_table", number)
         info = {
             agent = agent,
-            number = new_number(),
+            number = number,
             use = true,
         }
         table_list[agent] = info
-        number_list[info.number] = info
+        number_list[number] = info
     end
-    return info.agent, info.number
+    return info.agent
 end
 
 function CMD.free(agent)
