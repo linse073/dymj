@@ -16,6 +16,8 @@ skynet.init(function()
     share.msg = sharedata.query("msg")
     share.name_msg = sharedata.query("name_msg")
 
+    share.invalid_mj_card = sharedata.query("invalid_mj_card")
+
     -- share in current agent
     share.sproto = sprotoloader.load(1)
     share.cz = crit_zone() -- avoid dead lock, there is only one crit_zone in a agent

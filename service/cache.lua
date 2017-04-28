@@ -24,6 +24,13 @@ skynet.start(function()
     sharedata.new("msg", proto.msg)
     sharedata.new("name_msg", proto.name_msg)
 
+    local card = {10, 20, 30, 32, 34, 36, 38, 39, 40, 42, 44}
+    local invalid_mj_card = {}
+    for k, v in ipairs(card) do
+        invalid_mj_card[v] = v
+    end
+    sharedata.new("invalid_mj_card", invalid_mj_card)
+
     -- protocol
     local file = skynet.getenv("root") .. "proto/proto.sp"
     sprotoloader.register(file, 1)

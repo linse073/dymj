@@ -11,12 +11,18 @@ local pairs = pairs
 local cz
 local base
 local error_code
+local invalid_mj_card
 
 skynet.init(function()
     cz = share.cz
     base = share.base
     error_code = share.error_code
+    invalid_mj_card = share.invalid_mj_card
 end)
+
+local function valid_card(c)
+    return c<46 and not invalid_mj_card[c]
+end
 
 local dymj = {}
 
@@ -122,7 +128,23 @@ function dymj:finish()
     end
 end
 
-function dymj:dispatch()
+function dymj:deal(info, num)
+    local card = self._card
+    local own_card = info.own_card
+    local type_card = info.type_card
+    local index = self._index
+    for i = 1, num do
+        local c = card[index]
+        index = index - 1
+        own_card[#own_card+1] = c
+        local n = type_card[c]
+        if n then
+            type_card[c] = n + 1
+        else
+            type_card[c] = 1
+        end
+    end
+    self._index = index
 end
 
 function dymj:start()
@@ -151,29 +173,14 @@ function dymj:start()
     self._card = card
     util.shuffle(card)
     self._status = base.CHESS_STATUS_START
-    local index = #card
+    self._index = #card
     local role = self._role
-    for k, v in ipairs(self._role) do
-        local card = {}
-        local type_card = {}
-        for i = 1, base.MJ_CARD do
-            local c = card[index]
-            index = index - 1
-            card[#card+1] = c
-            local num = type_card[c]
-            if num then
-                type_card[c] = num + 1
-            else
-                type_card[c] = 1
-            end
-        end
-        v.card = card
-        v.type_card = type_card
+    for k, v in ipairs(role) do
+        v.own_card = {}
+        v.type_card = {}
+        self:deal(v, base.MJ_CARD)
     end
-    local banker = role[self._banker]
-    local c = card[index]
-    index = index - 1
-    self._index = index
+    self:deal(role[self._banker], 1)
 end
 
 return {__index=dymj}
