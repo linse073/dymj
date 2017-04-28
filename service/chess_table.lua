@@ -37,7 +37,7 @@ skynet.start(function()
             skynet.retpack(f(...))
         else
             f = assert(logic[command], string.format("No logic procedure %s.", command))
-            local ok, rmsg, info = pcall(f, ...)
+            local ok, rmsg, info = pcall(f, logic, ...)
             cz.over()
             skynet.retpack(ok, rmsg, info)
         end
