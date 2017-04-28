@@ -204,21 +204,40 @@ function proc.get_role(msg)
 end
 
 function proc.new_chess(msg)
-    local data = game.data
-    if data.table then
-        error{code = error_code.ALREAD_IN_CHESS}
-    end
     local name = "logic." .. msg.name
     if not require(name) then
         error{code = error_code.NO_CHESS}
     end
+    local data = game.data
+    cz.start()
+    if data.table then
+        error{code = error_code.ALREAD_IN_CHESS}
+    end
     local table = skynet.call(table_mgr, "lua", "new")
+    if not table then
+        error{code = error_code.INTERNAL_ERROR}
+    end
     data.table = table
-    local user = data.user
+    cz.finish()
     return skynet.call(table, "lua", "init", name, msg.rule, data.info, skynet.self())
 end
 
 function proc.join(msg)
+    local table = skynet.call(table_mgr, "lua", "get", msg.number)
+    if not table then
+        error{code = error_code.ERROR_CHESS_NUMBER}
+    end
+    local data = game.data
+    cz.start()
+    if data.table then
+        error{code = error_code.ALREAD_IN_CHESS}
+    end
+    local rmsg, info = skynet.call(table, "lua", "join", msg.name, data.info, skynet.self())
+    if rmsg == "update_user" then
+        data.table = table
+    end
+    cz.finish()
+    return rmsg, info
 end
 
 return role

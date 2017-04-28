@@ -55,7 +55,10 @@ function dymj:enter(info, agent)
     return "update_user", {}
 end
 
-function dymj:join(info, agent)
+function dymj:join(name, info, agent)
+    if name ~= "dymj" then
+        error{code = error_code.ERROR_CHESS_NAME}
+    end
     if self._status ~= base.CHESS_STATUS_READY then
         error{code = error_code.ERROR_CHESS_STATUS}
     end
@@ -90,6 +93,18 @@ function dymj:out_card(id, msg)
     local info = self._id[id]
 end
 
+function dymj:hu_card(id, msg)
+end
+
+function dymj:finish()
+    self._status = base.CHESS_STATUS_READY
+    for k, v in ipairs(self._role) do
+        v.ready = false
+        v.card = {}
+        v.type_card = {}
+    end
+end
+
 function dymj:start()
     local card = {
         01,02,03,04,05,06,07,08,09,
@@ -116,11 +131,6 @@ function dymj:start()
     self._card = card
     util.shuffle(card)
     self._status = base.CHESS_STATUS_START
-    for k, v in ipairs(self._role) do
-        v.ready = false
-        v.card = {}
-        v.type_card = {}
-    end
 end
 
 return {__index=dymj}

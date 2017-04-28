@@ -26,6 +26,8 @@ local type_code = {
         NOT_IN_CHESS="不在棋局中",
         ALREADY_READY="已经准备好了",
         ERROR_CHESS_STATUS="棋局状态错误",
+        ERROR_CHESS_NUMBER="棋局编号错误",
+        ERROR_CHESS_NAME="游戏不匹配",
     },
 }
 
