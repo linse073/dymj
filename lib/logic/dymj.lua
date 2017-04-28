@@ -1,8 +1,5 @@
 
 local dymj = {}
-local dymj_meta = {
-    __index = dymj,
-}
 
 function dymj:init()
 
@@ -16,4 +13,4 @@ function dymj:join()
 
 end
 
-return dymj_meta
+return {__index=dymj}
