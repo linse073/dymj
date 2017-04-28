@@ -5,6 +5,7 @@ local share = require "share"
 local assert = assert
 local pcall = pcall
 local string = string
+local setmetatable = setmetatable
 
 local cz
 
@@ -14,7 +15,8 @@ util.timer_wrap(CMD)
 local logic
 
 function CMD.start(name)
-    logic = require(name).new()
+    logic = setmetatable({}, require(name))
+    logic:init()
 end
 
 function CMD.finish()
