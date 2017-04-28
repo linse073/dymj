@@ -1,28 +1,43 @@
 
-local msg = {
-    [1000] = "error_code",
-    [1001] = "notify_info",
-    [1002] = "logout",
-    [1003] = "heart_beat",
-    [1004] = "heart_beat_response",
-    [1005] = "response",
+local pairs = pairs
+local ipairs = ipairs
 
-    [2000] = "user_info",
-    [2001] = "user_all",
-    [2002] = "info_all",
-    [2003] = "update_user",
-    [2004] = "other_info",
-    [2005] = "other_all",
-    [2006] = "update_other",
-    [2007] = "get_role",
-    [2008] = "role_info",
+local type_msg = {
+    [1000] = {
+        "error_code",
+        "notify_info",
+        "logout",
+        "heart_beat",
+        "heart_beat_response",
+        "response",
+    },
 
-    [2100] = "enter_game",
+    [2000] = {
+        "user_info",
+        "user_all",
+        "info_all",
+        "update_user",
+        "other_info",
+        "other_all",
+        "update_other",
+        "get_role",
+        "role_info",
+    },
+
+    [2100] = {
+        "enter_game",
+    },
 }
+
+local msg = {}
 local name_msg = {}
 
-for k, v in pairs(msg) do
-    name_msg[v] = k
+for k, v in pairs(type_msg) do
+    for k1, v1 in ipairs(v) do
+        local i = k + k1
+        msg[i] = v1
+        name_msg[v1] = i
+    end
 end
 
 local proto = {

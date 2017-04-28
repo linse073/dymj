@@ -22,7 +22,7 @@ local sproto
 local error_code
 local cz
 
-local data
+local LOGIC_MSG_BEGIN = 100000
 
 local CMD = {}
 util.timer_wrap(CMD)
@@ -101,9 +101,19 @@ skynet.start(function()
         if sproto:exist_type(msgname) then
             arg = sproto:pdecode(msgname, arg)
         end
-        local f = assert(proc[msgname], string.format("No protocol procedure %s.", msgname))
-        local ok, rmsg, info = pcall(f, arg)
-		cz.over()
+        local ok, rmsg, info
+        if id < LOGIC_MSG_BEGIN then
+            local f = assert(proc[msgname], string.format("No protocol procedure %s.", msgname))
+            ok, rmsg, info = pcall(f, arg)
+            cz.over()
+        else
+            local data = game.data
+            if data and data.table then
+                ok, rmsg, info = skynet.call(data.table, "lua", msgname, arg)
+            else
+                ok, rmsg, info = true, "error_code", {code = error_code.NOT_JOIN_CHESS}
+            end
+        end
         if not ok then
             if type(rmsg) == "string" then
                 skynet.error(rmsg)

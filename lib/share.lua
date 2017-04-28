@@ -11,6 +11,7 @@ skynet.init(function()
 
     share.base = sharedata.query("base")
     share.error_code = sharedata.query("error_code")
+    share.error_string = sharedata.query("error_string")
 
     share.msg = sharedata.query("msg")
     share.name_msg = sharedata.query("name_msg")

@@ -17,7 +17,9 @@ skynet.start(function()
     sharedata.new("textdata", textdata)
 
     sharedata.new("base", base)
-    sharedata.new("error_code", require("error_code"))
+    local error_code = require("error_code")
+    sharedata.new("error_code", error_code.code)
+    sharedata.new("error_string", error_code.code_string)
 
     sharedata.new("msg", proto.msg)
     sharedata.new("name_msg", proto.name_msg)
