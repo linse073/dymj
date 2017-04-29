@@ -34,6 +34,11 @@
     ip 5 : string
 }
 
+.weave_card {
+    op 0 : integer
+    card 1 : integer
+}
+
 .chess_user {
     account 0 : string
     id 1 : integer
@@ -45,6 +50,8 @@
     score 7 : integer
     ready 8 : boolean
     own_card 9 : *integer
+    out_card 10 : integer
+    weave_card 11 : *weave_card
 }
 
 .chess_info {

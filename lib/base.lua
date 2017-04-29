@@ -9,6 +9,10 @@ local base = {
     MJ_ROLE_CARD = 13,
     MJ_CARD_INDEX = 45,
 
+    MJ_OP_CHI = 1,
+    MJ_OP_PENG = 2,
+    MJ_OP_GANG = 3,
+
     CHESS_STATUS_READY = 1,
     CHESS_STATUS_START = 2,
 }

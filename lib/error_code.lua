@@ -28,6 +28,9 @@ local type_code = {
         ERROR_CHESS_STATUS="棋局状态错误",
         ERROR_CHESS_NUMBER="棋局编号错误",
         ERROR_CHESS_NAME="游戏不匹配",
+        ERROR_DEAL_INDEX="发牌索引不匹配",
+        NO_OUT_CARD="出牌不存在",
+        INVALID_CARD="非法牌",
     },
 }
 

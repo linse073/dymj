@@ -96,51 +96,121 @@ function dymj:is_all_ready()
     return true
 end
 
-function dymj:ready(id, msg)
-    if self._status ~= base.CHESS_STATUS_READY then
+function dymj:op_check(id, status)
+    if self._status ~= status then
         error{code = error_code.ERROR_CHESS_STATUS}
     end
     local info = self._id[id]
     if not info then
         error{code = error_code.NOT_IN_CHESS}
     end
+    return info
+end
+
+function dymj:ready(id, msg)
+    local info = self:op_check(id, base.CHESS_STATUS_READY)
     if info.ready then
         error{code = error_code.ALREADY_READY}
     end
     info.ready = true
     local user = {index=info.index, ready=true}
-    local rmsg = {chess={user=user}}
+    local chess = {user=user}
     if self:is_all_ready() then
         self:start()
-        rmsg.chess = {
-            status = self._status,
-            left = self._left,
-            deal_index = self._deal_index,
-        }
-        user.own_card = info.own_card
+        chess.status = self._status
+        chess.left = self._left
+        chess.deal_index = self._deal_index
+        local own_card = {}
+        for k, v in pairs(info.type_card) do
+            for i = 1, v do
+                own_card[#own_card+1] = k
+            end
+        end
+        user.own_card = own_card
     end
+    broadcast("update_user", {chess=chess}, self._role, id)
+    return "update_user", rmsg
+end
+
+local CHI_RULE = {
+    {-2, -1},
+    {-1, 1},
+    {1, 2},
+}
+function dymj:analyze(card, id)
+    for k, v in ipairs(self._role) do
+        if v.id ~= id then
+            local type_card = v.type_card
+            local chi = false
+            for k1, v1 in ipairs(CHI_RULE) do
+                if type_card[card+v1[1]]>=1 and type_card[card+v1[2]]>=1 then
+                    chi = true
+                    break
+                end
+            end
+            local peng = false
+            if type_card[card] >= 2 then
+                peng = true
+            end
+            local gang = false
+            if type_card[card] >= 3 then
+                gang = true
+            end
+            local respond = v.respond
+            respond[base.MJ_OP_CHI], respond[base.MJ_OP_PENG], respond[base.MJ_OP_GANG] = chi, peng, gang
+            if chi or peng or gang then
+                v.pass = false
+            else
+                v.pass = true
+            end
+            local action = v.action
+            action[base.MJ_OP_CHI], action[base.MJ_OP_PENG], action[base.MJ_OP_GANG] = false, false, false
+        end
+    end
+end
+
+function dymj:out_card(id, msg)
+    local info = self:op_check(id, base.CHESS_STATUS_START)
+    if self._deal_index ~= info.index then
+        error{code = error_code.ERROR_DEAL_INDEX}
+    end
+    local type_card = info.type_card
+    local card = msg.card
+    if not type_card[card] then
+        error{code = error_code.INVALID_CARD}
+    end
+    if type_card[card] == 0 then
+        error{code = error_code.NO_OUT_CARD}
+    end
+    type_card[card] = type_card[card] - 1
+    self._out_card = card
+    self:analyze(card, id)
+    local rmsg = {chess={user={{index=info.index, out_card=card}}}}
     broadcast("update_user", rmsg, self._role, id)
     return "update_user", rmsg
 end
 
-function dymj:out_card(id, msg)
-    if self._status ~= base.CHESS_STATUS_START then
-        error{code = error_code.ERROR_CHESS_STATUS}
-    end
-    local info = self._id[id]
-    if not info then
-        error{code = error_code.NOT_IN_CHESS}
+function dymj:hu_card(id, msg)
+    local info = self:op_check(id, base.CHESS_STATUS_START)
+    if self._deal_index ~= info.index then
+        error{code = error_code.ERROR_DEAL_INDEX}
     end
 end
 
-function dymj:hu_card(id, msg)
-    if self._status ~= base.CHESS_STATUS_START then
-        error{code = error_code.ERROR_CHESS_STATUS}
-    end
-    local info = self._id[id]
-    if not info then
-        error{code = error_code.NOT_IN_CHESS}
-    end
+function dymj:chi_card(id, msg)
+    local info = self:op_check(id, base.CHESS_STATUS_START)
+end
+
+function dymj:peng_card(id, msg)
+    local info = self:op_check(id, base.CHESS_STATUS_START)
+end
+
+function dymj:gang_card(id, msg)
+    local info = self:op_check(id, base.CHESS_STATUS_START)
+end
+
+function dymj:pass_card(id, msg)
+    local info = self:op_check(id, base.CHESS_STATUS_START)
 end
 
 function dymj:finish()
@@ -152,19 +222,12 @@ end
 
 function dymj:deal(info, num)
     local card = self._card
-    local own_card = info.own_card
     local type_card = info.type_card
     local left = self._left
     for i = 1, num do
         local c = card[left]
         left = left - 1
-        own_card[#own_card+1] = c
-        local n = type_card[c]
-        if n then
-            type_card[c] = n + 1
-        else
-            type_card[c] = 1
-        end
+        type_card[c] = type_card[c] + 1
     end
     self._left = left
     self._deal_index = info.index
@@ -197,10 +260,19 @@ function dymj:start()
     util.shuffle(card)
     self._status = base.CHESS_STATUS_START
     self._left = #card
+    self._out_card = 0
     local role = self._role
     for k, v in ipairs(role) do
-        v.own_card = {}
-        v.type_card = {}
+        local type_card = {}
+        for i = 1, base.MJ_CARD_INDEX do
+            if not mj_invalid_card[i] then
+                type_card[i] = 0
+            end
+        end
+        c.type_card = type_card
+        c.weave_card = {}
+        c.respond = {}
+        c.action = {}
         self:deal(v, base.MJ_ROLE_CARD)
     end
     self:deal(role[self._banker], 1)
