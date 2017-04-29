@@ -52,6 +52,7 @@
     own_card 9 : *integer
     out_card 10 : integer
     weave_card 11 : *weave_card
+    action 12 : integer
 }
 
 .chess_info {

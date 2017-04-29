@@ -31,6 +31,10 @@ local type_code = {
         ERROR_DEAL_INDEX="发牌索引不匹配",
         NO_OUT_CARD="出牌不存在",
         INVALID_CARD="非法牌",
+        ERROR_OPERATION="操作不合法",
+        CHI_COUNT_LIMIT="吃牌达上限",
+        WAIT_FOR_OTHER="请等待其他玩家",
+        ALREADY_PASS="已经过了",
     },
 }
 
