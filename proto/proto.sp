@@ -44,6 +44,7 @@
     index 6 : integer
     score 7 : integer
     ready 8 : boolean
+    own_card 9 : *integer
 }
 
 .chess_info {
@@ -53,6 +54,8 @@
     banker 3 : integer
     user 4 : *chess_user
     status 5 : integer
+    left 6 : integer
+    deal_index 7 : integer
 }
 
 .user_all {

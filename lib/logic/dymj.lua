@@ -11,17 +11,17 @@ local pairs = pairs
 local cz
 local base
 local error_code
-local invalid_mj_card
+local mj_invalid_card
 
 skynet.init(function()
     cz = share.cz
     base = share.base
     error_code = share.error_code
-    invalid_mj_card = share.invalid_mj_card
+    mj_invalid_card = share.mj_invalid_card
 end)
 
 local function valid_card(c)
-    return c<46 and not invalid_mj_card[c]
+    return c<=base.MJ_CARD_INDEX and not mj_invalid_card[c]
 end
 
 local dymj = {}
@@ -87,6 +87,15 @@ function dymj:join(name, info, agent)
     return rmsg, rinfo
 end
 
+function dymj:is_all_ready()
+    for k, v in ipairs(self._role) do
+        if not v.ready then
+            return false
+        end
+    end
+    return true
+end
+
 function dymj:ready(id, msg)
     if self._status ~= base.CHESS_STATUS_READY then
         error{code = error_code.ERROR_CHESS_STATUS}
@@ -99,6 +108,19 @@ function dymj:ready(id, msg)
         error{code = error_code.ALREADY_READY}
     end
     info.ready = true
+    local user = {index=info.index, ready=true}
+    local rmsg = {chess={user=user}}
+    if self:is_all_ready() then
+        self:start()
+        rmsg.chess = {
+            status = self._status,
+            left = self._left,
+            deal_index = self._deal_index,
+        }
+        user.own_card = info.own_card
+    end
+    broadcast("update_user", rmsg, self._role, id)
+    return "update_user", rmsg
 end
 
 function dymj:out_card(id, msg)
@@ -132,10 +154,10 @@ function dymj:deal(info, num)
     local card = self._card
     local own_card = info.own_card
     local type_card = info.type_card
-    local index = self._index
+    local left = self._left
     for i = 1, num do
-        local c = card[index]
-        index = index - 1
+        local c = card[left]
+        left = left - 1
         own_card[#own_card+1] = c
         local n = type_card[c]
         if n then
@@ -144,7 +166,8 @@ function dymj:deal(info, num)
             type_card[c] = 1
         end
     end
-    self._index = index
+    self._left = left
+    self._deal_index = info.index
 end
 
 function dymj:start()
@@ -173,12 +196,12 @@ function dymj:start()
     self._card = card
     util.shuffle(card)
     self._status = base.CHESS_STATUS_START
-    self._index = #card
+    self._left = #card
     local role = self._role
     for k, v in ipairs(role) do
         v.own_card = {}
         v.type_card = {}
-        self:deal(v, base.MJ_CARD)
+        self:deal(v, base.MJ_ROLE_CARD)
     end
     self:deal(role[self._banker], 1)
 end

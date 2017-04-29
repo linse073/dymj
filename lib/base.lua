@@ -6,7 +6,8 @@ local base = {
 	LOGIN_QQ = 4,
 
     MJ_FOUR = 4,
-    MJ_CARD = 13,
+    MJ_ROLE_CARD = 13,
+    MJ_CARD_INDEX = 45,
 
     CHESS_STATUS_READY = 1,
     CHESS_STATUS_START = 2,
