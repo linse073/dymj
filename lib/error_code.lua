@@ -35,6 +35,8 @@ local type_code = {
         CHI_COUNT_LIMIT="吃牌达上限",
         WAIT_FOR_OTHER="请等待其他玩家",
         ALREADY_PASS="已经过了",
+        CONCLUDE_CARD_LIMIT="尚未流局",
+        OUT_CARD_LIMIT="出牌限制",
     },
 }
 

@@ -7,6 +7,7 @@ local string = string
 local random = math.random
 local ipairs = ipairs
 local pairs = pairs
+local table = table
 
 local cz
 local base
@@ -32,9 +33,9 @@ function dymj:init(number, rule)
     local c, p = string.unpack(rule, "BB")
     print("game rule:", c, p)
     if c then
-        self._count = 16
+        self._total_count = 16
     else
-        self._count = 8
+        self._total_count = 8
     end
     if p then
         self._limit50 = true
@@ -133,14 +134,14 @@ function dymj:ready(id, msg)
 end
 
 local CHI_RULE = {
-    {-2, -1},
-    {-1, 1},
-    {1, 2},
+    {-2, -1, -2},
+    {-1, 1, -1},
+    {1, 2, 0},
 }
 function dymj:analyze(card, id)
     local has_respond = false
     for k, v in ipairs(self._role) do
-        if v.id ~= id then
+        if v.id ~= id and card ~= self._magic_card then
             local type_card = v.type_card
             local chi = false
             for k1, v1 in ipairs(CHI_RULE) do
@@ -191,28 +192,107 @@ function dymj:out_card(id, msg)
     if type_card[card] == 0 then
         error{code = error_code.NO_OUT_CARD}
     end
-    type_card[card] = type_card[card] - 1
-    info.gang_count = 0
-    self._out_card = card
-    local deal_index
-    if not self:analyze(card, id) then
-        deal_index = self._deal_index%base.MJ_FOUR+1
-        local c = self:deal(self._role[deal_index])
-        skynet.send(v.agent, "lua", "notify", "update_user", {chess={
-            user={
-                {index=info.index, out_card=card},
-                {index=deal_index, own_card={c}},
-            },
-            deal_index=deal_index,
-        }})
-    end
-    local rmsg = {chess={user={{index=info.index, out_card=card}}, deal_index=deal_index}}
-    for k, v in ipairs(self._role) do
-        if v.id ~= id and v.index ~= deal_index then
-            skynet.send(v.agent, "lua", "notify", "update_user", rmsg)
+    local magic = false
+    local role = self._role
+    for k, v in ipairs(role) do
+        if v.out_magic > 0 then
+            magic = true
         end
     end
-    return "update_user", rmsg
+    if magic and card ~= self._deal_card then
+        error{code = error_code.OUT_CARD_LIMIT}
+    end
+    if self._left <= 20 then
+        self:conclude(id)
+    else
+        type_card[card] = type_card[card] - 1
+        info.gang_count = 0
+        if card == self._magic_card then
+            info.out_magic = info.out_magic + 1
+        else
+            info.out_magic = 0
+        end
+        self._out_card = card
+        local deal_index
+        if not self:analyze(card, id) then
+            deal_index = self._deal_index%base.MJ_FOUR+1
+            local c = self:deal(role[deal_index])
+            skynet.send(v.agent, "lua", "notify", "update_user", {chess={
+                user={
+                    {index=info.index, out_card=card},
+                    {index=deal_index, own_card={c}},
+                },
+                deal_index=deal_index,
+            }})
+        end
+        local rmsg = {chess={user={{index=info.index, out_card=card}}, deal_index=deal_index}}
+        for k, v in ipairs(role) do
+            if v.id ~= id and v.index ~= deal_index then
+                skynet.send(v.agent, "lua", "notify", "update_user", rmsg)
+            end
+        end
+        return "update_user", rmsg
+    end
+end
+
+local function clone(type_card, k, d)
+    local c = util.clone(type_card)
+end
+
+local function find_weave(type_card, weave_card, magic_count)
+    for i = 1, base.MJ_CARD_INDEX do
+        local num = type_card[i]
+        if num and num > 0 then
+            if num+magic_count >= 3 then
+            end
+        end
+    end
+end
+
+local function check_hu(type_card, weave_card, magic_count)
+    if magic_count > 0 then
+        for k, v in pairs(type_card) do
+            local clone = util.clone(type_card)
+            clone[k] = v - 1
+            if clone[k] == 0 then
+                clone[k] = nil
+            end
+            weave_card[#weave_card+1] = {i, 0}
+            if find_weave(clone, weave_card, magic_count-1) then
+                return true
+            end
+            weave_card[#weave_card] = nil
+        end
+    end
+
+    if magic_count > 0 then
+        for i = 1, base.MJ_CARD_INDEX do
+            local num = type_card[i]
+            if num and num > 0 then
+                type_card[i] = num - 1
+                weave_card[#weave_card+1] = {i, 0}
+                magic_count = magic_count - 1
+                if find_weave(type_card, weave_card, magic_count) then
+                    return true
+                end
+                magic_count = magic_count + 1
+                weave_card[#weave_card] = nil
+                type_card[i] = num
+            end
+        end
+    end
+    for i = 1, base.MJ_CARD_INDEX do
+        local num = type_card[i]
+        if num and num >= 2 then
+            type_card[i] = num - 2
+            weave_card[#weave_card+1] = {i, i}
+            if find_weave(type_card, weave_card, magic_count) then
+                return true
+            end
+            weave_card[#weave_card] = nil
+            type_card[i] = num
+        end
+    end
 end
 
 function dymj:hu_card(id, msg)
@@ -258,7 +338,7 @@ function dymj:chi_card(id, msg)
     for i = msg.card, msg.card+2 do
         if i == self._out_card then
             valid = true
-        else if not (type_card[i] >= 1) then
+        elseif not (type_card[i] >= 1) then
             error{code = error_code.ERROR_OPERATION}
         end
     end
@@ -267,7 +347,6 @@ function dymj:chi_card(id, msg)
     end
     if self:check_prior(info.index, base.MJ_OP_CHI) then
         info.action[base.MJ_OP_CHI] = msg.card
-        -- TODO: what respond?
         return "update_user", {chess={user={{
             index = info.index,
             action = base.MJ_OP_CHI,
@@ -398,23 +477,89 @@ function dymj:pass_card(id, msg)
     end
     info.pass = true
     local all_pass = true
-    for k, v in ipairs(self._role) do
-        if not info.pass then
+    local role = self._role
+    for k, v in ipairs(role) do
+        if not v.pass then
             all_pass = false
-            for k1, v1 in ipairs(v.action) do
-                if v1>0 and not self:check_prior(k, k1) then
-                    assert(k1==base.MJ_OP_CHI)
+            -- NOTICE: only check MJ_OP_CHI
+            local card = v.action[base.MJ_OP_CHI]
+            if card > 0 and not self:check_prior(k, base.MJ_OP_CHI) then
+                local type_card = v.type_card
+                for i = card, card+2 do
+                    if i ~= self._out_card then
+                        type_card[i] = type_card[i] - 1
+                    end
                 end
+                local weave = {
+                    op = base.MJ_OP_CHI,
+                    card = card,
+                }
+                v.weave_card[#v.weave_card+1] = weave
+                local rmsg = {chess={user={{
+                    index = v.index,
+                    weave_card = {weave},
+                }}}}
+                broadcast("update_user", rmsg, role, id)
+                return "update_user", {chess={user={
+                    {index=v.index, weave_card={weave}},
+                    {index=info.index, action=base.MJ_OP_PASS},
+                }}}
             end
         end
     end
+    local deal_index
     if all_pass then
-        
+        deal_index = self._deal_index%base.MJ_FOUR+1
+        local c = self:deal(role[deal_index])
+        skynet.send(v.agent, "lua", "notify", "update_user", {chess={
+            user={{index=deal_index, own_card={c}}},
+            deal_index=deal_index,
+        }})
+        local rmsg = {chess={deal_index=deal_index}}
+        for k, v in ipairs(role) do
+            if v.id ~= id and v.index ~= deal_index then
+                skynet.send(v.agent, "lua", "notify", "update_user", rmsg)
+            end
+        end
     end
+    return "update_user", {chess={
+        user={{index=info.index, action=base.MJ_OP_PASS}},
+        deal_index=deal_index,
+    }}
+end
+
+function dymj:conclude(id, msg)
+    local info = self:op_check(id, base.CHESS_STATUS_START)
+    if self._deal_index ~= info.index then
+        error{code = error_code.ERROR_DEAL_INDEX}
+    end
+    if self._left > 20 then
+        error{code = error_code.CONCLUDE_CARD_LIMIT}
+    end
+    self:finish()
+    local user = {}
+    for k, v in ipairs(self._role) do
+        local own_card = {}
+        for k1, v1 in pairs(v.type_card) do
+            for i = 1, v1 do
+                own_card[#own_card+1] = k1
+            end
+        end
+        user[k] = {
+            index = k,
+            own_card = own_card,
+            weave_card = v.weave_card,
+            ready = false,
+        }
+    end
+    local rmsg = {chess={user=user, status=self._status, count=self._count}}
+    broadcast("update_user", rmsg, self._role, id)
+    return "update_user", rmsg
 end
 
 function dymj:finish()
     self._status = base.CHESS_STATUS_READY
+    self._count = self._count + 1
     for k, v in ipairs(self._role) do
         v.ready = false
     end
@@ -471,6 +616,7 @@ function dymj:start()
         v.action = {}
         v.chi_count = 0
         v.gang_count = 0
+        v.out_magic = 0
         for i = 1, base.MJ_ROLE_CARD do
             self:deal(v)
         end

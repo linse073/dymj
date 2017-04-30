@@ -64,6 +64,7 @@
     status 5 : integer
     left 6 : integer
     deal_index 7 : integer
+    count 8 : integer
 }
 
 .user_all {

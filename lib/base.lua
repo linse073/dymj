@@ -15,6 +15,7 @@ local base = {
     MJ_OP_GANG = 3,
     MJ_OP_PASS = 4,
     MJ_OP_HIDE_GANG = 5,
+    MJ_OP_HU = 6,
 
     CHESS_STATUS_READY = 1,
     CHESS_STATUS_START = 2,
