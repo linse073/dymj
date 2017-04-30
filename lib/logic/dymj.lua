@@ -340,6 +340,9 @@ function dymj:check_hu(type_card, weave_card, magic_count)
     return false
 end
 
+local function is_qidui()
+end
+
 function dymj:hu_card(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     if self._deal_index ~= info.index then
@@ -373,7 +376,8 @@ function dymj:hu_card(id, msg)
             ready = false,
         }
     end
-    local rmsg = {chess={user=user, status=self._status, count=self._count}}
+    user[info.index].action = base.MJ_OP_HU
+    local rmsg = {chess={user=user, status=self._status, count=self._count, banker=info.index}}
     broadcast("update_user", rmsg, self._role, id)
     return "update_user", rmsg
 end
