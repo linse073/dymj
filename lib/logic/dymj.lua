@@ -340,7 +340,28 @@ function dymj:check_hu(type_card, weave_card, magic_count)
     return false
 end
 
-local function is_qidui()
+function dymj:is_qidui(type_card)
+    local magic_count = type_card[self._magic_card]
+    local four_count = 0
+    for k, v in pairs(type_card) do
+        if k ~= self._magic_card then
+            if v == 1 then
+                if magic_count <= 0 then
+                    return false
+                end
+                magic_count = magic_count - 1
+            elseif v == 3 then
+                if magic_count <= 0 then
+                    return false
+                end
+                magic_count = magic_count - 1
+                four_count = four_count + 1
+            elseif v == 4 then
+                four_count = four_count + 1
+            end
+        end
+    end
+    return true, four_count
 end
 
 function dymj:hu_card(id, msg)
@@ -348,21 +369,43 @@ function dymj:hu_card(id, msg)
     if self._deal_index ~= info.index then
         error{code = error_code.ERROR_DEAL_INDEX}
     end
-    local type_card = {}
-    for k, v in pairs(info.type_card) do
-        if v > 0 then
-            type_card[k] = v
+    local type_card = info.type_card
+    local mul = 1
+    local hu, four_count = self:is_qidui(type_card)
+    if hu then
+        mul = 2^(four_count+1)
+        if type_card[self._deal_card]%2 == 1 then
+            mul = mul * 2^(info.out_magic+1)
+        end
+    else
+        local tc = {}
+        for k, v in pairs(type_card) do
+            if v > 0 then
+                tc[k] = v
+            end
+        end
+        local magic_count = tc[self._magic_card] or 0
+        tc[self._magic_card] = nil
+        local weave_card = {}
+        if not self:check_hu(tc, weave_card, magic_count) then
+            error{code = error_code.ERROR_OPERATION}
+        end
+        mul = 2^info.gang_count
+        local head = weave_card[1]
+        if head[1] == self._deal_card and head[2] == 0 then
+            mul = mul * 2^(info.out_magic+1)
         end
     end
-    local magic_count = type_card[self._magic_card] or 0
-    type_card[self._magic_card] = nil
-    local weave_card = {}
-    if not self:check_hu(type_card, weave_card, magic_count) then
-        error{code = error_code.ERROR_OPERATION}
-    end
-    self:finish()
+    self._status = base.CHESS_STATUS_READY
+    self._count = self._count + 1
     local user = {}
     for k, v in ipairs(self._role) do
+        v.ready = false
+        if k == info.index then
+            v.score = v.score + mul * 3
+        else
+            v.score = v.score - mul
+        end
         local own_card = {}
         for k1, v1 in pairs(v.type_card) do
             for i = 1, v1 do
@@ -374,6 +417,7 @@ function dymj:hu_card(id, msg)
             own_card = own_card,
             weave_card = v.weave_card,
             ready = false,
+            score = v.score,
         }
     end
     user[info.index].action = base.MJ_OP_HU
@@ -616,9 +660,11 @@ function dymj:conclude(id, msg)
     if self._left > 20 then
         error{code = error_code.CONCLUDE_CARD_LIMIT}
     end
-    self:finish()
+    self._status = base.CHESS_STATUS_READY
+    self._count = self._count + 1
     local user = {}
     for k, v in ipairs(self._role) do
+        v.ready = false
         local own_card = {}
         for k1, v1 in pairs(v.type_card) do
             for i = 1, v1 do
@@ -635,14 +681,6 @@ function dymj:conclude(id, msg)
     local rmsg = {chess={user=user, status=self._status, count=self._count}}
     broadcast("update_user", rmsg, self._role, id)
     return "update_user", rmsg
-end
-
-function dymj:finish()
-    self._status = base.CHESS_STATUS_READY
-    self._count = self._count + 1
-    for k, v in ipairs(self._role) do
-        v.ready = false
-    end
 end
 
 function dymj:deal(info)
