@@ -235,64 +235,109 @@ function dymj:out_card(id, msg)
     end
 end
 
-local function clone(type_card, k, d)
-    local c = util.clone(type_card)
+local function dec(t, k, d)
+    local n = t[k]
+    if d >= n then
+        t[k] = nil
+        return n
+    else
+        t[k] = n - d
+        return d
+    end
 end
 
 local function find_weave(type_card, weave_card, magic_count)
-    for i = 1, base.MJ_CARD_INDEX do
-        local num = type_card[i]
-        if num and num > 0 then
-            if num+magic_count >= 3 then
+    for k, v in pairs(type_card) do
+        if v+magic_count >= 3 then
+            local n = dec(type_card, k, 3)
+            local weave = {k, k, k}
+            for i = n+1, 3 do
+                weave[i] = 0
+            end
+            weave_card[#weave_card+1] = weave
+            if find_weave(type_card, weave_card, magic_count-(3-n)) then
+                return true
+            end
+            weave_card[#weave_card] = nil
+            type_card[k] = v
+        end
+        for k1, v1 in ipairs(CHI_RULE) do
+            local weave = {k, k+v1[1], k+v1[2]}
+            if valid_card(weave[2]) and valid_card(weave[3]) then
+                local mc = 0
+                local mi = 0
+                for i = 2, 3 do
+                    if not type_card[weave[i]] then
+                        mc = mc + 1
+                        mi = i
+                    end
+                end
+                if mc <= 1 and magic_count >= mc then
+                    for i = 1, 3 do
+                        if i ~= mi then
+                            dec(type_card, weave[i], 1)
+                        end
+                    end
+                    weave[4] = mi
+                    weave_card[#weave_card+1] = weave
+                    if find_weave(type_card, weave_card, magic_count-mc) then
+                        return true
+                    end
+                    weave_card[#weave_card] = nil
+                    for i = 1, 3 do
+                        if i ~= mi then
+                            local n = type_card[i]
+                            if n then
+                                type_card[i] = n + 1
+                            else
+                                type_card[i] = 1
+                            end
+                        end
+                    end
+                end
             end
         end
+        return false
     end
+    return true
 end
 
-local function check_hu(type_card, weave_card, magic_count)
+function dymj:check_hu(type_card, weave_card, magic_count)
+    local clone = util.clone(type_card)
     if magic_count > 0 then
-        for k, v in pairs(type_card) do
-            local clone = util.clone(type_card)
-            clone[k] = v - 1
-            if clone[k] == 0 then
-                clone[k] = nil
-            end
-            weave_card[#weave_card+1] = {i, 0}
-            if find_weave(clone, weave_card, magic_count-1) then
-                return true
-            end
-            weave_card[#weave_card] = nil
+        local deal_card = self._deal_card
+        local n = clone[deal_card]
+        dec(clone, deal_card, 1)
+        weave_card[#weave_card+1] = {deal_card, 0}
+        if find_weave(clone, weave_card, magic_count-1) then
+            return true
         end
-    end
-
-    if magic_count > 0 then
-        for i = 1, base.MJ_CARD_INDEX do
-            local num = type_card[i]
-            if num and num > 0 then
-                type_card[i] = num - 1
-                weave_card[#weave_card+1] = {i, 0}
-                magic_count = magic_count - 1
-                if find_weave(type_card, weave_card, magic_count) then
+        weave_card[#weave_card] = nil
+        clone[deal_card] = n
+        for k, v in pairs(type_card) do
+            if k ~= deal_card then
+                dec(clone, k, 1)
+                weave_card[#weave_card+1] = {k, 0}
+                if find_weave(clone, weave_card, magic_count-1) then
                     return true
                 end
-                magic_count = magic_count + 1
                 weave_card[#weave_card] = nil
-                type_card[i] = num
+                clone[k] = v
             end
         end
     end
-    for i = 1, base.MJ_CARD_INDEX do
-        local num = type_card[i]
-        if num and num >= 2 then
-            type_card[i] = num - 2
-            weave_card[#weave_card+1] = {i, i}
-            if find_weave(type_card, weave_card, magic_count) then
+    for k, v in pairs(type_card) do
+        if v >= 2 then
+            dec(clone, k, 2)
+            weave_card[#weave_card+1] = {k, k}
+            if find_weave(clone, weave_card, magic_count) then
                 return true
             end
             weave_card[#weave_card] = nil
-            type_card[i] = num
+            clone[k] = v
         end
     end
+    return false
 end
 
 function dymj:hu_card(id, msg)
@@ -300,6 +345,37 @@ function dymj:hu_card(id, msg)
     if self._deal_index ~= info.index then
         error{code = error_code.ERROR_DEAL_INDEX}
     end
+    local type_card = {}
+    for k, v in pairs(info.type_card) do
+        if v > 0 then
+            type_card[k] = v
+        end
+    end
+    local magic_count = type_card[self._magic_card] or 0
+    type_card[self._magic_card] = nil
+    local weave_card = {}
+    if not self:check_hu(type_card, weave_card, magic_count) then
+        error{code = error_code.ERROR_OPERATION}
+    end
+    self:finish()
+    local user = {}
+    for k, v in ipairs(self._role) do
+        local own_card = {}
+        for k1, v1 in pairs(v.type_card) do
+            for i = 1, v1 do
+                own_card[#own_card+1] = k1
+            end
+        end
+        user[k] = {
+            index = k,
+            own_card = own_card,
+            weave_card = v.weave_card,
+            ready = false,
+        }
+    end
+    local rmsg = {chess={user=user, status=self._status, count=self._count}}
+    broadcast("update_user", rmsg, self._role, id)
+    return "update_user", rmsg
 end
 
 function dymj:check_prior(index, op)
