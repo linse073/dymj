@@ -149,6 +149,12 @@ end
 function role.repair(user, now)
 end
 
+function role.add_room_card(p, num)
+    local user = game.data.user
+    user.room_card = user.room_card + num
+    p.user.room_card = user.room_card
+end
+
 -------------------protocol process--------------------------
 
 function proc.notify_info(msg)

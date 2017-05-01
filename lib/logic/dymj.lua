@@ -459,7 +459,8 @@ function dymj:chi_card(id, msg)
     end
     local valid = false
     local type_card = info.type_card
-    for i = msg.card, msg.card+2 do
+    local card = msg.card
+    for i = card, card+2 do
         if i == self._out_card then
             valid = true
         elseif not (type_card[i] >= 1) then
@@ -470,20 +471,20 @@ function dymj:chi_card(id, msg)
         error{code = error_code.ERROR_OPERATION}
     end
     if self:check_prior(info.index, base.MJ_OP_CHI) then
-        info.action[base.MJ_OP_CHI] = msg.card
+        info.action[base.MJ_OP_CHI] = card
         return "update_user", {chess={user={{
             index = info.index,
             action = base.MJ_OP_CHI,
         }}}}
     else
-        for i = msg.card, msg.card+2 do
+        for i = card, card+2 do
             if i ~= self._out_card then
                 type_card[i] = type_card[i] - 1
             end
         end
         local weave = {
             op = base.MJ_OP_CHI,
-            card = msg.card,
+            card = card,
         }
         info.weave_card[#info.weave_card+1] = weave
         local rmsg = {chess={user={{

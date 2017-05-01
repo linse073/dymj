@@ -105,3 +105,25 @@
 .role_info {
     info 0 : user_all
 }
+
+.add_room_card {
+    num 0 : integer
+}
+
+.new_chess {
+    name 0 : string
+    rule 1 : string
+}
+
+.join {
+    number 0 : integer
+    name 1 : string
+}
+
+.out_card {
+    card 0 : integer
+}
+
+.chi_card {
+    card 0 : integer
+}

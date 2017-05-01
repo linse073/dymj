@@ -27,6 +27,24 @@ local type_msg = {
     [2100] = {
         "enter_game",
     },
+
+    [2200] = {
+        "add_room_card",
+    },
+
+    [2300] = {
+        "new_chess",
+        "join",
+        "ready",
+        "out_card",
+        "hu_card",
+        "chi_card",
+        "peng_card",
+        "gane_card",
+        "hide_card",
+        "pass_card",
+        "conclude",
+    },
 }
 
 local msg = {}
