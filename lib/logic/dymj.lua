@@ -364,7 +364,7 @@ function dymj:is_qidui(type_card)
     return true, four_count
 end
 
-function dymj:hu_card(id, msg)
+function dymj:hu(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     if self._deal_index ~= info.index then
         error{code = error_code.ERROR_DEAL_INDEX}
@@ -446,7 +446,7 @@ function dymj:check_prior(index, op)
     return false
 end
 
-function dymj:chi_card(id, msg)
+function dymj:chi(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     if info.chi_count >= base.MJ_CHI_COUNT then
         error{code = error_code.CHI_COUNT_LIMIT}
@@ -496,7 +496,7 @@ function dymj:chi_card(id, msg)
     end
 end
 
-function dymj:peng_card(id, msg)
+function dymj:peng(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     if not info.respond[base.MJ_OP_PENG] then
         error{code = error_code.ERROR_OPERATION}
@@ -520,7 +520,7 @@ function dymj:peng_card(id, msg)
     return "update_user", rmsg
 end
 
-function dymj:gang_card(id, msg)
+function dymj:gang(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     if not info.respond[base.MJ_OP_GANG] then
         error{code = error_code.ERROR_OPERATION}
@@ -595,7 +595,7 @@ function dymj:hide_gang(id, msg)
     }}
 end
 
-function dymj:pass_card(id, msg)
+function dymj:pass(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     if info.pass then
         error{code = error_code.ALREADY_PASS}

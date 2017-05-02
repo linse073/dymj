@@ -124,6 +124,6 @@
     card 0 : integer
 }
 
-.chi_card {
+.chi {
     card 0 : integer
 }
