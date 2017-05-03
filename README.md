@@ -1,2 +1,1 @@
 # dymj
-chess
