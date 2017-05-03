@@ -14,6 +14,7 @@ local floor = math.floor
 local randomseed = math.randomseed
 local random = math.random
 local tonumber = tonumber
+local pcall = pcall
 
 local game
 
@@ -211,7 +212,8 @@ end
 
 function proc.new_chess(msg)
     local name = "logic." .. msg.name
-    if not require(name) then
+    local ok, chess = pcall(require, name)
+    if not ok then
         error{code = error_code.NO_CHESS}
     end
     local data = game.data
