@@ -85,7 +85,7 @@ local function get_user()
 				head_img = data.head_img,
 				ip = data.ip,
 			}
-			skynet.call(user_db, "lua", "save_insert", user)
+			skynet.call(user_db, "lua", "safe_insert", user)
 			data.user = user
 			local info = {
 				_id = user._id,
@@ -96,7 +96,7 @@ local function get_user()
 				head_img = user.head_img,
 				ip = user.ip,
 			}
-			skynet.call(info_db, "lua", "save_insert", info)
+			skynet.call(info_db, "lua", "safe_insert", info)
 			data.info = info
 		end
     end

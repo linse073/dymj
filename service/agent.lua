@@ -26,6 +26,7 @@ local LOGIC_MSG_BEGIN = 100000
 
 local CMD = {}
 util.timer_wrap(CMD)
+game.iter("init_module")
 
 function CMD.login(info)
 	-- you may use secret to make a encrypted data stream
