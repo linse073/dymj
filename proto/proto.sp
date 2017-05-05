@@ -1,5 +1,5 @@
 .user_info {
-    account 0 : sting
+    account 0 : string
     id 1 : integer
     sex 2 : integer
     create_time 3 : integer

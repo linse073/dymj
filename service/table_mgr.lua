@@ -1,5 +1,6 @@
 local skynet = require "skynet"
 local list = require "tool.list"
+local random = require "random"
 
 local assert = assert
 local pcall = pcall
@@ -7,28 +8,29 @@ local string = string
 local ipairs = ipairs
 local math = math
 local floor = math.floor
-local randomseed = math.randomseed
-local random = math.random
 
+local rand
 local table_list = {}
 local number_list = {}
 local free_list = list()
 
 local function new_number()
-    local number = random(200000, 999999)
+    local number = rand.randi(200000, 999999)
     if number_list[number] then
         repeat
             number = number - 1
             if not number_list[number] then
                 return number
             end
-        until number > 200000
+        until number < 200000
         repeat
             number = number + 1
             if not number_list[number] then
                 return number
             end
-        until number < 999999
+        until number > 999999
+    else
+        return number
     end
     assert(false, "Table full")
 end
@@ -37,6 +39,7 @@ local function new_table(count)
     local t = {}
     for i = 1, count do
         local number = new_number()
+        number_list[number] = true
         t[i] = {
             agent = skynet.newservice("chess_table", number),
             number = number,
@@ -72,6 +75,7 @@ function CMD.new()
         end
     else
         local number = new_number()
+        number_list[number] = true
         local agent = skynet.newservice("chess_table", number)
         info = {
             agent = agent,
@@ -103,7 +107,8 @@ function CMD.get(number)
 end
 
 skynet.start(function()
-    randomseed(floor(skynet.time()))
+    rand = random()
+    rand.init(floor(skynet.time()))
     new_table(100)
 
 	skynet.dispatch("lua", function(session, source, command, ...)

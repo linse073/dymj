@@ -9,10 +9,9 @@ local slave_list = {}
 local CMD = {}
 
 function CMD.open(conf)
-    local db = conf.db
-    for k, v in ipairs(db.name) do
+    for k, v in ipairs(conf.name) do
         local slave = skynet.newservice("redis_slave")
-        skynet.call(slave, "lua", "open", {host=db.host, port=db.port, db=db.base+k-1}, v)
+        skynet.call(slave, "lua", "open", {host=conf.host, port=conf.port, db=conf.base+k-1}, v)
         slave_list[v] = slave
     end
 end

@@ -2,6 +2,7 @@ local skynet = require "skynet"
 local sharedata = require "sharedata"
 local sprotoloader = require "sprotoloader"
 local crit_zone = require "crit_zone"
+local random = require "random"
 
 local share = {}
 
@@ -21,6 +22,7 @@ skynet.init(function()
     -- share in current agent
     share.sproto = sprotoloader.load(1)
     share.cz = crit_zone() -- avoid dead lock, there is only one crit_zone in a agent
+    share.rand = random()
 end)
 
 return share

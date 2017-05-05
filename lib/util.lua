@@ -1,5 +1,4 @@
 local crypt = require "crypt"
-local timer = require "timer"
 
 local pairs = pairs
 local ipairs = ipairs
@@ -17,8 +16,6 @@ local os = os
 local date = os.date
 local time = os.time
 local setmetatable = setmetatable
-local math = math
-local random = math.random
 
 local util = {}
 
@@ -245,6 +242,7 @@ local timer_protocol = {
 	once_routine = "call_once_routine",
 }
 function util.timer_wrap(cmd)
+    local timer = require "timer"
     setmetatable(cmd, {
         __index = function(self, key)
             local v = timer_protocol[key]
@@ -259,10 +257,10 @@ function util.timer_wrap(cmd)
     })
 end
 
-function util.shuffle(card)
+function util.shuffle(card, rand)
     local len = #card
     for i = 1, len-1 do
-        local r = random(i+1, len)
+        local r = rand.randi(i+1, len)
         card[i], card[r] = card[r], card[i]
     end
 end

@@ -105,7 +105,7 @@ local function launch_slave(auth_handler)
 		return msg, len
 	end
 
-	skynet.dispatch("lua", function(_,_,...)
+	skynet.dispatch("lua", function(_, _, ...)
 		local ok, msg, len = pcall(auth_fd, ...)
 		if ok then
 			skynet.ret(msg, len)
@@ -156,9 +156,9 @@ local function accept(conf, s, fd, addr, log)
         if new then
             skynet.send(log, "lua", "safe_insert", {
                 account = info.uid,
-                loginType = LOGIN_TYPE_STR[info.login_type],
+                login_type = LOGIN_TYPE_STR[info.login_type],
                 server = info.server,
-                accountID = id,
+                account_id = id,
                 ip = addr,
             })
         end
@@ -184,11 +184,11 @@ local function launch_master(conf)
     local log_mgr = skynet.queryservice("log_mgr")
     local register_log = skynet.call(log_mgr, "lua", "get", "register")
 
-	skynet.dispatch("lua", function(_,source,command, ...)
+	skynet.dispatch("lua", function(_, source, command, ...)
 		skynet.ret(skynet.pack(conf.command_handler(command, ...)))
 	end)
 
-	for i=1,instance do
+	for i = 1, instance do
 		table.insert(slave, skynet.newservice(SERVICE_NAME))
 	end
 

@@ -36,7 +36,7 @@ skynet.start(function()
     skynet.setenv("last_open_time", open_time.time)
     skynet.call(status_db, "lua", "update", {key="open_time"}, {["$set"]={time=now}})
     skynet.setenv("open_time", now)
-    local shutdown_time = skynet.call(statusdb, "lua", "findOne", {key="shutdown_time"})
+    local shutdown_time = skynet.call(status_db, "lua", "findOne", {key="shutdown_time"})
     if not shutdown_time then
         shutdown_time = {time = now}
     end
@@ -49,8 +49,8 @@ skynet.start(function()
     skynet.uniqueservice("role_mgr")
     skynet.uniqueservice("offline_mgr")
     -- TODO: server shutdown time
-    skynet.uniqueservice("agent_mgr")
     skynet.uniqueservice("table_mgr")
+    skynet.uniqueservice("agent_mgr")
 
 	local loginserver = skynet.newservice("logind")
     local gate = skynet.newservice("gated", loginserver)

@@ -20,9 +20,14 @@ local function new_list()
 
     function list.push(value)
         local t = {value=value}
-        tail.next = t
+        if tail then
+            tail.next = t
+        end
         tail = t
         count = count + 1
+        if not head then
+            head = t
+        end
         return count
     end
 

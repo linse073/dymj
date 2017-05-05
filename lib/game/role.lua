@@ -11,8 +11,6 @@ local error = error
 local string = string
 local math = math
 local floor = math.floor
-local randomseed = math.randomseed
-local random = math.random
 local tonumber = tonumber
 local pcall = pcall
 
@@ -25,6 +23,7 @@ local update_user = util.update_user
 local error_code
 local base
 local cz
+local rand
 local role_mgr
 local offline_mgr
 local table_mgr
@@ -37,6 +36,7 @@ skynet.init(function()
     error_code = share.error_code
     base = share.base
     cz = share.cz
+    rand = share.rand
     role_mgr = skynet.queryservice("role_mgr")
     offline_mgr = skynet.queryservice("offline_mgr")
     table_mgr = skynet.queryservice("table_mgr")
@@ -74,7 +74,7 @@ local function get_user()
 				_id = data.id,
 				account = data.uid,
 				id = data.id,
-				sex = data.sex or random(2),
+				sex = data.sex or rand.randi(1, 2),
 				login_time = 0,
 				last_login_time = 0,
 				logout_time = 0,
@@ -110,7 +110,7 @@ function role.init()
     local server_mgr = skynet.queryservice("server_mgr")
     data.server = skynet.call(server_mgr, "lua", "get", data.serverid)
 	local now = floor(skynet.time())
-    randomseed(now)
+    rand.init(now)
 	-- you may load user data from database
 	skynet.fork(get_user)
 end

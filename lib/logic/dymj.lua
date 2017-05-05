@@ -4,7 +4,6 @@ local broadcast = require "broadcast"
 local util = require "util"
 
 local string = string
-local random = math.random
 local ipairs = ipairs
 local pairs = pairs
 local table = table
@@ -27,9 +26,10 @@ end
 
 local dymj = {}
 
-function dymj:init(number, rule)
+function dymj:init(number, rule, rand)
     self._number = number
     self._rule = rule
+    self._rand = rand
     local c, p = string.unpack(rule, "BB")
     print("game rule:", c, p)
     if c then
@@ -41,7 +41,7 @@ function dymj:init(number, rule)
         self._limit50 = true
     end
     self._magic_card = 45
-    self._banker = random(base.MJ_FOUR)
+    self._banker = rand.randi(1, base.MJ_FOUR)
     self._status = base.CHESS_STATUS_READY
 end
 
@@ -717,7 +717,7 @@ function dymj:start()
         41,43,45,
     }
     self._card = card
-    util.shuffle(card)
+    util.shuffle(card, self._rand)
     self._status = base.CHESS_STATUS_START
     self._left = #card
     self._out_card = 0

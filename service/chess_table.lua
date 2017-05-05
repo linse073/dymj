@@ -1,6 +1,7 @@
 local skynet = require "skynet"
 local util = require "util"
 local share = require "share"
+local random = require "random"
 
 local assert = assert
 local pcall = pcall
@@ -8,10 +9,10 @@ local string = string
 local setmetatable = setmetatable
 local math = math
 local floor = math.floor
-local randomseed = math.randomseed
 
 local number = tonumber(...)
 local cz
+local rand
 
 local CMD = {}
 util.timer_wrap(CMD)
@@ -20,7 +21,7 @@ local logic
 
 function CMD.init(name, rule, info, agent)
     logic = setmetatable({}, require(name))
-    logic:init(number, rule)
+    logic:init(number, rule, rand)
     return logic:enter(info, agent)
 end
 
@@ -34,8 +35,9 @@ function CMD.exit()
 end
 
 skynet.start(function()
-    randomseed(floor(skynet.time()))
     cz = share.cz
+    rand = share.rand
+    rand.init(floor(skynet.time()))
 
 	skynet.dispatch("lua", function(session, source, command, ...)
 		local f = CMD[command]
