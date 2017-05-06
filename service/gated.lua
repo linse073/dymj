@@ -70,7 +70,7 @@ function server.kick_handler(id)
     skynet.error(string.format("kick user %d.", id))
 	local u = users[id]
 	if u then
-		local username = msgserver.username(u.uid, u.subid, u.server)
+		local username = msgserver.username(u.id, u.subid, u.server)
 		assert(u.username == username)
         skynet.call(u.agent, "lua", "logout")
 	end
