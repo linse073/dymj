@@ -30,19 +30,20 @@ function dymj:init(number, rule, rand)
     self._number = number
     self._rule = rule
     self._rand = rand
-    local c, p = string.unpack(rule, "BB")
-    print("game rule:", c, p)
-    if c then
-        self._total_count = 16
-    else
+    local p, c, l = string.unpack("BBB", rule)
+    if c == 1 then
         self._total_count = 8
+    else
+        self._total_count = 16
     end
-    if p then
+    if l == 1 then
         self._limit50 = true
     end
     self._magic_card = 45
     self._banker = rand.randi(1, base.MJ_FOUR)
     self._status = base.CHESS_STATUS_READY
+    self._role = {}
+    self._id = {}
 end
 
 function dymj:destroy()
@@ -57,7 +58,7 @@ function dymj:enter(info, agent)
     info.score = 0
     info.ready = false
     role[index] = info
-    self._id[id] = info
+    self._id[info.id] = info
     return "update_user", {
         name = "dymj",
         number = self._number,
@@ -79,7 +80,7 @@ function dymj:join(name, info, agent)
     if #role >= base.MJ_FOUR then
         error{code = error_code.CHESS_ROLE_FULL}
     end
-    local i = self._id[id]
+    local i = self._id[info.id]
     if i then
         error{code = error_code.ALREAD_IN_CHESS}
     end
