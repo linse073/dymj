@@ -56,10 +56,7 @@ function CMD.open(conf, gatename)
     status_key = gen_key(conf.serverid, "status")
     status = skynet.call(status_db, "lua", "findOne", {key=status_key})
     if not status then
-        status = {
-            key = status_key,
-            accountid = 1,
-        }
+        status = {accountid = 1}
     end
     local server_mgr = skynet.queryservice("server_mgr")
     skynet.call(server_mgr, "lua", "register", conf.serverid, skynet.self())
@@ -73,7 +70,7 @@ end
 function CMD.gen_account(info)
     local new, account, errmsg = cs(check_account, info)
     if new then
-		skynet.call(status_db, "lua", "update", {key=status_key}, {["$set"]={accountid=status.accountid}})
+		skynet.call(status_db, "lua", "update", {key=status_key}, {["$set"]={accountid=status.accountid}}, true)
     end
     return new, account, errmsg
 end

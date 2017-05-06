@@ -32,9 +32,9 @@ skynet.start(function()
     if not open_time then
         open_time = {time = now}
     end
-    skynet.call(status_db, "lua", "update", {key="last_open_time"}, {["$set"]={time=open_time.time}})
+    skynet.call(status_db, "lua", "update", {key="last_open_time"}, {["$set"]={time=open_time.time}}, true)
     skynet.setenv("last_open_time", open_time.time)
-    skynet.call(status_db, "lua", "update", {key="open_time"}, {["$set"]={time=now}})
+    skynet.call(status_db, "lua", "update", {key="open_time"}, {["$set"]={time=now}}, true)
     skynet.setenv("open_time", now)
     local shutdown_time = skynet.call(status_db, "lua", "findOne", {key="shutdown_time"})
     if not shutdown_time then
