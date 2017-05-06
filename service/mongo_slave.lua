@@ -8,7 +8,7 @@ local CMD = {}
 
 function CMD.open(conf, name)
     local d = mongo.client({host=conf.host})
-    util.cmd_wrap(CMD, d.log[name])
+    util.cmd_wrap(CMD, d.game[name])
 end
 
 skynet.start(function()
