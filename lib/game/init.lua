@@ -24,7 +24,7 @@ function game.iter(fname, ...)
 end
 
 function game.riter(fname, ...)
-    for i = #module, 1 do
+    for i = #module, 1, -1 do
         local v = module[i]
 		local func = v[fname]
 		if func then
