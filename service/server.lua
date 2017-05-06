@@ -53,15 +53,16 @@ function CMD.open(conf, gatename)
     local master = skynet.queryservice("mongo_master")
     status_db = skynet.call(master, "lua", "get", "status")
     account_db = skynet.call(master, "lua", "get", "account")
-    status_key = gen_key(config.serverid, "status")
+    status_key = gen_key(conf.serverid, "status")
     status = skynet.call(status_db, "lua", "findOne", {key=status_key})
     if not status then
         status = {
+            key = status_key,
             accountid = 1,
         }
     end
     local server_mgr = skynet.queryservice("server_mgr")
-    skynet.call(server_mgr, "lua", "register", config.serverid, skynet.self())
+    skynet.call(server_mgr, "lua", "register", conf.serverid, skynet.self())
     skynet.call(loginservice, "lua", "register_server", conf, gatename, skynet.self())
 end
 
