@@ -41,13 +41,14 @@ skynet.start(function()
 
 	skynet.dispatch("lua", function(session, source, command, ...)
 		local f = CMD[command]
+        local ok, rmsg, info
         if f then
-            skynet.retpack(f(...))
+            ok, rmsg, info = pcall(f, ...)
         else
             f = assert(logic[command], string.format("No logic procedure %s.", command))
-            local ok, rmsg, info = pcall(f, logic, ...)
-            cz.over()
-            skynet.retpack(ok, rmsg, info)
+            ok, rmsg, info = pcall(f, logic, ...)
         end
+        cz.over()
+        skynet.retpack(ok, rmsg, info)
 	end)
 end)

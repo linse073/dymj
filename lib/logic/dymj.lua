@@ -2,6 +2,7 @@ local skynet = require "skynet"
 local share = require "share"
 local broadcast = require "broadcast"
 local util = require "util"
+local func = require "func"
 
 local string = string
 local ipairs = ipairs
@@ -59,14 +60,14 @@ function dymj:enter(info, agent)
     info.ready = false
     role[index] = info
     self._id[info.id] = info
-    return "update_user", {
+    return func.update_msg({
         name = "dymj",
         number = self._number,
         rule = self._rule,
         banker = self._banker,
         user = role,
         status = self._status,
-    }
+    })
 end
 
 function dymj:join(name, info, agent)
@@ -85,7 +86,9 @@ function dymj:join(name, info, agent)
         error{code = error_code.ALREAD_IN_CHESS}
     end
     local rmsg, rinfo = self:enter(info, agent)
-    broadcast("update_user", {user={info}}, role, info.id)
+    broadcast(func.update_msg({
+        user = {info},
+    }), role, info.id)
     return rmsg, rinfo
 end
 
@@ -119,6 +122,7 @@ function dymj:ready(id, msg)
     local chess = {user=user}
     if self:is_all_ready() then
         self:start()
+        -- self
         chess.status = self._status
         chess.left = self._left
         chess.deal_index = self._deal_index
@@ -129,9 +133,25 @@ function dymj:ready(id, msg)
             end
         end
         user.own_card = own_card
+        -- other
+        for k, v in ipairs(self._role) do
+            if v.id ~= id then
+                local card = {}
+                for k1, v1 in pairs(v.type_card) do
+                    for i = 1, v1 do
+                        card[#card+1] = k1
+                    end
+                end
+                skynet.send(v.agent, "lua", "notify", func.update_msg({
+                    status = self._status,
+                    left = self._left,
+                    deal_index = self._deal_index,
+                    user = {user, {index=k, own_card=card}},
+                }))
+            end
+        end
     end
-    broadcast("update_user", {chess=chess}, self._role, id)
-    return "update_user", rmsg
+    return func.update_msg(chess)
 end
 
 local CHI_RULE = {
@@ -217,22 +237,28 @@ function dymj:out_card(id, msg)
         local deal_index
         if not self:analyze(card, id) then
             deal_index = self._deal_index%base.MJ_FOUR+1
-            local c = self:deal(role[deal_index])
-            skynet.send(v.agent, "lua", "notify", "update_user", {chess={
-                user={
+            local r = role[deal_index]
+            local c = self:deal(r)
+            skynet.send(r.agent, "lua", "notify", func.update_msg({
+                user = {
                     {index=info.index, out_card=card},
                     {index=deal_index, own_card={c}},
                 },
                 deal_index=deal_index,
-            }})
+            }))
         end
-        local rmsg = {chess={user={{index=info.index, out_card=card}}, deal_index=deal_index}}
+        local rmsg, rinfo = func.update_msg({
+            user = {
+                {index=info.index, out_card=card},
+            },
+            deal_index = deal_index,
+        })
         for k, v in ipairs(role) do
             if v.id ~= id and v.index ~= deal_index then
-                skynet.send(v.agent, "lua", "notify", "update_user", rmsg)
+                skynet.send(v.agent, "lua", "notify", rmsg, rinfo)
             end
         end
-        return "update_user", rmsg
+        return rmsg, rinfo
     end
 end
 
@@ -422,9 +448,11 @@ function dymj:hu(id, msg)
         }
     end
     user[info.index].action = base.MJ_OP_HU
-    local rmsg = {chess={user=user, status=self._status, count=self._count, banker=info.index}}
-    broadcast("update_user", rmsg, self._role, id)
-    return "update_user", rmsg
+    local rmsg, rinfo = func.update_msg({
+        user=user, status=self._status, count=self._count, banker=info.index,
+    })
+    broadcast(rmsg, rinfo, self._role, id)
+    return rmsg, rinfo
 end
 
 function dymj:check_prior(index, op)
@@ -473,10 +501,11 @@ function dymj:chi(id, msg)
     end
     if self:check_prior(info.index, base.MJ_OP_CHI) then
         info.action[base.MJ_OP_CHI] = card
-        return "update_user", {chess={user={{
-            index = info.index,
-            action = base.MJ_OP_CHI,
-        }}}}
+        return func.update_msg({
+            user = {
+                {index=info.index, action=base.MJ_OP_CHI},
+            },
+        })
     else
         for i = card, card+2 do
             if i ~= self._out_card then
@@ -488,12 +517,13 @@ function dymj:chi(id, msg)
             card = card,
         }
         info.weave_card[#info.weave_card+1] = weave
-        local rmsg = {chess={user={{
-            index = info.index,
-            weave_card = {weave},
-        }}}}
-        broadcast("update_user", rmsg, self._role, id)
-        return "update_user", rmsg
+        local rmsg, rinfo = func.update_msg({
+            user = {
+                {index=info.index, weave_card={weave}},
+            },
+        })
+        broadcast(rmsg, rinfo, self._role, id)
+        return rmsg, rinfo
     end
 end
 
@@ -513,12 +543,13 @@ function dymj:peng(id, msg)
         card = out_card,
     }
     info.weave_card[#info.weave_card+1] = weave
-    local rmsg = {chess={user={{
-        index = info.index,
-        weave_card = {weave},
-    }}}}
-    broadcast("update_user", rmsg, self._role, id)
-    return "update_user", rmsg
+    local rmsg, rinfo = func.update_msg({
+        user = {
+            {index=info.index, weave_card={weave}},
+        },
+    })
+    broadcast(rmsg, rinfo, self._role, id)
+    return rmsg, rinfo
 end
 
 function dymj:gang(id, msg)
@@ -539,22 +570,18 @@ function dymj:gang(id, msg)
     info.weave_card[#info.weave_card+1] = weave
     info.gang_count = info.gang_count + 1
     local c = self:deal(info)
-    local rmsg = {chess={
-        user={{
-            index = info.index,
-            weave_card = {weave},
-        }},
+    broadcast(func.update_msg({
+        user = {
+            {index=info.index, weave_card={weave}},
+        },
         deal_index = info.index,
-    }}
-    broadcast("update_user", rmsg, self._role, id)
-    return "update_user", {chess={
-        user={{
-            index = info.index,
-            weave_card = {weave},
-            own_card = {c},
-        }},
+    }), self._role, id)
+    return func.update_msg({
+        user = {
+            {index=info.index, weave_card={weave}, own_card={c}},
+        },
         deal_index = info.index,
-    }}
+    })
 end
 
 function dymj:hide_gang(id, msg)
@@ -575,25 +602,22 @@ function dymj:hide_gang(id, msg)
     info.weave_card[#info.weave_card+1] = weave
     info.gang_count = info.gang_count + 1
     local c = self:deal(info)
-    local rmsg = {chess={
-        user={{
-            index = info.index,
-            weave_card = {{
-                op = base.MJ_OP_HIDE_GANG,
-                card = 0,
-            }},
-        }},
+    local ow = {
+        op = base.MJ_OP_HIDE_GANG,
+        card = 0,
+    }
+    broadcast(func.update_msg({
+        user = {
+            {index=info.index, weave_card={ow}},
+        },
         deal_index = info.index,
-    }}
-    broadcast("update_user", rmsg, self._role, id)
-    return "update_user", {chess={
-        user={{
-            index = info.index,
-            weave_card = {weave},
-            own_card = {c},
-        }},
+    }), self._role, id)
+    return func.update_msg({
+        user = {
+            {index=info.index, weave_card={weave}, own_card={c}},
+        },
         deal_index = info.index,
-    }}
+    })
 end
 
 function dymj:pass(id, msg)
@@ -621,37 +645,46 @@ function dymj:pass(id, msg)
                     card = card,
                 }
                 v.weave_card[#v.weave_card+1] = weave
-                local rmsg = {chess={user={{
-                    index = v.index,
-                    weave_card = {weave},
-                }}}}
-                broadcast("update_user", rmsg, role, id)
-                return "update_user", {chess={user={
-                    {index=v.index, weave_card={weave}},
-                    {index=info.index, action=base.MJ_OP_PASS},
-                }}}
+                broadcast(func.update_msg({
+                    user = {
+                        {index=v.index, weave_card={weave}},
+                    },
+                }), role, id)
+                return func.update_msg({
+                    user = {
+                        {index=v.index, weave_card={weave}},
+                        {index=info.index, action=base.MJ_OP_PASS},
+                    },
+                })
             end
         end
     end
     local deal_index
     if all_pass then
         deal_index = self._deal_index%base.MJ_FOUR+1
-        local c = self:deal(role[deal_index])
-        skynet.send(v.agent, "lua", "notify", "update_user", {chess={
-            user={{index=deal_index, own_card={c}}},
-            deal_index=deal_index,
-        }})
-        local rmsg = {chess={deal_index=deal_index}}
+        local r = role[deal_index]
+        local c = self:deal(r)
+        skynet.send(r.agent, "lua", "notify", func.update_msg({
+            user = {
+                {index=deal_index, own_card={c}},
+            },
+            deal_index = deal_index,
+        }))
+        local rmsg, rinfo = func.update_msg({
+            deal_index = deal_index,
+        })
         for k, v in ipairs(role) do
             if v.id ~= id and v.index ~= deal_index then
-                skynet.send(v.agent, "lua", "notify", "update_user", rmsg)
+                skynet.send(v.agent, "lua", "notify", rmsg, rinfo)
             end
         end
     end
-    return "update_user", {chess={
-        user={{index=info.index, action=base.MJ_OP_PASS}},
-        deal_index=deal_index,
-    }}
+    return func.update_msg({
+        user = {
+            {index=info.index, action=base.MJ_OP_PASS},
+        },
+        deal_index = deal_index,
+    })
 end
 
 function dymj:conclude(id, msg)
@@ -680,9 +713,11 @@ function dymj:conclude(id, msg)
             ready = false,
         }
     end
-    local rmsg = {chess={user=user, status=self._status, count=self._count}}
-    broadcast("update_user", rmsg, self._role, id)
-    return "update_user", rmsg
+    local rmsg, rinfo = func.update_msg({
+        user=user, status=self._status, count=self._count,
+    })
+    broadcast(rmsg, rinfo, self._role, id)
+    return rmsg, rinfo
 end
 
 function dymj:deal(info)
