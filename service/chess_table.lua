@@ -2,6 +2,7 @@ local skynet = require "skynet"
 local util = require "util"
 local share = require "share"
 local random = require "random"
+local func = require "func"
 
 local assert = assert
 local pcall = pcall
@@ -49,6 +50,6 @@ skynet.start(function()
             ok, rmsg, info = pcall(f, logic, ...)
         end
         cz.over()
-        skynet.retpack(ok, rmsg, info)
+        skynet.retpack(func.return_msg(ok, rmsg, info))
 	end)
 end)

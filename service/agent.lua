@@ -3,6 +3,7 @@ local game = require "game"
 local util = require "util"
 local share = require "share"
 local notify = require "notify"
+local func = require "func"
 
 local assert = assert
 local pcall = pcall
@@ -107,23 +108,14 @@ skynet.start(function()
             local f = assert(proc[msgname], string.format("No protocol procedure %s.", msgname))
             ok, rmsg, info = pcall(f, arg)
             cz.over()
+            rmsg, info = func.return_msg(ok, rmsg, info)
         else
             local data = game.data
             if data and data.table then
-                ok, rmsg, info = skynet.call(data.table, "lua", msgname, data.id, arg)
+                rmsg, info = skynet.call(data.table, "lua", msgname, data.id, arg)
             else
-                ok, rmsg, info = true, "error_code", {code = error_code.NOT_JOIN_CHESS}
+                rmsg, info = "error_code", {code = error_code.NOT_JOIN_CHESS}
             end
-        end
-        if not ok then
-            if type(rmsg) == "string" then
-                skynet.error(rmsg)
-                info = {code = error_code.INTERNAL_ERROR}
-            else
-                assert(type(rmsg) == "table")
-                info = rmsg
-            end
-            rmsg = "error_code"
         end
         if sproto:exist_type(rmsg) then
             info = sproto:pencode(rmsg, info)

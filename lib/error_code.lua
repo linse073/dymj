@@ -51,9 +51,8 @@ for k, v in pairs(type_code) do
     table.sort(t)
     for k1, v1 in ipairs(t) do
         local i = k + k1
-        local s = v[v1]
-        code[s] = i
-        code_string[i] = s
+        code[v1] = i
+        code_string[i] = v[v1]
     end
 end
 

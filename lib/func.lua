@@ -6,11 +6,13 @@ local assert = assert
 local ipairs = ipairs
 local string = string
 local base
+local error_code
 local day_second = 24 * 60 * 60
 local start_routine_time = tonumber(skynet.getenv("start_routine_time"))
 
 skynet.init(function()
     base = sharedata.query("base")
+    error_code = sharedata.query("error_code")
 end)
 
 local func = {}
@@ -30,6 +32,20 @@ function func.update_msg(chess, user)
         user = user,
         chess = chess,
     }}
+end
+
+function func.return_msg(ok, msg, info)
+    if not ok then
+        if type(msg) == "string" then
+            skynet.error(msg)
+            info = {code = error_code.INTERNAL_ERROR}
+        else
+            assert(type(msg) == "table")
+            info = msg
+        end
+        msg = "error_code"
+    end
+    return msg, info
 end
 
 return func
