@@ -45,6 +45,7 @@ function dymj:init(number, rule, rand)
     self._status = base.CHESS_STATUS_READY
     self._role = {}
     self._id = {}
+    self._count = 0
 end
 
 function dymj:destroy()
