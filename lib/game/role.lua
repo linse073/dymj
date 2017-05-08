@@ -156,6 +156,13 @@ function role.add_room_card(p, num)
     p.user.room_card = user.room_card
 end
 
+function role.leave()
+    local data = game.data
+    assert(data.table, string.format("user %d not in chess.", data.id))
+    skynet.error(string.format("user %d leave chess.", data.id))
+    data.table = nil
+end
+
 -------------------protocol process--------------------------
 
 function proc.notify_info(msg)
@@ -248,20 +255,6 @@ function proc.join(msg)
     local rmsg, info = skynet.call(table, "lua", "join", msg.name, data.info, skynet.self())
     if rmsg == "update_user" then
         data.table = table
-    end
-    cz.finish()
-    return rmsg, info
-end
-
-function proc.leave(msg)
-    local data = game.data
-    cz.start()
-    if not data.table then
-        error{code = error_code.NOT_IN_CHESS}
-    end
-    local ok, rmsg, info = skynet.call(data.table, "lua", "leave", data.id)
-    if ok then
-        data.table = nil
     end
     cz.finish()
     return rmsg, info

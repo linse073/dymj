@@ -37,7 +37,7 @@ local type_code = {
         ALREADY_PASS="已经过了",
         CONCLUDE_CARD_LIMIT="尚未流局",
         OUT_CARD_LIMIT="出牌限制",
-        ALREADY_RESPONSE="已经回答",
+        ALREADY_REPLY="已经回答",
     },
 }
 

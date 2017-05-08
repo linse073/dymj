@@ -66,6 +66,7 @@
     left 6 : integer
     deal_index 7 : integer
     count 8 : integer
+    pause 9 : boolean
 }
 
 .user_all {

@@ -26,10 +26,6 @@ function CMD.init(name, rule, info, agent)
     return logic:enter(info, agent, 1)
 end
 
-function CMD.leave(id)
-    return logic:leave(id)
-end
-
 function CMD.destroy()
     logic:destroy()
     logic = nil

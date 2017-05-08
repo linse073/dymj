@@ -13,12 +13,14 @@ local cz
 local base
 local error_code
 local mj_invalid_card
+local table_mgr
 
 skynet.init(function()
     cz = share.cz
     base = share.base
     error_code = share.error_code
     mj_invalid_card = share.mj_invalid_card
+    table_mgr = skynet.queryservice("table_mgr")
 end)
 
 local function valid_card(c)
@@ -49,7 +51,22 @@ function dymj:init(number, rule, rand)
 end
 
 function dymj:destroy()
+end
 
+local function finish()
+    skynet.call(table_mgr, "lua", "free", skynet.self())
+end
+function dymj:finish()
+    local role = self._role
+    self._role = {}
+    self._id = {}
+    for i = 1, base.MJ_FOUR do
+        local v = role[i]
+        if v then
+            skynet.call(v.agent, "lua", "action", "role", "leave")
+        end
+    end
+    skynet.fork(finish)
 end
 
 function dymj:enter(info, agent, index)
@@ -105,31 +122,40 @@ function dymj:join(name, info, agent)
     return rmsg, rinfo
 end
 
-function dymj:leave(id)
+function dymj:leave(id, msg)
     local info = self._id[id]
     if not info then
         error{code = error_code.NOT_IN_CHESS}
     end
     local role = self._role
     if info.index == 1 or self._left then -- room master or already start
+        for i = 1, base.MJ_FOUR do
+            local v = role[i]
+            if v then
+                v.agree = nil
+            end
+        end
+        self._pause = false
+        info.agree = true
         local rmsg, rinfo = func.update_msg({
             user = {
-                {index=info.index, action=base.MJ_OP_CLOSE},
+                {index=info.index, action=base.MJ_OP_CLOSE, agree=true},
             },
+            pause = self._pause,
         })
         broadcast(rmsg, rinfo, role, id)
-        return false, rmsg, rinfo
+        return rmsg, rinfo
     else
         self._id[id] = nil
         role[info.index] = nil
-        broadcast(func.update_msg({
+        skynet.call(info.agent, "lua", "action", "role", "leave")
+        local rmsg, rinfo = func.update_msg({
             user = {
                 {index=info.index, action=base.MJ_OP_LEAVE},
             },
-        }), role)
-        return true, func.update_msg({
-            name = "",
         })
+        broadcast(rmsg, rinfo, role)
+        return rmsg, rinfo
     end
 end
 
@@ -137,9 +163,11 @@ function dymj:is_all_agree()
     local role = self._role
     for i = 1, base.MJ_FOUR do
         local v = role[i]
-        if v then
+        if v and not v.agree then
+            return false
         end
     end
+    return true
 end
 
 function dymj:reply(id, msg)
@@ -148,9 +176,29 @@ function dymj:reply(id, msg)
         error{code = error_code.NOT_IN_CHESS}
     end
     if info.agree then
-        error{code = error_code.ALREADY_RESPONSE}
+        error{code = error_code.ALREADY_REPLY}
     end
     info.agree = msg.agree
+    local chess = {
+        user = {
+            {index=info.index, agree=info.agree},
+        },
+    }
+    local rmsg, rinfo = func.update_msg(chess)
+    if info.agree then
+        if self:is_all_agree() then
+            self._status = base.CHESS_STATUS_FINISH
+            chess.status = self._status
+        end
+    else
+        self._pause = false
+        chess.pause = self._pause
+    end
+    broadcast(rmsg, rinfo, self._role, id)
+    if self._status == base.CHESS_STATUS_FINISH then
+        self:finish()
+    end
+    return rmsg, rinfo
 end
 
 function dymj:is_all_ready()
@@ -489,8 +537,12 @@ function dymj:hu(id, msg)
             mul = mul * 2^(info.out_magic+1)
         end
     end
-    self._status = base.CHESS_STATUS_READY
     self._count = self._count + 1
+    if self._count == self._total_count then
+        self._status = base.CHESS_STATUS_FINISH
+    else
+        self._status = base.CHESS_STATUS_READY
+    end
     local user = {}
     local role = self._role
     for k, v in ipairs(role) do
@@ -519,6 +571,9 @@ function dymj:hu(id, msg)
         user=user, status=self._status, count=self._count, banker=info.index,
     })
     broadcast(rmsg, rinfo, role, id)
+    if self._status == base.CHESS_STATUS_FINISH then
+        self:finish()
+    end
     return rmsg, rinfo
 end
 
@@ -763,8 +818,12 @@ function dymj:conclude(id, msg)
     if self._left > 20 then
         error{code = error_code.CONCLUDE_CARD_LIMIT}
     end
-    self._status = base.CHESS_STATUS_READY
     self._count = self._count + 1
+    if self._count == self._total_count then
+        self._status = base.CHESS_STATUS_FINISH
+    else
+        self._status = base.CHESS_STATUS_READY
+    end
     local user = {}
     local role = self._role
     for k, v in ipairs(role) do
@@ -786,6 +845,9 @@ function dymj:conclude(id, msg)
         user=user, status=self._status, count=self._count,
     })
     broadcast(rmsg, rinfo, role, id)
+    if self._status == base.CHESS_STATUS_FINISH then
+        self:finish()
+    end
     return rmsg, rinfo
 end
 
