@@ -67,6 +67,7 @@ function dymj:enter(info, agent)
         banker = self._banker,
         user = role,
         status = self._status,
+        count = self._count,
     })
 end
 
