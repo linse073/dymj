@@ -253,4 +253,18 @@ function proc.join(msg)
     return rmsg, info
 end
 
+function proc.leave(msg)
+    local data = game.data
+    cz.start()
+    if not data.table then
+        error{code = error_code.NOT_IN_CHESS}
+    end
+    local ok, rmsg, info = skynet.call(data.table, "lua", "leave", data.id)
+    if ok then
+        data.table = nil
+    end
+    cz.finish()
+    return rmsg, info
+end
+
 return role

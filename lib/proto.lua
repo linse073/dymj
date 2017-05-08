@@ -44,6 +44,8 @@ local type_msg = {
         "hide_gang",
         "pass",
         "conclude",
+        "leave",
+        "reply",
     },
 }
 

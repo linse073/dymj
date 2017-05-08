@@ -53,6 +53,7 @@
     out_card 10 : integer
     weave_card 11 : *weave_card
     action 12 : integer
+    agree 13 : boolean
 }
 
 .chess_info {
@@ -126,4 +127,8 @@
 
 .chi {
     card 0 : integer
+}
+
+.reply {
+    agree 0 : boolean
 }

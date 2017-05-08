@@ -105,6 +105,54 @@ function dymj:join(name, info, agent)
     return rmsg, rinfo
 end
 
+function dymj:leave(id)
+    local info = self._id[id]
+    if not info then
+        error{code = error_code.NOT_IN_CHESS}
+    end
+    local role = self._role
+    if info.index == 1 or self._left then -- room master or already start
+        local rmsg, rinfo = func.update_msg({
+            user = {
+                {index=info.index, action=base.MJ_OP_CLOSE},
+            },
+        })
+        broadcast(rmsg, rinfo, role, id)
+        return false, rmsg, rinfo
+    else
+        self._id[id] = nil
+        role[info.index] = nil
+        broadcast(func.update_msg({
+            user = {
+                {index=info.index, action=base.MJ_OP_LEAVE},
+            },
+        }), role)
+        return true, func.update_msg({
+            name = "",
+        })
+    end
+end
+
+function dymj:is_all_agree()
+    local role = self._role
+    for i = 1, base.MJ_FOUR do
+        local v = role[i]
+        if v then
+        end
+    end
+end
+
+function dymj:reply(id, msg)
+    local info = self._id[id]
+    if not info then
+        error{code = error_code.NOT_IN_CHESS}
+    end
+    if info.agree then
+        error{code = error_code.ALREADY_RESPONSE}
+    end
+    info.agree = msg.agree
+end
+
 function dymj:is_all_ready()
     local role = self._role
     for i = 1, base.MJ_FOUR do
