@@ -52,21 +52,25 @@ function dymj:destroy()
 
 end
 
-function dymj:enter(info, agent)
-    info.agent = agent
+function dymj:enter(info, agent, index)
     local role = self._role
-    local index = #role + 1
+    assert(not role[index], string.format("Seat %d already has role.", index))
+    info.agent = agent
     info.index = index
     info.score = 0
     info.ready = false
     role[index] = info
     self._id[info.id] = info
+    local user = {}
+    for i = 1, base.MJ_FOUR do
+        user[#user+1] = role[i] -- role[i] can be nil
+    end
     return func.update_msg({
         name = "dymj",
         number = self._number,
         rule = self._rule,
         banker = self._banker,
-        user = role,
+        user = user,
         status = self._status,
         count = self._count,
     })
@@ -80,14 +84,21 @@ function dymj:join(name, info, agent)
         error{code = error_code.ERROR_CHESS_STATUS}
     end
     local role = self._role
-    if #role >= base.MJ_FOUR then
+    local index
+    for i = 1, base.MJ_FOUR do
+        if not role[i] then
+            index = i
+            break
+        end
+    end
+    if not index then
         error{code = error_code.CHESS_ROLE_FULL}
     end
     local i = self._id[info.id]
     if i then
         error{code = error_code.ALREAD_IN_CHESS}
     end
-    local rmsg, rinfo = self:enter(info, agent)
+    local rmsg, rinfo = self:enter(info, agent, index)
     broadcast(func.update_msg({
         user = {info},
     }), role, info.id)
@@ -95,8 +106,10 @@ function dymj:join(name, info, agent)
 end
 
 function dymj:is_all_ready()
-    for k, v in ipairs(self._role) do
-        if not v.ready then
+    local role = self._role
+    for i = 1, base.MJ_FOUR do
+        local v = role[i]
+        if not v or not v.ready then
             return false
         end
     end
@@ -122,6 +135,7 @@ function dymj:ready(id, msg)
     info.ready = true
     local user = {index=info.index, ready=true}
     local chess = {user=user}
+    local rmsg, rinfo = func.update_msg(chess)
     if self:is_all_ready() then
         self:start()
         -- self
@@ -152,8 +166,10 @@ function dymj:ready(id, msg)
                 }))
             end
         end
+    else
+        broadcast(rmsg, rinfo, self._role, id)
     end
-    return func.update_msg(chess)
+    return rmsg, rinfo
 end
 
 local CHI_RULE = {
@@ -226,7 +242,7 @@ function dymj:out_card(id, msg)
         error{code = error_code.OUT_CARD_LIMIT}
     end
     if self._left <= 20 then
-        self:conclude(id)
+        return self:conclude(id)
     else
         type_card[card] = type_card[card] - 1
         info.gang_count = 0
@@ -428,7 +444,8 @@ function dymj:hu(id, msg)
     self._status = base.CHESS_STATUS_READY
     self._count = self._count + 1
     local user = {}
-    for k, v in ipairs(self._role) do
+    local role = self._role
+    for k, v in ipairs(role) do
         v.ready = false
         if k == info.index then
             v.score = v.score + mul * 3
@@ -453,18 +470,19 @@ function dymj:hu(id, msg)
     local rmsg, rinfo = func.update_msg({
         user=user, status=self._status, count=self._count, banker=info.index,
     })
-    broadcast(rmsg, rinfo, self._role, id)
+    broadcast(rmsg, rinfo, role, id)
     return rmsg, rinfo
 end
 
 function dymj:check_prior(index, op)
     local front = true
+    local role = self._role
     for i = 1, base.MJ_FOUR-1 do
         local n = (self._deal_index+i-1)%base.MJ_FOUR+1
         if n == index then
             front = false
         else
-            local other = self._role[n]
+            local other = role[n]
             if not other.pass then
                 for k, v in ipairs(other.respond) do
                     if v and (k>op or (k==op and front)) then
@@ -700,7 +718,8 @@ function dymj:conclude(id, msg)
     self._status = base.CHESS_STATUS_READY
     self._count = self._count + 1
     local user = {}
-    for k, v in ipairs(self._role) do
+    local role = self._role
+    for k, v in ipairs(role) do
         v.ready = false
         local own_card = {}
         for k1, v1 in pairs(v.type_card) do
@@ -718,7 +737,7 @@ function dymj:conclude(id, msg)
     local rmsg, rinfo = func.update_msg({
         user=user, status=self._status, count=self._count,
     })
-    broadcast(rmsg, rinfo, self._role, id)
+    broadcast(rmsg, rinfo, role, id)
     return rmsg, rinfo
 end
 

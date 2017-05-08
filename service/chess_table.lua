@@ -23,7 +23,7 @@ local logic
 function CMD.init(name, rule, info, agent)
     logic = setmetatable({}, require(name))
     logic:init(number, rule, rand)
-    return logic:enter(info, agent)
+    return logic:enter(info, agent, 1)
 end
 
 function CMD.destroy()
