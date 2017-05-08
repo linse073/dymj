@@ -37,7 +37,7 @@ local type_msg = {
         "join",
     },
 
-    [100000] = {
+    [20000] = {
         "ready",
         "out_card",
         "hu",

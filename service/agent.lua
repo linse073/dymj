@@ -23,7 +23,7 @@ local sproto
 local error_code
 local cz
 
-local LOGIC_MSG_BEGIN = 100000
+local LOGIC_MSG_BEGIN = 20000
 
 local CMD = {}
 util.timer_wrap(CMD)
