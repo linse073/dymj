@@ -35,6 +35,9 @@ local type_msg = {
     [2300] = {
         "new_chess",
         "join",
+    },
+
+    [100000] = {
         "ready",
         "out_card",
         "hu",
