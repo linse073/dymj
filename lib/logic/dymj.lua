@@ -13,14 +13,12 @@ local cz
 local base
 local error_code
 local mj_invalid_card
-local table_mgr
 
 skynet.init(function()
     cz = share.cz
     base = share.base
     error_code = share.error_code
     mj_invalid_card = share.mj_invalid_card
-    table_mgr = skynet.queryservice("table_mgr")
 end)
 
 local function valid_card(c)
@@ -54,6 +52,7 @@ function dymj:destroy()
 end
 
 local function finish()
+    local table_mgr = skynet.queryservice("table_mgr")
     skynet.call(table_mgr, "lua", "free", skynet.self())
 end
 function dymj:finish()
