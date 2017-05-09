@@ -61,17 +61,17 @@
     number 1 : integer
     rule 2 : string
     banker 3 : integer
-    user 4 : *chess_user
-    status 5 : integer
-    left 6 : integer
-    deal_index 7 : integer
-    count 8 : integer
-    pause 9 : boolean
+    status 4 : integer
+    left 5 : integer
+    deal_index 6 : integer
+    count 7 : integer
+    pause 8 : boolean
 }
 
 .user_all {
     user 0 : user_info
-    chess 1 : chess_info
+    chess_info 1 : chess_info
+    chess_user 2 : *chess_user
 }
 
 .info_all {
