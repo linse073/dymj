@@ -30,8 +30,10 @@ end
 function func.update_msg(chess_user, chess_info, user)
     return "update_user", {update={
         user = user,
-        chess_info = chess_info,
-        chess_user = chess_user,
+        chess = {
+            info = chess_info,
+            user = chess_user,
+        },
     }}
 end
 

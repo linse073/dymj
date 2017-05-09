@@ -22,6 +22,9 @@ local type_msg = {
         "update_other",
         "get_role",
         "role_info",
+        "chess_info",
+        "chess_user",
+        "chess_all",
     },
 
     [2100] = {

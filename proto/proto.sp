@@ -68,10 +68,14 @@
     pause 8 : boolean
 }
 
+.chess_all {
+    info 0 : chess_info
+    user 1 : *chess_user
+}
+
 .user_all {
     user 0 : user_info
-    chess_info 1 : chess_info
-    chess_user 2 : *chess_user
+    chess 1 : chess_all
 }
 
 .info_all {
