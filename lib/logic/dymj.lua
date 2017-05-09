@@ -292,14 +292,14 @@ function dymj:analyze(card, id)
             else
                 v.pass = true
             end
-            local action = v.action
-            action[base.MJ_OP_CHI], action[base.MJ_OP_PENG], action[base.MJ_OP_GANG] = 0, 0, 0
+            local op = v.op
+            op[base.MJ_OP_CHI], op[base.MJ_OP_PENG], op[base.MJ_OP_GANG] = 0, 0, 0
         else
             local respond = v.respond
             respond[base.MJ_OP_CHI], respond[base.MJ_OP_PENG], respond[base.MJ_OP_GANG] = false, false, false
             v.pass = true
-            local action = v.action
-            action[base.MJ_OP_CHI], action[base.MJ_OP_PENG], action[base.MJ_OP_GANG] = 0, 0, 0
+            local op = v.op
+            op[base.MJ_OP_CHI], op[base.MJ_OP_PENG], op[base.MJ_OP_GANG] = 0, 0, 0
         end
     end
     return has_respond
@@ -588,7 +588,7 @@ function dymj:chi(id, msg)
     if info.chi_count >= base.MJ_CHI_COUNT then
         error{code = error_code.CHI_COUNT_LIMIT}
     end
-    if info.action[base.MJ_OP_CHI] > 0 then
+    if info.op[base.MJ_OP_CHI] > 0 then
         error{code = error_code.WAIT_FOR_OTHER}
     end
     if not info.respond[base.MJ_OP_CHI] then
@@ -608,7 +608,7 @@ function dymj:chi(id, msg)
         error{code = error_code.ERROR_OPERATION}
     end
     if self:check_prior(info.index, base.MJ_OP_CHI) then
-        info.action[base.MJ_OP_CHI] = card
+        info.op[base.MJ_OP_CHI] = card
         return func.update_msg({
             {index=info.index, action=base.MJ_OP_CHI},
         })
@@ -724,7 +724,7 @@ function dymj:pass(id, msg)
         if not v.pass then
             all_pass = false
             -- NOTICE: only check MJ_OP_CHI
-            local card = v.action[base.MJ_OP_CHI]
+            local card = v.op[base.MJ_OP_CHI]
             if card > 0 and not self:check_prior(k, base.MJ_OP_CHI) then
                 local type_card = v.type_card
                 for i = card, card+2 do
@@ -857,7 +857,7 @@ function dymj:start()
         v.type_card = type_card
         v.weave_card = {}
         v.respond = {}
-        v.action = {}
+        v.op = {}
         v.chi_count = 0
         v.gang_count = 0
         v.out_magic = 0
