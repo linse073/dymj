@@ -229,7 +229,7 @@ function dymj:ready(id, msg)
     end
     info.ready = true
     local user = {index=info.index, ready=true}
-    local chess = {user=user}
+    local chess = {user={user}}
     local rmsg, rinfo = func.update_msg(chess)
     if self:is_all_ready() then
         self:start()
