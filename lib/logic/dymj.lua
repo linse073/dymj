@@ -114,7 +114,8 @@ function dymj:join(name, info, agent)
         error{code = error_code.ALREAD_IN_CHESS}
     end
     local rmsg, rinfo = self:enter(info, agent, index)
-    broadcast(func.update_msg({info}), role, info.id)
+    local rg, ri = func.update_msg({info})
+    broadcast(rg, ri, role, info.id)
     return rmsg, rinfo
 end
 
@@ -671,9 +672,10 @@ function dymj:gang(id, msg)
     info.weave_card[#info.weave_card+1] = weave
     info.gang_count = info.gang_count + 1
     local c = self:deal(info)
-    broadcast(func.update_msg({
+    local rmsg, rinfo = func.update_msg({
         {index=info.index, weave_card={weave}},
-    }, {deal_index=info.index}), self._role, id)
+    }, {deal_index=info.index})
+    broadcast(rmsg, rinfo, self._role, id)
     return func.update_msg({
         {index=info.index, weave_card={weave}, own_card={c}},
     }, {deal_index=info.index})
@@ -701,9 +703,10 @@ function dymj:hide_gang(id, msg)
         op = base.MJ_OP_HIDE_GANG,
         card = 0,
     }
-    broadcast(func.update_msg({
+    local rmsg, rinfo = func.update_msg({
         {index=info.index, weave_card={ow}},
-    }, {deal_index=info.index}), self._role, id)
+    }, {deal_index=info.index})
+    broadcast(rmsg, rinfo, self._role, id)
     return func.update_msg({
         {index=info.index, weave_card={weave}, own_card={c}},
     }, {deal_index=info.index})
@@ -734,9 +737,10 @@ function dymj:pass(id, msg)
                     card = card,
                 }
                 v.weave_card[#v.weave_card+1] = weave
-                broadcast(func.update_msg({
+                local rmsg, rinfo = func.update_msg({
                     {index=v.index, weave_card={weave}},
-                }), role, id)
+                })
+                broadcast(rmsg, rinfo, role, id)
                 return func.update_msg({
                     {index=v.index, weave_card={weave}},
                     {index=info.index, action=base.MJ_OP_PASS},
