@@ -121,43 +121,34 @@ function dymj:join(name, info, agent)
     return rmsg, rinfo
 end
 
-function dymj:only_master()
-    local role = self._role
-    for i = 2, base.MJ_FOUR do
-        if role[i] then
-            return false
-        end
-    end
-    return true
-end
-
 function dymj:leave(id, msg)
     local info = self._id[id]
     if not info then
         error{code = error_code.NOT_IN_CHESS}
     end
     local role = self._role
-    if info.index == 1 or self._left then -- room master or already start
-        if self:only_master() then
-            self._status = base.CHESS_STATUS_FINISH
-            local rmsg, rinfo = func.update_msg(nil, {status=self._status})
-            self:finish()
-            return rmsg, rinfo
-        else
-            for i = 1, base.MJ_FOUR do
-                local v = role[i]
-                if v then
-                    v.agree = nil
-                end
+    if self._count > 0 or self._status == base.CHESS_STATUS_START then
+        for i = 1, base.MJ_FOUR do
+            local v = role[i]
+            if v then
+                v.agree = nil
             end
-            self._pause = false
-            info.agree = true
-            local rmsg, rinfo = func.update_msg({
-                {index=info.index, action=base.MJ_OP_CLOSE, agree=true},
-            }, {pause=self._pause})
-            broadcast(rmsg, rinfo, role, id)
-            return rmsg, rinfo
         end
+        self._pause = false
+        info.agree = true
+        local rmsg, rinfo = func.update_msg({
+            {index=info.index, action=base.MJ_OP_CLOSE, agree=true},
+        }, {pause=self._pause})
+        broadcast(rmsg, rinfo, role, id)
+        return rmsg, rinfo
+    elseif info.index == 1 then
+        self._status = base.CHESS_STATUS_FINISH
+        local rmsg, rinfo = func.update_msg({
+            {index=info.index, action=base.MJ_OP_LEAVE},
+        }, {status=self._status})
+        broadcast(rmsg, rinfo, role, id)
+        self:finish()
+        return rmsg, rinfo
     else
         self._id[id] = nil
         role[info.index] = nil

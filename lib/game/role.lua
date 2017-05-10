@@ -118,7 +118,8 @@ end
 function role.exit()
     timer.del_routine("save_role")
     timer.del_routine("heart_beat")
-    local user = game.data.user
+    local data = game.data
+    local user = data.user
     if user then
         skynet.call(role_mgr, "lua", "logout", user.id)
         user.logout_time = floor(skynet.time())
