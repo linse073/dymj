@@ -39,6 +39,11 @@
     card 1 : integer
 }
 
+.show_card {
+    own_card 0 : *integer
+    weave_card 1 : *weave_card
+}
+
 .chess_user {
     account 0 : string
     id 1 : integer
@@ -51,9 +56,11 @@
     ready 8 : boolean
     own_card 9 : *integer
     out_card 10 : integer
-    weave_card 11 : *weave_card
+    weave_card 11 : weave_card
     action 12 : integer
     agree 13 : boolean
+    show_card 14 : show_card
+    deal_card 15 : integer
 }
 
 .chess_info {
