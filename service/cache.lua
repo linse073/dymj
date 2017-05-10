@@ -29,7 +29,7 @@ skynet.start(function()
     for k, v in ipairs(card) do
         mj_invalid_card[v] = v
     end
-    sharedata.new("invalid_mj_card", invalid_mj_card)
+    sharedata.new("mj_invalid_card", mj_invalid_card)
 
     -- protocol
     local file = skynet.getenv("root") .. "proto/proto.sp"
