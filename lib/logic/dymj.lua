@@ -121,6 +121,16 @@ function dymj:join(name, info, agent)
     return rmsg, rinfo
 end
 
+function dymj:only_master()
+    local role = self._role
+    for i = 2, base.MJ_FOUR do
+        if role[i] then
+            return false
+        end
+    end
+    return true
+end
+
 function dymj:leave(id, msg)
     local info = self._id[id]
     if not info then
@@ -128,19 +138,26 @@ function dymj:leave(id, msg)
     end
     local role = self._role
     if info.index == 1 or self._left then -- room master or already start
-        for i = 1, base.MJ_FOUR do
-            local v = role[i]
-            if v then
-                v.agree = nil
+        if self:only_master() then
+            self._status = base.CHESS_STATUS_FINISH
+            local rmsg, rinfo = func.update_msg(nil, {status=self._status})
+            self:finish()
+            return rmsg, rinfo
+        else
+            for i = 1, base.MJ_FOUR do
+                local v = role[i]
+                if v then
+                    v.agree = nil
+                end
             end
+            self._pause = false
+            info.agree = true
+            local rmsg, rinfo = func.update_msg({
+                {index=info.index, action=base.MJ_OP_CLOSE, agree=true},
+            }, {pause=self._pause})
+            broadcast(rmsg, rinfo, role, id)
+            return rmsg, rinfo
         end
-        self._pause = false
-        info.agree = true
-        local rmsg, rinfo = func.update_msg({
-            {index=info.index, action=base.MJ_OP_CLOSE, agree=true},
-        }, {pause=self._pause})
-        broadcast(rmsg, rinfo, role, id)
-        return rmsg, rinfo
     else
         self._id[id] = nil
         role[info.index] = nil
