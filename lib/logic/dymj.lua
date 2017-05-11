@@ -238,24 +238,12 @@ function dymj:ready(id, msg)
         chess.status = self._status
         chess.left = self._left
         chess.deal_index = self._deal_index
-        local own_card = {}
-        for k, v in pairs(info.type_card) do
-            for i = 1, v do
-                own_card[#own_card+1] = k
-            end
-        end
-        user.own_card = own_card
+        user.own_card = info.deal_card
         -- other
         for k, v in ipairs(self._role) do
             if v.id ~= id then
-                local card = {}
-                for k1, v1 in pairs(v.type_card) do
-                    for i = 1, v1 do
-                        card[#card+1] = k1
-                    end
-                end
                 skynet.send(v.agent, "lua", "notify", func.update_msg({
-                    user, {index=k, own_card=card},
+                    user, {index=k, own_card=v.deal_card},
                 }, {
                     status = self._status,
                     left = self._left,
@@ -711,12 +699,8 @@ function dymj:hide_gang(id, msg)
     info.weave_card[#info.weave_card+1] = weave
     info.gang_count = info.gang_count + 1
     local c = self:deal(info)
-    local ow = {
-        op = base.MJ_OP_HIDE_GANG,
-        card = 0,
-    }
     local rmsg, rinfo = func.update_msg({
-        {index=info.index, weave_card={ow}},
+        {index=info.index, weave_card={weave}},
     }, {deal_index=info.index, left=self._left})
     broadcast(rmsg, rinfo, self._role, id)
     return func.update_msg({
@@ -827,6 +811,7 @@ function dymj:deal(info)
     local c = self._card[self._left]
     self._left = self._left - 1
     info.type_card[c] = info.type_card[c] + 1
+    info.deal_card[#info.deal_card+1] = c
     self._deal_index = info.index
     self._deal_card = c
     return c
@@ -872,6 +857,7 @@ function dymj:start()
         v.weave_card = {}
         v.respond = {}
         v.op = {}
+        v.deal_card = {}
         v.chi_count = 0
         v.gang_count = 0
         v.out_magic = 0
