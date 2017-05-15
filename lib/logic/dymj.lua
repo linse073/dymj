@@ -243,7 +243,8 @@ function dymj:ready(id, msg)
         for k, v in ipairs(self._role) do
             if v.id ~= id then
                 skynet.send(v.agent, "lua", "notify", func.update_msg({
-                    user, {index=k, own_card=v.deal_card},
+                    {index=info.index, ready=true}, 
+                    {index=k, own_card=v.deal_card},
                 }, {
                     status = self._status,
                     left = self._left,
