@@ -57,9 +57,10 @@
     own_card 9 : *integer
     out_card 10 : *integer
     weave_card 11 : *weave_card
-    action 12 : integer
-    agree 13 : boolean
-    show_card 14 : show_card
+    deal_card 12 : integer
+    action 13 : integer
+    agree 14 : boolean
+    show_card 15 : show_card
 }
 
 .chess_info {
