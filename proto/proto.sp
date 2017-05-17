@@ -58,9 +58,10 @@
     out_card 10 : *integer
     weave_card 11 : *weave_card
     last_deal 12 : integer
-    action 13 : integer
-    agree 14 : boolean
-    show_card 15 : show_card
+    out_index 13 : integer
+    action 14 : integer
+    agree 15 : boolean
+    show_card 16 : show_card
 }
 
 .chess_info {
@@ -135,6 +136,7 @@
 
 .out_card {
     card 0 : integer
+    index 1 : integer
 }
 
 .chi {

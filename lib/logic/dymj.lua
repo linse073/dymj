@@ -351,12 +351,12 @@ function dymj:out_card(id, msg)
             local r = role[deal_index]
             local c = self:deal(r)
             skynet.send(r.agent, "lua", "notify", func.update_msg({
-                {index=info.index, out_card={card}},
+                {index=info.index, out_card={card}, out_index=msg.index},
                 {index=deal_index, last_deal=c},
             }, {deal_index=deal_index, left=self._left}))
         end
         local rmsg, rinfo = func.update_msg({
-            {index=info.index, out_card={card}},
+            {index=info.index, out_card={card}, out_index=msg.index},
         }, {deal_index=deal_index, left=self._left})
         for k, v in ipairs(role) do
             if v.id ~= id and v.index ~= deal_index then
