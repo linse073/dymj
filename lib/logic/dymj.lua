@@ -271,7 +271,9 @@ function dymj:analyze(card, id)
             local type_card = v.type_card
             local chi = false
             for k1, v1 in ipairs(CHI_RULE) do
-                if type_card[card+v1[1]]>=1 and type_card[card+v1[2]]>=1 then
+                local c1, c2 = card+v1[1], card+v1[2]
+                if valid_card(c1) and type_card[c1]>=1 
+                    and valid_card(c2) and type_card[c2]>=1 then
                     chi = true
                     break
                 end
