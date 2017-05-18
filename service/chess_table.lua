@@ -21,6 +21,7 @@ util.timer_wrap(CMD)
 local logic
 
 function CMD.init(name, rule, info, agent)
+    rand.init(floor(skynet.time()))
     logic = setmetatable({}, require(name))
     logic:init(number, rule, rand)
     return logic:enter(info, agent, 1)
@@ -38,7 +39,6 @@ end
 skynet.start(function()
     cz = share.cz
     rand = share.rand
-    rand.init(floor(skynet.time()))
 
 	skynet.dispatch("lua", function(session, source, command, ...)
 		local f = CMD[command]
