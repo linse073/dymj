@@ -341,6 +341,7 @@ function dymj:out_card(id, msg)
             info.out_magic = 0
         end
         self._out_card = card
+        self._out_index = info.index
         local deal_index
         if not self:analyze(card, id) then
             deal_index = self._deal_index%base.MJ_FOUR+1
@@ -625,6 +626,8 @@ function dymj:chi(id, msg)
         local weave = {
             op = base.MJ_OP_CHI,
             card = card,
+            index = self._out_index,
+            out_card = self._out_card,
         }
         info.weave_card[#info.weave_card+1] = weave
         local rmsg, rinfo = func.update_msg({
@@ -649,6 +652,8 @@ function dymj:peng(id, msg)
     local weave = {
         op = base.MJ_OP_PENG,
         card = out_card,
+        index = self._out_index,
+        out_card = self._out_card,
     }
     info.weave_card[#info.weave_card+1] = weave
     local rmsg, rinfo = func.update_msg({
@@ -672,6 +677,8 @@ function dymj:gang(id, msg)
     local weave = {
         op = base.MJ_OP_GANG,
         card = out_card,
+        index = self._out_index,
+        out_card = self._out_card,
     }
     info.weave_card[#info.weave_card+1] = weave
     info.gang_count = info.gang_count + 1
@@ -699,6 +706,8 @@ function dymj:hide_gang(id, msg)
     local weave = {
         op = base.MJ_OP_HIDE_GANG,
         card = deal_card,
+        index = info.index,
+        out_card = deal_card,
     }
     info.weave_card[#info.weave_card+1] = weave
     info.gang_count = info.gang_count + 1
@@ -735,6 +744,8 @@ function dymj:pass(id, msg)
                 local weave = {
                     op = base.MJ_OP_CHI,
                     card = card,
+                    index = self._out_index,
+                    out_card = self._out_card,
                 }
                 v.weave_card[#v.weave_card+1] = weave
                 local rmsg, rinfo = func.update_msg({
@@ -849,6 +860,7 @@ function dymj:start()
     self._status = base.CHESS_STATUS_START
     self._left = #card
     self._out_card = 0
+    self._out_index = 0
     local role = self._role
     for k, v in ipairs(role) do
         local type_card = {}

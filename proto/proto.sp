@@ -37,6 +37,8 @@
 .weave_card {
     op 0 : integer
     card 1 : integer
+    index 2 : integer
+    out_card 3 : integer
 }
 
 .show_card {
