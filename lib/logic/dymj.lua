@@ -239,13 +239,19 @@ function dymj:ready(id, msg)
         chess.left = self._left
         chess.deal_index = self._deal_index
         user.own_card = info.deal_card
-        user.last_deal = info.last_deal
+        if info.index == self._banker then
+            user.last_deal = info.last_deal
+        end
         -- other
         for k, v in ipairs(self._role) do
             if v.id ~= id then
+                local last_deal
+                if v.index == self._banker then
+                    last_deal = v.last_deal
+                end
                 skynet.send(v.agent, "lua", "notify", func.update_msg({
                     {index=info.index, ready=true}, 
-                    {index=k, own_card=v.deal_card, last_deal=v.last_deal},
+                    {index=k, own_card=v.deal_card, last_deal=last_deal},
                 }, {
                     status = self._status,
                     left = self._left,
