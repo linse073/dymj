@@ -382,6 +382,15 @@ local function dec(t, k, d)
     end
 end
 
+local function inc(t, k, d)
+    local n = t[k]
+    if n then
+        t[k] = n + d
+    else
+        t[k] = d
+    end
+end
+
 local function find_weave(type_card, weave_card, magic_count)
     for k, v in pairs(type_card) do
         if v+magic_count >= 3 then
@@ -422,12 +431,7 @@ local function find_weave(type_card, weave_card, magic_count)
                     weave_card[#weave_card] = nil
                     for i = 1, 3 do
                         if i ~= mi then
-                            local n = type_card[i]
-                            if n then
-                                type_card[i] = n + 1
-                            else
-                                type_card[i] = 1
-                            end
+                            inc(type_card, weave[i], 1)
                         end
                     end
                 end
