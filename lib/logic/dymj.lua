@@ -316,8 +316,8 @@ end
 
 function dymj:out_card(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
-    if self._deal_index ~= info.index then
-        error{code = error_code.ERROR_DEAL_INDEX}
+    if not info.out then
+        error{code = error_code.ERROR_OUT_INDEX}
     end
     local type_card = info.type_card
     local card = msg.card
@@ -337,6 +337,7 @@ function dymj:out_card(id, msg)
     if magic and card ~= self._deal_card then
         error{code = error_code.OUT_CARD_LIMIT}
     end
+    info.out = false
     if self._left <= 20 then
         return self:conclude(id)
     else
@@ -641,6 +642,7 @@ function dymj:chi(id, msg)
             out_card = self._out_card,
         }
         info.weave_card[#info.weave_card+1] = weave
+        info.out = true
         local rmsg, rinfo = func.update_msg({
             {index=info.index, weave_card={weave}},
         })
@@ -667,6 +669,7 @@ function dymj:peng(id, msg)
         out_card = self._out_card,
     }
     info.weave_card[#info.weave_card+1] = weave
+    info.out = true
     local rmsg, rinfo = func.update_msg({
         {index=info.index, weave_card={weave}},
     })
@@ -692,6 +695,7 @@ function dymj:gang(id, msg)
         out_card = self._out_card,
     }
     info.weave_card[#info.weave_card+1] = weave
+    info.out = true
     info.gang_count = info.gang_count + 1
     local c = self:deal(info)
     local rmsg, rinfo = func.update_msg({
@@ -721,6 +725,7 @@ function dymj:hide_gang(id, msg)
         out_card = deal_card,
     }
     info.weave_card[#info.weave_card+1] = weave
+    info.out = true
     info.gang_count = info.gang_count + 1
     local c = self:deal(info)
     local rmsg, rinfo = func.update_msg({
@@ -759,6 +764,7 @@ function dymj:pass(id, msg)
                     out_card = self._out_card,
                 }
                 v.weave_card[#v.weave_card+1] = weave
+                v.out = true
                 local rmsg, rinfo = func.update_msg({
                     {index=v.index, weave_card={weave}},
                 })
@@ -838,6 +844,7 @@ function dymj:deal(info)
     self._left = self._left - 1
     info.type_card[c] = info.type_card[c] + 1
     info.last_deal = c
+    info.out = true
     self._deal_index = info.index
     self._deal_card = c
     return c
@@ -887,6 +894,7 @@ function dymj:start()
         v.chi_count = 0
         v.gang_count = 0
         v.out_magic = 0
+        v.out = false
         local deal_card = {}
         for i = 1, base.MJ_ROLE_CARD do
             deal_card[i] = self:deal(v)

@@ -38,6 +38,7 @@ local type_code = {
         CONCLUDE_CARD_LIMIT="尚未流局",
         OUT_CARD_LIMIT="出牌限制",
         ALREADY_REPLY="已经回答",
+        ERROR_OUT_INDEX="出牌索引不匹配",
     },
 }
 
