@@ -22,7 +22,7 @@ skynet.init(function()
 end)
 
 local function valid_card(c)
-    return c<=base.MJ_CARD_INDEX and not mj_invalid_card[c]
+    return c>0 and c<=base.MJ_CARD_INDEX and not mj_invalid_card[c]
 end
 
 local dymj = {}
