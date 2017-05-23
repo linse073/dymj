@@ -447,14 +447,16 @@ function dymj:check_hu(type_card, weave_card, magic_count)
     local clone = util.clone(type_card)
     if magic_count > 0 then
         local deal_card = self._deal_card
-        local n = clone[deal_card]
-        dec(clone, deal_card, 1)
-        weave_card[#weave_card+1] = {deal_card, 0}
-        if find_weave(clone, weave_card, magic_count-1) then
-            return true
+        if deal_card ~= self._magic_card then
+            local n = clone[deal_card]
+            dec(clone, deal_card, 1)
+            weave_card[#weave_card+1] = {deal_card, 0}
+            if find_weave(clone, weave_card, magic_count-1) then
+                return true
+            end
+            weave_card[#weave_card] = nil
+            clone[deal_card] = n
         end
-        weave_card[#weave_card] = nil
-        clone[deal_card] = n
         for k, v in pairs(type_card) do
             if k ~= deal_card then
                 dec(clone, k, 1)
