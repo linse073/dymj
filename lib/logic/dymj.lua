@@ -270,18 +270,20 @@ local CHI_RULE = {
     {-1, 1, -1},
     {1, 2, 0},
 }
-function dymj:analyze(card, id)
+function dymj:analyze(card, index)
     local has_respond = false
     for k, v in ipairs(self._role) do
-        if v.id ~= id and card ~= self._magic_card then
+        if v.index ~= index and card ~= self._magic_card then
             local type_card = v.type_card
             local chi = false
-            for k1, v1 in ipairs(CHI_RULE) do
-                local c1, c2 = card+v1[1], card+v1[2]
-                if valid_card(c1) and type_card[c1]>=1 
-                    and valid_card(c2) and type_card[c2]>=1 then
-                    chi = true
-                    break
+            if v.index == index%base.MJ_FOUR+1 then
+                for k1, v1 in ipairs(CHI_RULE) do
+                    local c1, c2 = card+v1[1], card+v1[2]
+                    if valid_card(c1) and type_card[c1]>=1 
+                        and valid_card(c2) and type_card[c2]>=1 then
+                        chi = true
+                        break
+                    end
                 end
             end
             local peng = false
@@ -351,7 +353,7 @@ function dymj:out_card(id, msg)
         self._out_card = card
         self._out_index = info.index
         local deal_index
-        if not self:analyze(card, id) then
+        if not self:analyze(card, info.index) then
             deal_index = info.index%base.MJ_FOUR+1
             local r = role[deal_index]
             local c = self:deal(r)
