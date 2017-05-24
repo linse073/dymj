@@ -330,8 +330,9 @@ function dymj:out_card(id, msg)
     local magic = false
     local role = self._role
     for k, v in ipairs(role) do
-        if v.out_magic > 0 then
+        if k ~= info.index and v.out_magic > 0 then
             magic = true
+            break
         end
     end
     if magic and card ~= self._deal_card then
@@ -713,16 +714,16 @@ function dymj:hide_gang(id, msg)
         error{code = error_code.ERROR_DEAL_INDEX}
     end
     local type_card = info.type_card
-    local deal_card = self._deal_card
-    if not (type_card[deal_card] >= 4) then
+    local card = msg.card
+    if not (type_card[card] >= 4) then
         error{code = error_code.ERROR_OPERATION}
     end
-    type_card[deal_card] = type_card[deal_card] - 4
+    type_card[card] = type_card[card] - 4
     local weave = {
         op = base.MJ_OP_HIDE_GANG,
-        card = deal_card,
+        card = card,
         index = info.index,
-        out_card = deal_card,
+        out_card = card,
     }
     info.weave_card[#info.weave_card+1] = weave
     info.out = true

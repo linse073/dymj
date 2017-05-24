@@ -145,6 +145,10 @@
     card 0 : integer
 }
 
+.hide_gang {
+    card 0 : integer
+}
+
 .reply {
     agree 0 : boolean
 }
