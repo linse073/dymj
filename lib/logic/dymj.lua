@@ -270,18 +270,20 @@ local CHI_RULE = {
     {-1, 1, -1},
     {1, 2, 0},
 }
-function dymj:analyze(card, id)
+function dymj:analyze(card, index)
     local has_respond = false
     for k, v in ipairs(self._role) do
-        if v.id ~= id and card ~= self._magic_card then
+        if v.index ~= index and card ~= self._magic_card then
             local type_card = v.type_card
             local chi = false
-            for k1, v1 in ipairs(CHI_RULE) do
-                local c1, c2 = card+v1[1], card+v1[2]
-                if valid_card(c1) and type_card[c1]>=1 
-                    and valid_card(c2) and type_card[c2]>=1 then
-                    chi = true
-                    break
+            if v.index == index%base.MJ_FOUR+1 then
+                for k1, v1 in ipairs(CHI_RULE) do
+                    local c1, c2 = card+v1[1], card+v1[2]
+                    if valid_card(c1) and type_card[c1]>=1 
+                        and valid_card(c2) and type_card[c2]>=1 then
+                        chi = true
+                        break
+                    end
                 end
             end
             local peng = false
@@ -352,8 +354,8 @@ function dymj:out_card(id, msg)
         self._out_card = card
         self._out_index = info.index
         local deal_index
-        if not self:analyze(card, id) then
-            deal_index = self._deal_index%base.MJ_FOUR+1
+        if not self:analyze(card, info.index) then
+            deal_index = info.index%base.MJ_FOUR+1
             local r = role[deal_index]
             local c = self:deal(r)
             skynet.send(r.agent, "lua", "notify", func.update_msg({
@@ -448,14 +450,16 @@ function dymj:check_hu(type_card, weave_card, magic_count)
     local clone = util.clone(type_card)
     if magic_count > 0 then
         local deal_card = self._deal_card
-        local n = clone[deal_card]
-        dec(clone, deal_card, 1)
-        weave_card[#weave_card+1] = {deal_card, 0}
-        if find_weave(clone, weave_card, magic_count-1) then
-            return true
+        if deal_card ~= self._magic_card then
+            local n = clone[deal_card]
+            dec(clone, deal_card, 1)
+            weave_card[#weave_card+1] = {deal_card, 0}
+            if find_weave(clone, weave_card, magic_count-1) then
+                return true
+            end
+            weave_card[#weave_card] = nil
+            clone[deal_card] = n
         end
-        weave_card[#weave_card] = nil
-        clone[deal_card] = n
         for k, v in pairs(type_card) do
             if k ~= deal_card then
                 dec(clone, k, 1)
@@ -610,6 +614,9 @@ function dymj:chi(id, msg)
         error{code = error_code.WAIT_FOR_OTHER}
     end
     if not info.respond[base.MJ_OP_CHI] then
+        error{code = error_code.ERROR_OPERATION}
+    end
+    if info.index ~= self._out_index%base.MJ_FOUR+1 then
         error{code = error_code.ERROR_OPERATION}
     end
     local valid = false
