@@ -276,7 +276,7 @@ function dymj:analyze(card, index)
         if v.index ~= index and card ~= self._magic_card then
             local type_card = v.type_card
             local chi = false
-            if v.index == index%base.MJ_FOUR+1 then
+            if v.index == index%base.MJ_FOUR+1 and v.chi_count < 2 then
                 for k1, v1 in ipairs(CHI_RULE) do
                     local c1, c2 = card+v1[1], card+v1[2]
                     if valid_card(c1) and type_card[c1]>=1 
@@ -489,6 +489,7 @@ end
 function dymj:is_qidui(type_card)
     local magic_count = type_card[self._magic_card]
     local four_count = 0
+    local two_count = 0
     for k, v in pairs(type_card) do
         if k ~= self._magic_card then
             if v == 1 then
@@ -496,18 +497,21 @@ function dymj:is_qidui(type_card)
                     return false
                 end
                 magic_count = magic_count - 1
+                two_count = two_count + 1
             elseif v == 3 then
                 if magic_count <= 0 then
                     return false
                 end
                 magic_count = magic_count - 1
                 four_count = four_count + 1
+                two_count = two_count + 2
             elseif v == 4 then
                 four_count = four_count + 1
+                two_count = two_count + 2
             end
         end
     end
-    return true, four_count
+    return two_count==7, four_count
 end
 
 function dymj:hu(id, msg)
