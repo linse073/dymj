@@ -615,6 +615,9 @@ function dymj:chi(id, msg)
     if not info.respond[base.MJ_OP_CHI] then
         error{code = error_code.ERROR_OPERATION}
     end
+    if info.index ~= self._out_index%base.MJ_FOUR+1 then
+        error{code = error_code.ERROR_OPERATION}
+    end
     local valid = false
     local type_card = info.type_card
     local card = msg.card
