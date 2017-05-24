@@ -792,7 +792,7 @@ function dymj:pass(id, msg)
     end
     local deal_index
     if all_pass then
-        deal_index = self._deal_index%base.MJ_FOUR+1
+        deal_index = self._out_index%base.MJ_FOUR+1
         local r = role[deal_index]
         local c = self:deal(r)
         skynet.send(r.agent, "lua", "notify", func.update_msg({
