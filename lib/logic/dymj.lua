@@ -273,10 +273,10 @@ local CHI_RULE = {
 function dymj:analyze(card, index)
     local has_respond = false
     for k, v in ipairs(self._role) do
-        if v.index ~= index and not self:is_out_magic(v.index) then
+        if v.index ~= index and not self:is_out_magic(v.index) and v.chi_count[index] < base.MJ_CHI_COUNT then
             local type_card = v.type_card
             local chi = false
-            if v.index == index%base.MJ_FOUR+1 and v.chi_count < 2 then
+            if v.index == index%base.MJ_FOUR+1 then
                 for k1, v1 in ipairs(CHI_RULE) do
                     local c1, c2 = card+v1[1], card+v1[2]
                     if valid_card(c1) and type_card[c1]>=1 
@@ -613,7 +613,7 @@ end
 
 function dymj:chi(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
-    if info.chi_count >= base.MJ_CHI_COUNT then
+    if info.chi_count[self._out_index] >= base.MJ_CHI_COUNT then
         error{code = error_code.CHI_COUNT_LIMIT}
     end
     if info.op[base.MJ_OP_CHI] > 0 then
@@ -668,6 +668,9 @@ end
 
 function dymj:peng(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
+    if info.chi_count[self._out_index] >= base.MJ_CHI_COUNT then
+        error{code = error_code.CHI_COUNT_LIMIT}
+    end
     if not info.respond[base.MJ_OP_PENG] then
         error{code = error_code.ERROR_OPERATION}
     end
@@ -694,6 +697,9 @@ end
 
 function dymj:gang(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
+    if info.chi_count[self._out_index] >= base.MJ_CHI_COUNT then
+        error{code = error_code.CHI_COUNT_LIMIT}
+    end
     if not info.respond[base.MJ_OP_GANG] then
         error{code = error_code.ERROR_OPERATION}
     end
@@ -907,7 +913,11 @@ function dymj:start()
         v.weave_card = {}
         v.respond = {}
         v.op = {}
-        v.chi_count = 0
+        local chi_count = {}
+        for i = 1, base.MJ_FOUR do
+            chi_count[i] = 0
+        end
+        v.chi_count = chi_count
         v.gang_count = 0
         v.out_magic = 0
         v.out = false
