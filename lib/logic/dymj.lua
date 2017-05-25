@@ -799,7 +799,7 @@ function dymj:pass(id, msg)
                     }
                     v.weave_card[#v.weave_card+1] = weave
                     v.out = true
-                    v.chi_count = v.chi_count + 1
+                    v.chi_count[self._out_index] = v.chi_count[self._out_index] + 1
                     local rmsg, rinfo = func.update_msg({
                         {index=v.index, weave_card={weave}},
                     })
