@@ -273,7 +273,7 @@ local CHI_RULE = {
 function dymj:analyze(card, index)
     local has_respond = false
     for k, v in ipairs(self._role) do
-        if v.index ~= index and card ~= self._magic_card then
+        if v.index ~= index and self:is_out_magic(v.index) then
             local type_card = v.type_card
             local chi = false
             if v.index == index%base.MJ_FOUR+1 and v.chi_count < 2 then
@@ -316,6 +316,15 @@ function dymj:analyze(card, index)
     return has_respond
 end
 
+function dymj:is_out_magic(index)
+    local role = self._role
+    for k, v in ipairs(role) do
+        if k ~= index and v.out_magic > 0 then
+            return true
+        end
+    end
+end
+
 function dymj:out_card(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     if not info.out then
@@ -329,15 +338,7 @@ function dymj:out_card(id, msg)
     if type_card[card] == 0 then
         error{code = error_code.NO_OUT_CARD}
     end
-    local magic = false
-    local role = self._role
-    for k, v in ipairs(role) do
-        if k ~= info.index and v.out_magic > 0 then
-            magic = true
-            break
-        end
-    end
-    if magic and card ~= self._deal_card then
+    if self:is_out_magic(info.index) and card ~= self._deal_card then
         error{code = error_code.OUT_CARD_LIMIT}
     end
     info.out = false
