@@ -558,10 +558,19 @@ function dymj:hu(id, msg)
     local role = self._role
     for k, v in ipairs(role) do
         v.ready = false
-        if k == info.index then
-            v.score = v.score + mul * 3
+        local score
+        if k == inde.index then
+            if k == self._banker then
+                score = mul * 24
+            else
+                score = mul * 10
+            end
         else
-            v.score = v.score - mul
+            if k == self._banker then
+                score = -mul * 8
+            else
+                score = -mul
+            end
         end
         local own_card = {}
         for k1, v1 in pairs(v.type_card) do
@@ -576,6 +585,7 @@ function dymj:hu(id, msg)
             show_card = {
                 own_card = own_card,
                 weave_card = v.weave_card,
+                score = score,
             },
         }
     end
@@ -657,7 +667,7 @@ function dymj:chi(id, msg)
         }
         info.weave_card[#info.weave_card+1] = weave
         info.out = true
-        info.chi_count = info.chi_count + 1
+        info.chi_count[self._out_index] = info.chi_count[self._out_index] + 1
         local rmsg, rinfo = func.update_msg({
             {index=info.index, weave_card={weave}},
         })
@@ -688,6 +698,7 @@ function dymj:peng(id, msg)
     }
     info.weave_card[#info.weave_card+1] = weave
     info.out = true
+    info.chi_count[self._out_index] = info.chi_count[self._out_index] + 1
     local rmsg, rinfo = func.update_msg({
         {index=info.index, weave_card={weave}},
     })
@@ -718,6 +729,7 @@ function dymj:gang(id, msg)
     info.weave_card[#info.weave_card+1] = weave
     info.out = true
     info.gang_count = info.gang_count + 1
+    info.chi_count[self._out_index] = info.chi_count[self._out_index] + 1
     local c = self:deal(info)
     local rmsg, rinfo = func.update_msg({
         {index=info.index, weave_card={weave}},
