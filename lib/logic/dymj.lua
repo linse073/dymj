@@ -771,7 +771,7 @@ function dymj:hide_gang(id, msg)
 end
 
 local function in_respond(respond)
-    return respond[base.MJ_OP_CHI], respond[base.MJ_OP_PENG], respond[base.MJ_OP_GANG]
+    return respond[base.MJ_OP_CHI] or respond[base.MJ_OP_PENG] or respond[base.MJ_OP_GANG]
 end
 
 function dymj:pass(id, msg)
