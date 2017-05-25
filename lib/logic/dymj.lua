@@ -860,6 +860,7 @@ function dymj:conclude(id, msg)
             show_card = {
                 own_card = own_card,
                 weave_card = v.weave_card,
+                score = 0,
             },
         }
     end
@@ -879,6 +880,7 @@ function dymj:deal(info)
     info.type_card[c] = info.type_card[c] + 1
     info.last_deal = c
     info.out = true
+    info.pass = false
     self._deal_index = info.index
     self._deal_card = c
     return c
