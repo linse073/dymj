@@ -888,7 +888,7 @@ function dymj:deal(info)
     info.out = true
     local respond = info.respond
     respond[base.MJ_OP_CHI], respond[base.MJ_OP_PENG], respond[base.MJ_OP_GANG] = false, false, false
-    info.pass = true
+    info.pass = false
     local op = info.op
     op[base.MJ_OP_CHI], op[base.MJ_OP_PENG], op[base.MJ_OP_GANG] = 0, 0, 0
     self._deal_index = info.index
