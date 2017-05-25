@@ -780,6 +780,7 @@ function dymj:pass(id, msg)
         error{code = error_code.ALREADY_PASS}
     end
     info.pass = true
+    local deal_index
     if in_respond(info.respond) then
         local all_pass = true
         local role = self._role
@@ -815,7 +816,6 @@ function dymj:pass(id, msg)
                 end
             end
         end
-        local deal_index
         if all_pass then
             deal_index = self._out_index%base.MJ_FOUR+1
             local r = role[deal_index]
