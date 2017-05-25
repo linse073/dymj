@@ -273,7 +273,7 @@ local CHI_RULE = {
 function dymj:analyze(card, index)
     local has_respond = false
     for k, v in ipairs(self._role) do
-        if v.index ~= index and self:is_out_magic(v.index) then
+        if v.index ~= index and not self:is_out_magic(v.index) then
             local type_card = v.type_card
             local chi = false
             if v.index == index%base.MJ_FOUR+1 and v.chi_count < 2 then
