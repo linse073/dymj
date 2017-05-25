@@ -355,6 +355,7 @@ function dymj:out_card(id, msg)
         self._out_card = card
         self._out_index = info.index
         local deal_index
+        local role = self._role
         if not self:analyze(card, info.index) then
             deal_index = info.index%base.MJ_FOUR+1
             local r = role[deal_index]
