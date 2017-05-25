@@ -770,13 +770,17 @@ function dymj:hide_gang(id, msg)
     }, {deal_index=info.index, left=self._left})
 end
 
+local function in_respond(respond)
+    return respond[base.MJ_OP_CHI], respond[base.MJ_OP_PENG], respond[base.MJ_OP_GANG]
+end
+
 function dymj:pass(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     if info.pass then
         error{code = error_code.ALREADY_PASS}
     end
     info.pass = true
-    if info.index ~= self._deal_index then
+    if in_respond(info.respond) then
         local all_pass = true
         local role = self._role
         for k, v in ipairs(role) do
@@ -882,7 +886,11 @@ function dymj:deal(info)
     info.type_card[c] = info.type_card[c] + 1
     info.last_deal = c
     info.out = true
-    info.pass = false
+    local respond = info.respond
+    respond[base.MJ_OP_CHI], respond[base.MJ_OP_PENG], respond[base.MJ_OP_GANG] = false, false, false
+    info.pass = true
+    local op = info.op
+    op[base.MJ_OP_CHI], op[base.MJ_OP_PENG], op[base.MJ_OP_GANG] = 0, 0, 0
     self._deal_index = info.index
     self._deal_card = c
     return c
