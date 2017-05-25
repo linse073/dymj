@@ -590,8 +590,9 @@ function dymj:hu(id, msg)
         }
     end
     user[info.index].action = base.MJ_OP_HU
+    self._banker = info.index
     local rmsg, rinfo = func.update_msg(user, {
-        status=self._status, count=self._count, banker=info.index,
+        status=self._status, count=self._count, banker=self._banker,
     })
     broadcast(rmsg, rinfo, role, id)
     if self._status == base.CHESS_STATUS_FINISH then
