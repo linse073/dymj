@@ -559,7 +559,7 @@ function dymj:hu(id, msg)
     for k, v in ipairs(role) do
         v.ready = false
         local score
-        if k == inde.index then
+        if k == info.index then
             if k == self._banker then
                 score = mul * 24
             else
