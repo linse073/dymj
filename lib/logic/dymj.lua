@@ -776,52 +776,54 @@ function dymj:pass(id, msg)
         error{code = error_code.ALREADY_PASS}
     end
     info.pass = true
-    local all_pass = true
-    local role = self._role
-    for k, v in ipairs(role) do
-        if not v.pass then
-            all_pass = false
-            -- NOTICE: only check MJ_OP_CHI
-            local card = v.op[base.MJ_OP_CHI]
-            if card > 0 and not self:check_prior(k, base.MJ_OP_CHI) then
-                local type_card = v.type_card
-                for i = card, card+2 do
-                    if i ~= self._out_card then
-                        type_card[i] = type_card[i] - 1
+    if info.index ~= self._deal_index then
+        local all_pass = true
+        local role = self._role
+        for k, v in ipairs(role) do
+            if not v.pass then
+                all_pass = false
+                -- NOTICE: only check MJ_OP_CHI
+                local card = v.op[base.MJ_OP_CHI]
+                if card > 0 and not self:check_prior(k, base.MJ_OP_CHI) then
+                    local type_card = v.type_card
+                    for i = card, card+2 do
+                        if i ~= self._out_card then
+                            type_card[i] = type_card[i] - 1
+                        end
                     end
+                    local weave = {
+                        op = base.MJ_OP_CHI,
+                        card = card,
+                        index = self._out_index,
+                        out_card = self._out_card,
+                    }
+                    v.weave_card[#v.weave_card+1] = weave
+                    v.out = true
+                    v.chi_count = v.chi_count + 1
+                    local rmsg, rinfo = func.update_msg({
+                        {index=v.index, weave_card={weave}},
+                    })
+                    broadcast(rmsg, rinfo, role, id)
+                    return func.update_msg({
+                        {index=v.index, weave_card={weave}},
+                        {index=info.index, action=base.MJ_OP_PASS},
+                    })
                 end
-                local weave = {
-                    op = base.MJ_OP_CHI,
-                    card = card,
-                    index = self._out_index,
-                    out_card = self._out_card,
-                }
-                v.weave_card[#v.weave_card+1] = weave
-                v.out = true
-                v.chi_count = v.chi_count + 1
-                local rmsg, rinfo = func.update_msg({
-                    {index=v.index, weave_card={weave}},
-                })
-                broadcast(rmsg, rinfo, role, id)
-                return func.update_msg({
-                    {index=v.index, weave_card={weave}},
-                    {index=info.index, action=base.MJ_OP_PASS},
-                })
             end
         end
-    end
-    local deal_index
-    if all_pass and info.index ~= self._deal_index then
-        deal_index = self._out_index%base.MJ_FOUR+1
-        local r = role[deal_index]
-        local c = self:deal(r)
-        skynet.send(r.agent, "lua", "notify", func.update_msg({
-            {index=deal_index, last_deal=c},
-        }, {deal_index=deal_index, left=self._left}))
-        local rmsg, rinfo = func.update_msg(nil, {deal_index=deal_index, left=self._left})
-        for k, v in ipairs(role) do
-            if v.id ~= id and v.index ~= deal_index then
-                skynet.send(v.agent, "lua", "notify", rmsg, rinfo)
+        local deal_index
+        if all_pass then
+            deal_index = self._out_index%base.MJ_FOUR+1
+            local r = role[deal_index]
+            local c = self:deal(r)
+            skynet.send(r.agent, "lua", "notify", func.update_msg({
+                {index=deal_index, last_deal=c},
+            }, {deal_index=deal_index, left=self._left}))
+            local rmsg, rinfo = func.update_msg(nil, {deal_index=deal_index, left=self._left})
+            for k, v in ipairs(role) do
+                if v.id ~= id and v.index ~= deal_index then
+                    skynet.send(v.agent, "lua", "notify", rmsg, rinfo)
+                end
             end
         end
     end
