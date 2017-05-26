@@ -22,6 +22,7 @@ local base = {
     CHESS_STATUS_READY = 1,
     CHESS_STATUS_START = 2,
     CHESS_STATUS_FINISH = 3,
+    CHESS_STATUS_EXIT = 4,
 }
 
 return base

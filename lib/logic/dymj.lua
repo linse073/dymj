@@ -142,7 +142,7 @@ function dymj:leave(id, msg)
         broadcast(rmsg, rinfo, role, id)
         return rmsg, rinfo
     elseif info.index == 1 then
-        self._status = base.CHESS_STATUS_FINISH
+        self._status = base.CHESS_STATUS_EXIT
         local rmsg, rinfo = func.update_msg({
             {index=info.index, action=base.MJ_OP_LEAVE},
         }, {status=self._status})
@@ -187,7 +187,7 @@ function dymj:reply(id, msg)
     }, chess)
     if info.agree then
         if self:is_all_agree() then
-            self._status = base.CHESS_STATUS_FINISH
+            self._status = base.CHESS_STATUS_EXIT
             chess.status = self._status
         end
     else
@@ -195,7 +195,7 @@ function dymj:reply(id, msg)
         chess.pause = self._pause
     end
     broadcast(rmsg, rinfo, self._role, id)
-    if self._status == base.CHESS_STATUS_FINISH then
+    if self._status == base.CHESS_STATUS_EXIT then
         self:finish()
     end
     return rmsg, rinfo
