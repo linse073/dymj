@@ -77,6 +77,7 @@
     deal_index 6 : integer
     count 7 : integer
     pause 8 : boolean
+    rand 9 : integer
 }
 
 .chess_all {
