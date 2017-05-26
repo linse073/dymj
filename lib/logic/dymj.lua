@@ -566,7 +566,7 @@ function dymj:hu(id, msg)
                 score = mul * 10
             end
         else
-            if k == self._banker then
+            if k == self._banker or info.index == self._banker then
                 score = -mul * 8
             else
                 score = -mul
