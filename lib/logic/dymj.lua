@@ -509,6 +509,8 @@ function dymj:is_qidui(type_card)
                 end
                 magic_count = magic_count - 1
                 two_count = two_count + 1
+            elseif v == 2 then
+                two_count = two_count + 1
             elseif v == 3 then
                 if magic_count <= 0 then
                     return false
