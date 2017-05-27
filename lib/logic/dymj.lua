@@ -946,7 +946,8 @@ function dymj:start()
     self._out_card = 0
     self._out_index = 0
     local role = self._role
-    for k, v in ipairs(role) do
+    for j = 1, base.MJ_FOUR do
+        local v = role[(self._banker+j-2)%base.MJ_FOUR+1]
         local type_card = {}
         for i = 1, base.MJ_CARD_INDEX do
             if not mj_invalid_card[i] then
