@@ -39,7 +39,10 @@ function proc.dymj_card(msg)
     if data.user.gm_level == 0 then
         error{code = error_code.ROLE_NO_PERMIT}
     end
-    local card = util.reverse(msg.card)
+    local card = msg.card
+    if card then
+        card = util.reverse(card)
+    end
     data.dymj_card = card
     if data.table then
         return skynet.call(data.table, "lua", "custom_card", "dymj", card)
