@@ -233,7 +233,8 @@ function proc.new_chess(msg)
     if not table then
         error{code = error_code.INTERNAL_ERROR}
     end
-    local rmsg, info = skynet.call(table, "lua", "init", name, msg.rule, data.info, skynet.self())
+    local card = data[msg.name .. "_card"]
+    local rmsg, info = skynet.call(table, "lua", "init", name, msg.rule, data.info, skynet.self(), card)
     if rmsg == "update_user" then
         data.table = table
     else

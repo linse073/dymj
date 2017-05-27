@@ -154,3 +154,7 @@
 .reply {
     agree 0 : boolean
 }
+
+.dymj_card {
+    card 0 : *integer
+}

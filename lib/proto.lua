@@ -33,6 +33,7 @@ local type_msg = {
 
     [2200] = {
         "add_room_card",
+        "dymj_card",
     },
 
     [2300] = {

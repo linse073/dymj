@@ -20,10 +20,10 @@ util.timer_wrap(CMD)
 
 local logic
 
-function CMD.init(name, rule, info, agent)
+function CMD.init(name, rule, info, agent, card)
     rand.init(floor(skynet.time()))
     logic = setmetatable({}, require(name))
-    logic:init(number, rule, rand)
+    logic:init(number, rule, rand, card)
     return logic:enter(info, agent, 1)
 end
 

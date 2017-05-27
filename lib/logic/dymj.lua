@@ -28,10 +28,11 @@ end
 
 local dymj = {}
 
-function dymj:init(number, rule, rand)
+function dymj:init(number, rule, rand, card)
     self._number = number
     self._rule = rule
     self._rand = rand
+    self._custom_card = card
     local p, c, l = string.unpack("BBB", rule)
     if c == 1 then
         self._total_count = 8
@@ -68,6 +69,14 @@ function dymj:finish()
         end
     end
     skynet.fork(finish)
+end
+
+function dymj:custom_card(name, card)
+    if name ~= "dymj" then
+        error{code = error_code.ERROR_CHESS_NAME}
+    end
+    self._custom_card = card
+    return "respond", ""
 end
 
 function dymj:enter(info, agent, index)
@@ -903,30 +912,34 @@ function dymj:deal(info)
 end
 
 function dymj:start()
-    local card = {
-        01,02,03,04,05,06,07,08,09,
-        01,02,03,04,05,06,07,08,09,
-        01,02,03,04,05,06,07,08,09,
-        01,02,03,04,05,06,07,08,09,
-        11,12,13,14,15,16,17,18,19,
-        11,12,13,14,15,16,17,18,19,
-        11,12,13,14,15,16,17,18,19,
-        11,12,13,14,15,16,17,18,19,
-        21,22,23,24,25,26,27,28,29,
-        21,22,23,24,25,26,27,28,29,
-        21,22,23,24,25,26,27,28,29,
-        21,22,23,24,25,26,27,28,29,
-        31,33,35,37,
-        31,33,35,37,
-        31,33,35,37,
-        31,33,35,37,
-        41,43,45,
-        41,43,45,
-        41,43,45,
-        41,43,45,
-    }
-    self._card = card
-    util.shuffle(card, self._rand)
+    if self._custom_card then
+        self._card = util.clone(self._custom_card)
+    else
+        local card = {
+            01,02,03,04,05,06,07,08,09,
+            01,02,03,04,05,06,07,08,09,
+            01,02,03,04,05,06,07,08,09,
+            01,02,03,04,05,06,07,08,09,
+            11,12,13,14,15,16,17,18,19,
+            11,12,13,14,15,16,17,18,19,
+            11,12,13,14,15,16,17,18,19,
+            11,12,13,14,15,16,17,18,19,
+            21,22,23,24,25,26,27,28,29,
+            21,22,23,24,25,26,27,28,29,
+            21,22,23,24,25,26,27,28,29,
+            21,22,23,24,25,26,27,28,29,
+            31,33,35,37,
+            31,33,35,37,
+            31,33,35,37,
+            31,33,35,37,
+            41,43,45,
+            41,43,45,
+            41,43,45,
+            41,43,45,
+        }
+        self._card = card
+        util.shuffle(card, self._rand)
+    end
     self._status = base.CHESS_STATUS_START
     self._left = #card
     self._out_card = 0

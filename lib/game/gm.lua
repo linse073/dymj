@@ -34,4 +34,17 @@ function proc.add_room_card(msg)
     return "update_user", {update=p}
 end
 
+function proc.dymj_card(msg)
+    local data = game.data
+    if data.user.gm_level == 0 then
+        error{code = error_code.ROLE_NO_PERMIT}
+    end
+    data.dymj_card = msg.card
+    if data.table then
+        return skynet.call(data.table, "lua", "custom_card", "dymj", msg.card)
+    else
+        return "respond", ""
+    end
+end
+
 return gm
