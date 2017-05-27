@@ -514,7 +514,6 @@ function dymj:is_qidui(type_card)
                     return false
                 end
                 magic_count = magic_count - 1
-                four_count = four_count + 1
                 two_count = two_count + 2
             elseif v == 4 then
                 four_count = four_count + 1
