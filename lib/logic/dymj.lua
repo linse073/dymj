@@ -572,6 +572,7 @@ function dymj:hu(id, msg)
                 score = -mul
             end
         end
+        v.score = v.score + score
         local own_card = {}
         for k1, v1 in pairs(v.type_card) do
             for i = 1, v1 do
