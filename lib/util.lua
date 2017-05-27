@@ -47,6 +47,15 @@ function util.empty(t)
     return true
 end
 
+function util.reverse(t)
+    local nt = {}
+    local len = #t
+    for k, v in ipairs(t) do
+        nt[len-k+1] = v
+    end
+    return nt
+end
+
 function util.gen_key(serverid, key)
     return string.format("%d@%s", serverid, key)
 end
