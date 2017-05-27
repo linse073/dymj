@@ -941,7 +941,7 @@ function dymj:start()
         util.shuffle(card, self._rand)
     end
     self._status = base.CHESS_STATUS_START
-    self._left = #card
+    self._left = #self._card
     self._out_card = 0
     self._out_index = 0
     local role = self._role
