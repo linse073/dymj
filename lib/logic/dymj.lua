@@ -76,7 +76,7 @@ function dymj:custom_card(name, card)
         error{code = error_code.ERROR_CHESS_NAME}
     end
     self._custom_card = card
-    return "respond", ""
+    return "response", ""
 end
 
 function dymj:enter(info, agent, index)
