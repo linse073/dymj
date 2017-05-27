@@ -48,12 +48,12 @@ function util.empty(t)
 end
 
 function util.reverse(t)
-    local nt = {}
-    local len = #t
-    for k, v in ipairs(t) do
-        nt[len-k+1] = v
+    local l = #t
+    for i = 1, l//2 do
+        local j = l - i + 1
+        t[i], t[j] = t[j], t[i]
     end
-    return nt
+    return t
 end
 
 function util.gen_key(serverid, key)
