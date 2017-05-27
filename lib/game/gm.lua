@@ -43,7 +43,7 @@ function proc.dymj_card(msg)
     if data.table then
         return skynet.call(data.table, "lua", "custom_card", "dymj", msg.card)
     else
-        return "respond", ""
+        return "response", ""
     end
 end
 
