@@ -596,13 +596,12 @@ function dymj:hu(id, msg)
             score = v.score,
             show_card = {
                 own_card = own_card,
-                weave_card = v.weave_card,
                 score = score,
             },
         }
     end
     user[index].action = base.MJ_OP_HU
-    user[index].last_deal = role[index].last_deal
+    user[index].show_card.last_deal = role[index].last_deal
     self._banker = index
     local rmsg, rinfo = func.update_msg(user, {
         status=self._status, count=self._count, banker=self._banker,
@@ -637,7 +636,8 @@ end
 
 function dymj:chi(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
-    if info.chi_count[self._out_index] >= base.MJ_CHI_COUNT then
+    local out_index = self._out_index
+    if info.chi_count[out_index] >= base.MJ_CHI_COUNT then
         error{code = error_code.CHI_COUNT_LIMIT}
     end
     if info.op[base.MJ_OP_CHI] > 0 then
@@ -646,14 +646,15 @@ function dymj:chi(id, msg)
     if not info.respond[base.MJ_OP_CHI] then
         error{code = error_code.ERROR_OPERATION}
     end
-    if info.index ~= self._out_index%base.MJ_FOUR+1 then
+    if info.index ~= out_index%base.MJ_FOUR+1 then
         error{code = error_code.ERROR_OPERATION}
     end
     local valid = false
     local type_card = info.type_card
     local card = msg.card
+    local out_card = self._out_card
     for i = card, card+2 do
-        if i == self._out_card then
+        if i == out_card then
             valid = true
         elseif not (type_card[i] >= 1) then
             error{code = error_code.ERROR_OPERATION}
@@ -669,19 +670,19 @@ function dymj:chi(id, msg)
         })
     else
         for i = card, card+2 do
-            if i ~= self._out_card then
+            if i ~= out_card then
                 type_card[i] = type_card[i] - 1
             end
         end
         local weave = {
             op = base.MJ_OP_CHI,
             card = card,
-            index = self._out_index,
-            out_card = self._out_card,
+            index = out_index,
+            out_card = out_card,
         }
         info.weave_card[#info.weave_card+1] = weave
         info.out = true
-        info.chi_count[self._out_index] = info.chi_count[self._out_index] + 1
+        info.chi_count[out_index] = info.chi_count[out_index] + 1
         local rmsg, rinfo = func.update_msg({
             {index=info.index, weave_card={weave}},
         })
@@ -692,7 +693,8 @@ end
 
 function dymj:peng(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
-    if info.chi_count[self._out_index] >= base.MJ_CHI_COUNT then
+    local out_index = self._out_index
+    if info.chi_count[out_index] >= base.MJ_CHI_COUNT then
         error{code = error_code.CHI_COUNT_LIMIT}
     end
     if not info.respond[base.MJ_OP_PENG] then
@@ -707,12 +709,12 @@ function dymj:peng(id, msg)
     local weave = {
         op = base.MJ_OP_PENG,
         card = out_card,
-        index = self._out_index,
-        out_card = self._out_card,
+        index = out_index,
+        out_card = out_card,
     }
     info.weave_card[#info.weave_card+1] = weave
     info.out = true
-    info.chi_count[self._out_index] = info.chi_count[self._out_index] + 1
+    info.chi_count[out_index] = info.chi_count[out_index] + 1
     local rmsg, rinfo = func.update_msg({
         {index=info.index, weave_card={weave}},
     })
@@ -722,7 +724,8 @@ end
 
 function dymj:gang(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
-    if info.chi_count[self._out_index] >= base.MJ_CHI_COUNT then
+    local out_index = self._out_index
+    if info.chi_count[out_index] >= base.MJ_CHI_COUNT then
         error{code = error_code.CHI_COUNT_LIMIT}
     end
     if not info.respond[base.MJ_OP_GANG] then
@@ -737,13 +740,13 @@ function dymj:gang(id, msg)
     local weave = {
         op = base.MJ_OP_GANG,
         card = out_card,
-        index = self._out_index,
-        out_card = self._out_card,
+        index = out_index,
+        out_card = out_card,
     }
     info.weave_card[#info.weave_card+1] = weave
     info.out = true
     info.gang_count = info.gang_count + 1
-    info.chi_count[self._out_index] = info.chi_count[self._out_index] + 1
+    info.chi_count[out_index] = info.chi_count[out_index] + 1
     local c = self:deal(info)
     local chess = {deal_index=info.index, left=self._left}
     local rmsg, rinfo = func.update_msg({
@@ -757,7 +760,8 @@ end
 
 function dymj:hide_gang(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
-    if self._deal_index ~= info.index then
+    local index = info.index
+    if self._deal_index ~= index then
         error{code = error_code.ERROR_DEAL_INDEX}
     end
     local type_card = info.type_card
@@ -770,7 +774,7 @@ function dymj:hide_gang(id, msg)
         weave = {
             op = base.MJ_OP_HIDE_GANG,
             card = card,
-            index = info.index,
+            index = index,
             out_card = card,
         }
         weave_card[#weave_card+1] = weave
@@ -793,13 +797,13 @@ function dymj:hide_gang(id, msg)
     info.out = true
     info.gang_count = info.gang_count + 1
     local c = self:deal(info)
-    local chess = {deal_index=info.index, left=self._left}
+    local chess = {deal_index=index, left=self._left}
     local rmsg, rinfo = func.update_msg({
-        {index=info.index, weave_card={weave}},
+        {index=index, weave_card={weave}},
     }, chess)
     broadcast(rmsg, rinfo, self._role, id)
     return func.update_msg({
-        {index=info.index, weave_card={weave}, last_deal=c},
+        {index=index, weave_card={weave}, last_deal=c},
     }, chess)
 end
 

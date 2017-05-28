@@ -44,8 +44,8 @@
 
 .show_card {
     own_card 0 : *integer
-    weave_card 1 : *weave_card
-    score 2 : integer
+    score 1 : integer
+    last_deal 2 : integer
 }
 
 .chess_user {
