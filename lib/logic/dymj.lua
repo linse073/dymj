@@ -301,7 +301,6 @@ function dymj:analyze(card, index)
             if type_card[card] >= 3 then
                 gang = true
             end
-            -- TODO: weave gang
             local respond = v.respond
             respond[base.MJ_OP_CHI], respond[base.MJ_OP_PENG], respond[base.MJ_OP_GANG] = chi, peng, gang
             if chi or peng or gang then
