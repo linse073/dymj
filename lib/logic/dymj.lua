@@ -600,6 +600,7 @@ function dymj:hu(id, msg)
         }
     end
     user[info.index].action = base.MJ_OP_HU
+    user[info.index].last_deal = role[info.index].last_deal
     self._banker = info.index
     local rmsg, rinfo = func.update_msg(user, {
         status=self._status, count=self._count, banker=self._banker,
