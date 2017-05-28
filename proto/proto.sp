@@ -39,6 +39,7 @@
     card 1 : integer
     index 2 : integer
     out_card 3 : integer
+    old 4 : integer
 }
 
 .show_card {

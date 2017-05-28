@@ -772,22 +772,18 @@ function dymj:hide_gang(id, msg)
         }
         weave_card[#weave_card+1] = weave
     elseif card_count >= 1 then
-        local old
         for k, v in ipairs(weave_card) do
             if v.op == base.MJ_OP_PENG and v.card == card then
-                old = v
+                weave = v
+                weave.old = k
                 break
             end
         end
-        if not old then
+        if not weave then
             error{code = error_code.ERROR_OPERATION}
         end
         type_card[card] = card_count - 1
-        old.op = base.MJ_OP_GANG
-        weave = {
-            op = old.op,
-            card = card,
-        }
+        weave.op = base.MJ_OP_GANG
     else
         error{code = error_code.ERROR_OPERATION}
     end
