@@ -760,17 +760,38 @@ function dymj:hide_gang(id, msg)
     end
     local type_card = info.type_card
     local card = msg.card
-    if not (type_card[card] >= 4) then
+    local weave
+    local weave_card = info.weave_card
+    local card_count = type_card[card]
+    if card_count >= 4 then
+        type_card[card] = card_count - 4
+        weave = {
+            op = base.MJ_OP_HIDE_GANG,
+            card = card,
+            index = info.index,
+            out_card = card,
+        }
+        weave_card[#weave_card+1] = weave
+    elseif card_count >= 1 then
+        local old
+        for k, v in ipairs(weave_card) do
+            if v.op == base.MJ_OP_PENG and v.card == card then
+                old = v
+                break
+            end
+        end
+        if not old then
+            error{code = error_code.ERROR_OPERATION}
+        end
+        type_card[card] = card_count - 1
+        old.op = base.MJ_OP_GANG
+        weave = {
+            op = old.op,
+            card = card,
+        }
+    else
         error{code = error_code.ERROR_OPERATION}
     end
-    type_card[card] = type_card[card] - 4
-    local weave = {
-        op = base.MJ_OP_HIDE_GANG,
-        card = card,
-        index = info.index,
-        out_card = card,
-    }
-    info.weave_card[#info.weave_card+1] = weave
     info.out = true
     info.gang_count = info.gang_count + 1
     local c = self:deal(info)
