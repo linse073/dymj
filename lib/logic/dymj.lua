@@ -280,7 +280,7 @@ local CHI_RULE = {
 function dymj:analyze(card, index)
     local has_respond = false
     for k, v in ipairs(self._role) do
-        if v.index ~= index and not self:is_out_magic(v.index) and v.chi_count[index] < base.MJ_CHI_COUNT then
+        if v.index ~= index and not self:is_out_magic() and v.chi_count[index] < base.MJ_CHI_COUNT then
             local type_card = v.type_card
             local chi = false
             if v.index == index%base.MJ_FOUR+1 then
@@ -763,6 +763,9 @@ function dymj:hide_gang(id, msg)
     local index = info.index
     if self._deal_index ~= index then
         error{code = error_code.ERROR_DEAL_INDEX}
+    end
+    if self:is_out_magic(index) then
+        error{code = error_code.ERROR_OPERATION}
     end
     local type_card = info.type_card
     local card = msg.card
