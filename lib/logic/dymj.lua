@@ -527,7 +527,8 @@ end
 
 function dymj:hu(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
-    if self._deal_index ~= info.index then
+    local index = info.index
+    if self._deal_index ~= index then
         error{code = error_code.ERROR_DEAL_INDEX}
     end
     local type_card = info.type_card
@@ -567,15 +568,16 @@ function dymj:hu(id, msg)
     local role = self._role
     for k, v in ipairs(role) do
         v.ready = false
+        local banker = self._banker
         local score
-        if k == info.index then
-            if k == self._banker then
+        if k == index then
+            if k == banker then
                 score = mul * 24
             else
                 score = mul * 10
             end
         else
-            if k == self._banker or info.index == self._banker then
+            if k == banker or index == banker then
                 score = -mul * 8
             else
                 score = -mul
@@ -599,9 +601,9 @@ function dymj:hu(id, msg)
             },
         }
     end
-    user[info.index].action = base.MJ_OP_HU
-    user[info.index].last_deal = role[info.index].last_deal
-    self._banker = info.index
+    user[index].action = base.MJ_OP_HU
+    user[index].last_deal = role[index].last_deal
+    self._banker = index
     local rmsg, rinfo = func.update_msg(user, {
         status=self._status, count=self._count, banker=self._banker,
     })
