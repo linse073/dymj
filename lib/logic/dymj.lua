@@ -761,6 +761,9 @@ end
 function dymj:hide_gang(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     local index = info.index
+    -- if self._deal_index ~= index then
+    --     error{code = error_code.ERROR_DEAL_INDEX}
+    -- end
     if self:is_out_magic(index) then
         error{code = error_code.ERROR_OPERATION}
     end
