@@ -352,11 +352,11 @@ function dymj:out_card(id, msg)
         return self:conclude(id)
     else
         type_card[card] = type_card[card] - 1
-        info.gang_count = 0
         if card == self._magic_card then
             info.out_magic = info.out_magic + 1
         else
             info.out_magic = 0
+            info.gang_count = 0
         end
         self._out_card = card
         self._out_index = info.index
