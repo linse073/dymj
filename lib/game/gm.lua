@@ -44,8 +44,8 @@ function proc.dymj_card(msg)
         card = util.reverse(card)
     end
     data.dymj_card = card
-    if data.table then
-        return skynet.call(data.table, "lua", "custom_card", "dymj", card)
+    if data.chess_table then
+        return skynet.call(data.chess_table, "lua", "custom_card", "dymj", card)
     else
         return "response", ""
     end

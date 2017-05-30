@@ -79,6 +79,59 @@ function dymj:custom_card(name, card)
     return "response", ""
 end
 
+function dymj:pack(id)
+    local chess = {
+        name = "dymj",
+        number = self._number,
+        rule = self._rule,
+        banker = self._banker,
+        status = self._statue,
+        count = self._count,
+        pause = self._pause,
+        left = self._left,
+        deal_index = self._deal_index,
+    }
+    local user = {}
+    local role = self._role
+    for i = 1, base.MJ_FOUR do
+        local info = role[i]
+        if info then
+            local u = {
+                account = info.account,
+                id = info.id,
+                sex = info.sex,
+                nick_name = info.nick_name,
+                head_img = info.head_img,
+                ip = info.ip,
+                index = info.index,
+                score = info.score,
+                ready = info.ready,
+                out_card = info.out_card,
+                last_deal = info.last_deal,
+                weave_card = info.weave_card,
+                agree = info.agree,
+            }
+            if info.id == id then
+                local own_card = {}
+                for k, v in pairs(info.type_card) do
+                    for i = 1, v do
+                        own_card[#own_card+1] = k
+                    end
+                end
+                u.own_card = own_card
+            else
+                local count = 0
+                for k, v in pairs(info.type_card) do
+                    count = count + v
+                end
+                u.own_count = count
+            end
+            user[#user+1] = u
+        end
+    end
+    return func.update_msg(user, chess)
+end
+
 function dymj:enter(info, agent, index)
     local role = self._role
     assert(not role[index], string.format("Seat %d already has role.", index))
@@ -832,6 +885,7 @@ function dymj:pass(id, msg)
     if in_respond(info.respond) then
         local all_pass = true
         local role = self._role
+        local out_index = self._out_index
         for k, v in ipairs(role) do
             if not v.pass then
                 all_pass = false
@@ -847,12 +901,14 @@ function dymj:pass(id, msg)
                     local weave = {
                         op = base.MJ_OP_CHI,
                         card = card,
-                        index = self._out_index,
+                        index = out_index,
                         out_card = self._out_card,
                     }
                     v.weave_card[#v.weave_card+1] = weave
                     v.out = true
-                    v.chi_count[self._out_index] = v.chi_count[self._out_index] + 1
+                    v.chi_count[out_index] = v.chi_count[out_index] + 1
+                    local role_out = role[out_index].out_card
+                    role_out[#role_out] = nil
                     local rmsg, rinfo = func.update_msg({
                         {index=v.index, weave_card={weave}},
                     })

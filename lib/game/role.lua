@@ -27,6 +27,7 @@ local rand
 local role_mgr
 local offline_mgr
 local table_mgr
+local chess_mgr
 local gm_level = tonumber(skynet.getenv("gm_level"))
 local start_utc_time = tonumber(skynet.getenv("start_utc_time"))
 local user_db
@@ -40,6 +41,7 @@ skynet.init(function()
     role_mgr = skynet.queryservice("role_mgr")
     offline_mgr = skynet.queryservice("offline_mgr")
     table_mgr = skynet.queryservice("table_mgr")
+    chess_mgr = skynet.queryservice("chess_mgr")
 	local master = skynet.queryservice("mongo_master")
     user_db = skynet.call(master, "lua", "get", "user")
     info_db = skynet.call(master, "lua", "get", "info")
@@ -159,9 +161,12 @@ end
 
 function role.leave()
     local data = game.data
-    assert(data.table, string.format("user %d not in chess.", data.id))
+    cz.start()
+    assert(data.chess_table, string.format("user %d not in chess.", data.id))
     skynet.error(string.format("user %d leave chess.", data.id))
-    data.table = nil
+    skynet.call(chess_mgr, "lua", "del", data.id)
+    data.chess_table = nil
+    cz.finish()
 end
 
 -------------------protocol process--------------------------
@@ -201,6 +206,11 @@ function proc.enter_game(msg)
     for _, v in ipairs(pack) do
         ret[v[1]] = v[2]
     end
+    local chess_table = skynet.call(chess_mgr, "lua", "get", user.id)
+    if chess_table then
+        data.chess_table = chess_table
+        ret.chess = skynet.call(chess_table, "lua", "pack", user.id)
+    end
     timer.add_routine("save_role", role.save_routine, 300)
     skynet.call(role_mgr, "lua", "enter", data.info, skynet.self())
     cz.finish()
@@ -226,37 +236,39 @@ function proc.new_chess(msg)
     end
     local data = game.data
     cz.start()
-    if data.table then
+    if data.chess_table then
         error{code = error_code.ALREAD_IN_CHESS}
     end
-    local table = skynet.call(table_mgr, "lua", "new")
-    if not table then
+    local chess_table = skynet.call(table_mgr, "lua", "new")
+    if not chess_table then
         error{code = error_code.INTERNAL_ERROR}
     end
     local card = data[msg.name .. "_card"]
-    local rmsg, info = skynet.call(table, "lua", "init", name, msg.rule, data.info, skynet.self(), card)
+    local rmsg, info = skynet.call(chess_table, "lua", "init", name, msg.rule, data.info, skynet.self(), card)
     if rmsg == "update_user" then
-        data.table = table
+        data.chess_table = chess_table
+        skynet.call(chess_mgr, "lua", "add", data.id, chess_table)
     else
-        skynet.call(table_mgr, "lua", "free", table)
+        skynet.call(table_mgr, "lua", "free", chess_table)
     end
     cz.finish()
     return rmsg, info
 end
 
 function proc.join(msg)
-    local table = skynet.call(table_mgr, "lua", "get", msg.number)
-    if not table then
+    local chess_table = skynet.call(table_mgr, "lua", "get", msg.number)
+    if not chess_table then
         error{code = error_code.ERROR_CHESS_NUMBER}
     end
     local data = game.data
     cz.start()
-    if data.table then
+    if data.chess_table then
         error{code = error_code.ALREAD_IN_CHESS}
     end
-    local rmsg, info = skynet.call(table, "lua", "join", msg.name, data.info, skynet.self())
+    local rmsg, info = skynet.call(chess_table, "lua", "join", msg.name, data.info, skynet.self())
     if rmsg == "update_user" then
-        data.table = table
+        data.chess_table = chess_table
+        skynet.call(chess_mgr, "lua", "add", data.id, chess_table)
     end
     cz.finish()
     return rmsg, info

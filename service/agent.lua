@@ -111,8 +111,8 @@ skynet.start(function()
             rmsg, info = func.return_msg(ok, rmsg, info)
         else
             local data = game.data
-            if data and data.table then
-                rmsg, info = skynet.call(data.table, "lua", msgname, data.id, arg)
+            if data and data.chess_table then
+                rmsg, info = skynet.call(data.chess_table, "lua", msgname, data.id, arg)
             else
                 rmsg, info = "error_code", {code = error_code.NOT_JOIN_CHESS}
             end

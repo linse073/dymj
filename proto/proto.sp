@@ -66,6 +66,7 @@
     action 14 : integer
     agree 15 : boolean
     show_card 16 : show_card
+    own_count 17 : integer
 }
 
 .chess_info {
