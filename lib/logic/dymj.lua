@@ -110,6 +110,8 @@ function dymj:pack(id)
                 last_deal = info.last_deal,
                 weave_card = info.weave_card,
                 agree = info.agree,
+                out = info.out,
+                pass = info.pass,
             }
             if info.id == id then
                 local own_card = {}
