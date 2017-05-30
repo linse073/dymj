@@ -69,6 +69,8 @@
     own_count 17 : integer
     out 18 : boolean
     pass 19 : boolean
+    out_magic 20 : boolean
+    chi_count 21 : *integer
 }
 
 .chess_info {
@@ -82,6 +84,8 @@
     count 7 : integer
     pause 8 : boolean
     rand 9 : integer
+    out_card 10 : integer
+    out_index 11 : integer
 }
 
 .chess_all {

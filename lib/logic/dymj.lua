@@ -90,6 +90,8 @@ function dymj:pack(id)
         pause = self._pause,
         left = self._left,
         deal_index = self._deal_index,
+        out_card = self._out_card,
+        out_index = self._out_index,
     }
     local user = {}
     local role = self._role
@@ -112,7 +114,12 @@ function dymj:pack(id)
                 agree = info.agree,
                 out = info.out,
                 pass = info.pass,
+                out_magic = info.out_magic>0,
+                chi_count = info.chi_count,
             }
+            if info.op[base.MJ_OP_CHI] > 0 then
+                u.action = base.MJ_OP_CHI
+            end
             if info.id == id then
                 local own_card = {}
                 for k, v in pairs(info.type_card) do
