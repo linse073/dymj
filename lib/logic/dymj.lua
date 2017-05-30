@@ -360,6 +360,7 @@ function dymj:out_card(id, msg)
         end
         self._out_card = card
         self._out_index = info.index
+        info.out_card[#info.out_card+1] = card
         local chess
         local deal_index
         local role = self._role
@@ -683,6 +684,8 @@ function dymj:chi(id, msg)
         info.weave_card[#info.weave_card+1] = weave
         info.out = true
         info.chi_count[out_index] = info.chi_count[out_index] + 1
+        local role_out = self._role[out_index].out_card
+        role_out[#role_out] = nil
         local rmsg, rinfo = func.update_msg({
             {index=info.index, weave_card={weave}},
         })
@@ -715,6 +718,8 @@ function dymj:peng(id, msg)
     info.weave_card[#info.weave_card+1] = weave
     info.out = true
     info.chi_count[out_index] = info.chi_count[out_index] + 1
+    local role_out = self._role[out_index].out_card
+    role_out[#role_out] = nil
     local rmsg, rinfo = func.update_msg({
         {index=info.index, weave_card={weave}},
     })
@@ -747,6 +752,8 @@ function dymj:gang(id, msg)
     info.out = true
     info.gang_count = info.gang_count + 1
     info.chi_count[out_index] = info.chi_count[out_index] + 1
+    local role_out = self._role[out_index].out_card
+    role_out[#role_out] = nil
     local c = self:deal(info)
     local chess = {deal_index=info.index, left=self._left}
     local rmsg, rinfo = func.update_msg({
@@ -984,6 +991,7 @@ function dymj:start()
         v.weave_card = {}
         v.respond = {}
         v.op = {}
+        v.out_card = {}
         local chi_count = {}
         for i = 1, base.MJ_FOUR do
             chi_count[i] = 0
