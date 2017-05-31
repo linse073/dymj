@@ -33,14 +33,11 @@ function dymj:init(number, rule, rand, card)
     self._rule = rule
     self._rand = rand
     self._custom_card = card
-    local p, c, l = string.unpack("BBB", rule)
+    local p, c = string.unpack("BB", rule)
     if c == 1 then
         self._total_count = 8
     else
         self._total_count = 16
-    end
-    if l == 1 then
-        self._limit50 = true
     end
     self._magic_card = 45
     self._banker = rand.randi(1, base.MJ_FOUR)
