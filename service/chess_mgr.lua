@@ -18,7 +18,7 @@ function CMD.del(id)
 end
 
 function CMD.get(id)
-    return assert(role_list[id], string.format("No role %d.", id))
+    return role_list[id]
 end
 
 skynet.start(function()
