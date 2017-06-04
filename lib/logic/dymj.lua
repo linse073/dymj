@@ -611,9 +611,9 @@ function dymj:hu(id, msg)
         if not self:check_hu(tc, weave_card, magic_count) then
             error{code = error_code.ERROR_OPERATION}
         end
-        mul = 2^info.gang_count
         local head = weave_card[1]
         if head[1] == self._deal_card and head[2] == 0 then
+            mul = 2^info.gang_count
             mul = mul * 2^(info.out_magic+1)
         end
     end
