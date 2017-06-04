@@ -556,11 +556,12 @@ function dymj:check_hu(type_card, weave_card, magic_count)
 end
 
 function dymj:is_qidui(type_card)
-    local magic_count = type_card[self._magic_card]
+    local magic_card = self._magic_card
+    local magic_count = type_card[magic_card]
     local four_count = 0
     local two_count = 0
     for k, v in pairs(type_card) do
-        if k ~= self._magic_card then
+        if k ~= magic_card then
             if v == 1 then
                 if magic_count <= 0 then
                     return false
@@ -593,9 +594,12 @@ function dymj:hu(id, msg)
     local type_card = info.type_card
     local mul = 1
     local hu, four_count = self:is_qidui(type_card)
+    local magic_card = self._magic_card
     if hu then
-        -- TODO: if type_card[self._magic_card] == 0
-        mul = 2^(four_count+1)
+        if type_card[magic_card] == 0 then
+            mul = 2
+        end
+        mul = mul * 2^(four_count+1)
         if type_card[self._deal_card]%2 == 1 then
             mul = mul * 2^(info.out_magic+1)
         end
@@ -606,8 +610,8 @@ function dymj:hu(id, msg)
                 tc[k] = v
             end
         end
-        local magic_count = tc[self._magic_card] or 0
-        tc[self._magic_card] = nil
+        local magic_count = tc[magic_card] or 0
+        tc[magic_card] = nil
         local weave_card = {}
         if not self:check_hu(tc, weave_card, magic_count) then
             error{code = error_code.ERROR_OPERATION}
@@ -619,7 +623,7 @@ function dymj:hu(id, msg)
         else
             local out_card = info.out_card
             local len = #out_card
-            if len == 0 or out_card[len] ~= self._magic_card then
+            if len == 0 or out_card[len] ~= magic_card then
                 mul = 2^info.gang_count
             end
         end
