@@ -382,8 +382,7 @@ function dymj:analyze(card, index)
 end
 
 function dymj:is_out_magic(index)
-    local role = self._role
-    for k, v in ipairs(role) do
+    for k, v in ipairs(self._role) do
         if k ~= index and v.out_magic > 0 then
             return true
         end
