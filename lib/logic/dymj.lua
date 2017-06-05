@@ -131,6 +131,7 @@ function dymj:pack(id)
                         end
                     end
                     u.own_card = own_card
+                    u.own_count = #own_card
                 end
                 u.last_deal = info.last_deal
             else
