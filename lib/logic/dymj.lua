@@ -146,7 +146,7 @@ function dymj:pack(id)
             user[#user+1] = u
         end
     end
-    return func.update_msg(user, chess)
+    return {info=chess, user=user}
 end
 
 function dymj:enter(info, agent, index)
