@@ -606,12 +606,11 @@ function dymj:hu(id, msg)
     local hu, four_count = self:is_qidui(type_card)
     local magic_card = self._magic_card
     if hu then
-        if type_card[magic_card] == 0 then
-            mul = 2
-        end
-        mul = mul * 2^(four_count+1)
+        mul = 2^(four_count+1)
         if type_card[self._deal_card]%2 == 1 then
             mul = mul * 2^(info.out_magic+1)
+        elseif type_card[magic_card] == 0 then
+            mul = mul * 2
         end
     else
         local tc = {}
