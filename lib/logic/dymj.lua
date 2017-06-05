@@ -111,26 +111,34 @@ function dymj:pack(id)
                 agree = info.agree,
                 out = info.out,
                 pass = info.pass,
-                out_magic = info.out_magic>0,
                 chi_count = info.chi_count,
             }
-            if info.op[base.MJ_OP_CHI] > 0 then
+            if info.out_magic then
+                u.out_magic = info.out_magic>0
+            else
+                u.out_magic = false
+            end
+            local op = info.op
+            if op and op[base.MJ_OP_CHI] > 0 then
                 u.action = base.MJ_OP_CHI
             end
-            if info.id == id then
-                local own_card = {}
-                for k, v in pairs(info.type_card) do
-                    for i = 1, v do
-                        own_card[#own_card+1] = k
+            local type_card = info.type_card
+            if type_card then
+                if info.id == id then
+                    local own_card = {}
+                    for k, v in pairs(type_card) do
+                        for i = 1, v do
+                            own_card[#own_card+1] = k
+                        end
                     end
+                    u.own_card = own_card
+                else
+                    local count = 0
+                    for k, v in pairs(type_card) do
+                        count = count + v
+                    end
+                    u.own_count = count
                 end
-                u.own_card = own_card
-            else
-                local count = 0
-                for k, v in pairs(info.type_card) do
-                    count = count + v
-                end
-                u.own_count = count
             end
             user[#user+1] = u
         end
