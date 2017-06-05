@@ -106,7 +106,6 @@ function dymj:pack(id)
                 score = info.score,
                 ready = info.ready,
                 out_card = info.out_card,
-                last_deal = info.last_deal,
                 weave_card = info.weave_card,
                 agree = info.agree,
                 out = info.out,
@@ -123,8 +122,8 @@ function dymj:pack(id)
                 u.action = base.MJ_OP_CHI
             end
             local type_card = info.type_card
-            if type_card then
-                if info.id == id then
+            if info.id == id then
+                if type_card then
                     local own_card = {}
                     for k, v in pairs(type_card) do
                         for i = 1, v do
@@ -132,7 +131,10 @@ function dymj:pack(id)
                         end
                     end
                     u.own_card = own_card
-                else
+                end
+                u.last_deal = info.last_deal
+            else
+                if type_card then
                     local count = 0
                     for k, v in pairs(type_card) do
                         count = count + v
