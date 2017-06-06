@@ -137,6 +137,7 @@ function dymj:pack(id, agent)
                 ready = info.ready,
                 agree = info.agree,
                 out = info.out,
+                -- TODO: dismiss pass
                 pass = info.pass,
                 out_magic = info.out_magic>0,
             }
@@ -934,14 +935,14 @@ end
 
 function dymj:pass(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
-    if info.pass then
-        error{code = error_code.ALREADY_PASS}
-    end
-    info.pass = true
-    local chess
-    local user = {index=info.index, action=base.MJ_OP_PASS}
     if in_respond(info.respond) then
+        if info.pass then
+            error{code = error_code.ALREADY_PASS}
+        end
+        info.pass = true
         self:clear_op(info)
+        local chess
+        local user = {index=info.index, action=base.MJ_OP_PASS}
         local all_pass = true
         local role = self._role
         local out_index = self._out_index
@@ -998,8 +999,15 @@ function dymj:pass(id, msg)
                 end
             end
         end
+        return func.update_msg({user}, chess)
+    else
+        if info.deal_pass then
+            error{code = error_code.ALREADY_PASS}
+        end
+        info.deal_pass = true
+        local user = {index=info.index, action=base.MJ_OP_PASS}
+        return func.update_msg({user})
     end
-    return func.update_msg({user}, chess)
 end
 
 function dymj:conclude(id, msg)
@@ -1052,7 +1060,8 @@ function dymj:deal(info)
     info.type_card[c] = info.type_card[c] + 1
     info.last_deal = c
     info.out = true
-    info.pass = false
+    self:clear_op(info)
+    info.deal_pass = false
     self._deal_index = info.index
     self._deal_card = c
     return c
