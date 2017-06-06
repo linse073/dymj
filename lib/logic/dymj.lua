@@ -409,6 +409,7 @@ function dymj:analyze(card, index)
             end
             local op = v.op
             op[base.MJ_OP_CHI], op[base.MJ_OP_PENG], op[base.MJ_OP_GANG] = 0, 0, 0
+            v.deal_pass = false
         else
             self:clear_op(v)
         end
@@ -1061,7 +1062,6 @@ function dymj:deal(info)
     info.last_deal = c
     info.out = true
     self:clear_op(info)
-    info.deal_pass = false
     self._deal_index = info.index
     self._deal_card = c
     return c
@@ -1073,6 +1073,7 @@ function dymj:clear_op(info)
     info.pass = true
     local op = info.op
     op[base.MJ_OP_CHI], op[base.MJ_OP_PENG], op[base.MJ_OP_GANG] = 0, 0, 0
+    info.deal_pass = false
 end
 
 function dymj:start()
