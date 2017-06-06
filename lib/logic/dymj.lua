@@ -76,13 +76,13 @@ function dymj:custom_card(name, card)
     return "response", ""
 end
 
-function dymj:pack(id)
+function dymj:pack(id, agent)
     local chess = {
         name = "dymj",
         number = self._number,
         rule = self._rule,
         banker = self._banker,
-        status = self._statue,
+        status = self._status,
         count = self._count,
         pause = self._pause,
         left = self._left,
@@ -110,7 +110,6 @@ function dymj:pack(id)
                 agree = info.agree,
                 out = info.out,
                 pass = info.pass,
-                chi_count = info.chi_count,
             }
             if info.out_magic then
                 u.out_magic = info.out_magic>0
@@ -123,6 +122,7 @@ function dymj:pack(id)
             end
             local type_card = info.type_card
             if info.id == id then
+                info.agent = agent
                 if type_card then
                     local own_card = {}
                     for k, v in pairs(type_card) do
@@ -134,6 +134,7 @@ function dymj:pack(id)
                     u.own_count = #own_card
                 end
                 u.last_deal = info.last_deal
+                u.chi_count = info.chi_count
             else
                 if type_card then
                     local count = 0
@@ -146,6 +147,8 @@ function dymj:pack(id)
             user[#user+1] = u
         end
     end
+    util.dump(chess)
+    util.dump(user)
     return {info=chess, user=user}
 end
 
@@ -1081,11 +1084,11 @@ function dymj:start()
         v.chi_count = chi_count
         v.gang_count = 0
         v.out_magic = 0
-        v.out = false
         local deal_card = {}
         for i = 1, base.MJ_ROLE_CARD do
             deal_card[i] = self:deal(v)
         end
+        v.out = false
         v.deal_card = deal_card
     end
     self:deal(role[self._banker])

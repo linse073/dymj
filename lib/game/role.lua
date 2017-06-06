@@ -209,7 +209,7 @@ function proc.enter_game(msg)
     local chess_table = skynet.call(chess_mgr, "lua", "get", user.id)
     if chess_table then
         data.chess_table = chess_table
-        ret.chess = skynet.call(chess_table, "lua", "pack", user.id)
+        ret.chess = skynet.call(chess_table, "lua", "pack", user.id, skynet.self())
     end
     timer.add_routine("save_role", role.save_routine, 300)
     skynet.call(role_mgr, "lua", "enter", data.info, skynet.self())
