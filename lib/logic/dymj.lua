@@ -77,24 +77,54 @@ function dymj:custom_card(name, card)
 end
 
 function dymj:pack(id, agent)
-    local chess = {
-        name = "dymj",
-        number = self._number,
-        rule = self._rule,
-        banker = self._banker,
-        status = self._status,
-        count = self._count,
-        pause = self._pause,
-        left = self._left,
-        deal_index = self._deal_index,
-        out_card = self._out_card,
-        out_index = self._out_index,
-    }
-    local user = {}
-    local role = self._role
-    for i = 1, base.MJ_FOUR do
-        local info = role[i]
-        if info then
+    local status = self._status
+    if status == base.CHESS_STATUS_READY then
+        local chess = {
+            name = "dymj",
+            number = self._number,
+            rule = self._rule,
+            banker = self._banker,
+            status = status,
+            count = self._count,
+            pause = self._pause,
+        }
+        local user = {}
+        local role = self._role
+        for i = 1, base.MJ_FOUR do
+            local info = role[i]
+            if info then
+                user[#user+1] = {
+                    account = info.account,
+                    id = info.id,
+                    sex = info.sex,
+                    nick_name = info.nick_name,
+                    head_img = info.head_img,
+                    ip = info.ip,
+                    index = info.index,
+                    score = info.score,
+                    ready = info.ready,
+                }
+            end
+        end
+        return {info=chess, user=user}
+    elseif status == base.CHESS_STATUS_START then
+        local chess = {
+            name = "dymj",
+            number = self._number,
+            rule = self._rule,
+            banker = self._banker,
+            status = self._status,
+            count = self._count,
+            pause = self._pause,
+            left = self._left,
+            deal_index = self._deal_index,
+            out_card = self._out_card,
+            out_index = self._out_index,
+        }
+        local user = {}
+        local role = self._role
+        for i = 1, base.MJ_FOUR do
+            local info = role[i]
             local u = {
                 account = info.account,
                 id = info.id,
@@ -108,6 +138,7 @@ function dymj:pack(id, agent)
                 agree = info.agree,
                 out = info.out,
                 pass = info.pass,
+                out_magic = info.out_magic>0,
             }
             local out_card = info.out_card
             if out_card and #out_card > 0 then
@@ -117,43 +148,32 @@ function dymj:pack(id, agent)
             if weave_card and #weave_card > 0 then
                 u.weave_card = weave_card
             end
-            if info.out_magic then
-                u.out_magic = info.out_magic>0
-            else
-                u.out_magic = false
-            end
-            local op = info.op
-            if op and op[base.MJ_OP_CHI] > 0 then
+            if info.op[base.MJ_OP_CHI] > 0 then
                 u.action = base.MJ_OP_CHI
             end
-            local type_card = info.type_card
             if info.id == id then
                 info.agent = agent
-                if type_card then
-                    local own_card = {}
-                    for k, v in pairs(type_card) do
-                        for i = 1, v do
-                            own_card[#own_card+1] = k
-                        end
+                local own_card = {}
+                for k, v in pairs(info.type_card) do
+                    for i = 1, v do
+                        own_card[#own_card+1] = k
                     end
-                    u.own_card = own_card
-                    u.own_count = #own_card
                 end
+                u.own_card = own_card
+                u.own_count = #own_card
                 u.last_deal = info.last_deal
                 u.chi_count = info.chi_count
             else
-                if type_card then
-                    local count = 0
-                    for k, v in pairs(type_card) do
-                        count = count + v
-                    end
-                    u.own_count = count
+                local count = 0
+                for k, v in pairs(info.type_card) do
+                    count = count + v
                 end
+                u.own_count = count
             end
             user[#user+1] = u
         end
+        return {info=chess, user=user}
     end
-    return {info=chess, user=user}
 end
 
 function dymj:enter(info, agent, index)
