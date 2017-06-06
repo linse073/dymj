@@ -540,6 +540,12 @@ function dymj:check_hu(type_card, weave_card, magic_count)
             end
             weave_card[#weave_card] = nil
             clone[deal_card] = n
+        elseif magic_count >= 2 then
+            weave_card[#weave_card+1] = {deal_card, 0}
+            if find_weave(clone, weave_card, magic_count-2) then
+                return true
+            end
+            weave_card[#weave_card] = nil
         end
         for k, v in pairs(type_card) do
             if k ~= deal_card then
