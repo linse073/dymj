@@ -919,8 +919,8 @@ function dymj:pass(id, msg)
         error{code = error_code.ALREADY_PASS}
     end
     info.pass = true
-    local deal_index
     local chess
+    local user = {index=info.index, action=base.MJ_OP_PASS}
     if in_respond(info.respond) then
         local all_pass = true
         local role = self._role
@@ -957,20 +957,24 @@ function dymj:pass(id, msg)
                     })
                     broadcast(rmsg, rinfo, role, id)
                     return func.update_msg({
-                        {index=v.index, weave_card={weave}},
-                        {index=info.index, action=base.MJ_OP_PASS},
+                        {index=v.index, weave_card={weave}}, 
+                        user,
                     })
                 end
             end
         end
         if all_pass and not has_out then
-            deal_index = self._out_index%base.MJ_FOUR+1
+            local deal_index = out_index%base.MJ_FOUR+1
             local r = role[deal_index]
             local c = self:deal(r)
             chess = {deal_index=deal_index, left=self._left}
-            skynet.send(r.agent, "lua", "notify", func.update_msg({
-                {index=deal_index, last_deal=c},
-            }, chess))
+            if r.id == id then
+                user.last_deal = c
+            else
+                skynet.send(r.agent, "lua", "notify", func.update_msg({
+                    {index=deal_index, last_deal=c},
+                }, chess))
+            end
             local rmsg, rinfo = func.update_msg(nil, chess)
             for k, v in ipairs(role) do
                 if v.id ~= id and v.index ~= deal_index then
@@ -979,9 +983,7 @@ function dymj:pass(id, msg)
             end
         end
     end
-    return func.update_msg({
-        {index=info.index, action=base.MJ_OP_PASS},
-    }, chess)
+    return func.update_msg({user}, chess)
 end
 
 function dymj:conclude(id, msg)
