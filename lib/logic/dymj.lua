@@ -409,11 +409,7 @@ function dymj:analyze(card, index)
             local op = v.op
             op[base.MJ_OP_CHI], op[base.MJ_OP_PENG], op[base.MJ_OP_GANG] = 0, 0, 0
         else
-            local respond = v.respond
-            respond[base.MJ_OP_CHI], respond[base.MJ_OP_PENG], respond[base.MJ_OP_GANG] = false, false, false
-            v.pass = true
-            local op = v.op
-            op[base.MJ_OP_CHI], op[base.MJ_OP_PENG], op[base.MJ_OP_GANG] = 0, 0, 0
+            self:clear_op(v)
         end
     end
     return has_respond
@@ -773,6 +769,7 @@ function dymj:chi(id, msg)
     if not valid then
         error{code = error_code.ERROR_OPERATION}
     end
+    self:clear_op(info)
     if self:check_prior(info.index, base.MJ_OP_CHI) then
         info.op[base.MJ_OP_CHI] = card
         return func.update_msg({
@@ -817,6 +814,7 @@ function dymj:peng(id, msg)
     if not (type_card[out_card] >= 2) then
         error{code = error_code.ERROR_OPERATION}
     end
+    self:clear_op(info)
     type_card[out_card] = type_card[out_card] - 2
     local weave = {
         op = base.MJ_OP_PENG,
@@ -850,6 +848,7 @@ function dymj:gang(id, msg)
     if not (type_card[out_card] >= 3) then
         error{code = error_code.ERROR_OPERATION}
     end
+    self:clear_op(info)
     type_card[out_card] = type_card[out_card] - 3
     local weave = {
         op = base.MJ_OP_GANG,
@@ -942,14 +941,11 @@ function dymj:pass(id, msg)
     local chess
     local user = {index=info.index, action=base.MJ_OP_PASS}
     if in_respond(info.respond) then
+        self:clear_op(info)
         local all_pass = true
         local role = self._role
         local out_index = self._out_index
-        local has_out = false
         for k, v in ipairs(role) do
-            if v.out then
-                has_out = true
-            end
             if not v.pass then
                 all_pass = false
                 -- NOTICE: only check MJ_OP_CHI
@@ -983,7 +979,7 @@ function dymj:pass(id, msg)
                 end
             end
         end
-        if all_pass and not has_out then
+        if all_pass then
             local deal_index = out_index%base.MJ_FOUR+1
             local r = role[deal_index]
             local c = self:deal(r)
@@ -1056,14 +1052,18 @@ function dymj:deal(info)
     info.type_card[c] = info.type_card[c] + 1
     info.last_deal = c
     info.out = true
-    local respond = info.respond
-    respond[base.MJ_OP_CHI], respond[base.MJ_OP_PENG], respond[base.MJ_OP_GANG] = false, false, false
     info.pass = false
-    local op = info.op
-    op[base.MJ_OP_CHI], op[base.MJ_OP_PENG], op[base.MJ_OP_GANG] = 0, 0, 0
     self._deal_index = info.index
     self._deal_card = c
     return c
+end
+
+function dymj:clear_op(info)
+    local respond = info.respond
+    respond[base.MJ_OP_CHI], respond[base.MJ_OP_PENG], respond[base.MJ_OP_GANG] = false, false, false
+    info.pass = true
+    local op = info.op
+    op[base.MJ_OP_CHI], op[base.MJ_OP_PENG], op[base.MJ_OP_GANG] = 0, 0, 0
 end
 
 function dymj:start()
