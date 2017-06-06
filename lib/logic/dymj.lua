@@ -863,8 +863,11 @@ function dymj:hide_gang(id, msg)
     if self:is_out_magic(index) then
         error{code = error_code.ERROR_OPERATION}
     end
-    local type_card = info.type_card
     local card = msg.card
+    if card == self._magic_card then
+        error{code = error_code.ERROR_OPERATION}
+    end
+    local type_card = info.type_card
     local weave
     local weave_card = info.weave_card
     local card_count = type_card[card]
