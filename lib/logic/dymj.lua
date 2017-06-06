@@ -147,8 +147,6 @@ function dymj:pack(id, agent)
             user[#user+1] = u
         end
     end
-    util.dump(chess)
-    util.dump(user)
     return {info=chess, user=user}
 end
 
