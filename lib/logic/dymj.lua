@@ -105,12 +105,16 @@ function dymj:pack(id, agent)
                 index = info.index,
                 score = info.score,
                 ready = info.ready,
-                out_card = info.out_card,
-                weave_card = info.weave_card,
                 agree = info.agree,
                 out = info.out,
                 pass = info.pass,
             }
+            if #info.out_card > 0 then
+                u.out_card = info.out_card
+            end
+            if #info.weave_card > 0 then
+                weave_card = info.weave_card
+            end
             if info.out_magic then
                 u.out_magic = info.out_magic>0
             else
