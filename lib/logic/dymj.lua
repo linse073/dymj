@@ -925,7 +925,11 @@ function dymj:pass(id, msg)
         local all_pass = true
         local role = self._role
         local out_index = self._out_index
+        local has_out = false
         for k, v in ipairs(role) do
+            if v.out then
+                has_out = true
+            end
             if not v.pass then
                 all_pass = false
                 -- NOTICE: only check MJ_OP_CHI
@@ -959,7 +963,7 @@ function dymj:pass(id, msg)
                 end
             end
         end
-        if all_pass then
+        if all_pass and not has_out then
             deal_index = self._out_index%base.MJ_FOUR+1
             local r = role[deal_index]
             local c = self:deal(r)
