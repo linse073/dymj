@@ -583,30 +583,26 @@ function dymj:is_qidui(type_card)
     local magic_card = self._magic_card
     local magic_count = type_card[magic_card]
     local four_count = 0
-    local two_count = 0
+    local count = 0
     for k, v in pairs(type_card) do
+        count = count + v
         if k ~= magic_card then
             if v == 1 then
                 if magic_count <= 0 then
                     return false
                 end
                 magic_count = magic_count - 1
-                two_count = two_count + 1
-            elseif v == 2 then
-                two_count = two_count + 1
             elseif v == 3 then
                 if magic_count <= 0 then
                     return false
                 end
                 magic_count = magic_count - 1
-                two_count = two_count + 2
             elseif v == 4 then
                 four_count = four_count + 1
-                two_count = two_count + 2
             end
         end
     end
-    return two_count==7, four_count
+    return count==14, four_count
 end
 
 function dymj:hu(id, msg)
