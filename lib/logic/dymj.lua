@@ -602,7 +602,7 @@ function dymj:is_qidui(type_card)
             end
         end
     end
-    return count==14, four_count
+    return count==14, four_count, magic_count
 end
 
 function dymj:hu(id, msg)
@@ -613,11 +613,12 @@ function dymj:hu(id, msg)
     end
     local type_card = info.type_card
     local mul = 1
-    local hu, four_count = self:is_qidui(type_card)
+    local hu, four_count, mc = self:is_qidui(type_card)
     local magic_card = self._magic_card
     if hu then
         mul = 2^(four_count+1)
-        if self._deal_card == magic_card or type_card[self._deal_card]%2 == 1 then
+        if (self._deal_card ~= magic_card and type_card[self._deal_card]%2 == 1)
+            or (self._deal_card == magic_count and mc > 0) then
             mul = mul * 2^(info.out_magic+1)
         elseif type_card[magic_card] == 0 then
             mul = mul * 2
