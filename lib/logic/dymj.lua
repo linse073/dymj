@@ -402,10 +402,10 @@ function dymj:analyze(card, index)
             local respond = v.respond
             respond[base.MJ_OP_CHI], respond[base.MJ_OP_PENG], respond[base.MJ_OP_GANG] = chi, peng, gang
             if chi or peng or gang then
-                v.pass = false
+                v.out_pass = false
                 has_respond = true
             else
-                v.pass = true
+                v.out_pass = true
             end
             local op = v.op
             op[base.MJ_OP_CHI], op[base.MJ_OP_PENG], op[base.MJ_OP_GANG] = 0, 0, 0
@@ -730,7 +730,7 @@ function dymj:check_prior(index, op)
             front = false
         else
             local other = role[n]
-            if not other.pass then
+            if not other.out_pass then
                 for k, v in ipairs(other.respond) do
                     if v and (k>op or (k==op and front)) then
                         return true
@@ -937,10 +937,10 @@ end
 function dymj:pass(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     if in_respond(info.respond) then
-        if info.pass then
+        if info.out_pass then
             error{code = error_code.ALREADY_PASS}
         end
-        info.pass = true
+        info.out_pass = true
         self:clear_op(info)
         local chess
         local user = {index=info.index, action=base.MJ_OP_PASS}
@@ -948,7 +948,7 @@ function dymj:pass(id, msg)
         local role = self._role
         local out_index = self._out_index
         for k, v in ipairs(role) do
-            if not v.pass then
+            if not v.out_pass then
                 all_pass = false
                 -- NOTICE: only check MJ_OP_CHI
                 local card = v.op[base.MJ_OP_CHI]
@@ -1070,7 +1070,7 @@ end
 function dymj:clear_op(info)
     local respond = info.respond
     respond[base.MJ_OP_CHI], respond[base.MJ_OP_PENG], respond[base.MJ_OP_GANG] = false, false, false
-    info.pass = true
+    info.out_pass = true
     local op = info.op
     op[base.MJ_OP_CHI], op[base.MJ_OP_PENG], op[base.MJ_OP_GANG] = 0, 0, 0
     info.deal_pass = false
