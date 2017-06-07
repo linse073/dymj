@@ -112,11 +112,15 @@ function dymj:pack(id, agent)
                             own_card[#own_card+1] = k1
                         end
                     end
-                    u.show_card = {
+                    local show_card = {
                         own_card = own_card,
                         weave_card = info.weave_card,
                         score = info.last_score,
                     }
+                    if info.last_score > 0 then
+                        show_card.last_deal = info.last_deal
+                    end
+                    u.show_card = show_card
                 end
                 user[#user+1] = u
             end
