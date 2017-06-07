@@ -137,8 +137,6 @@ function dymj:pack(id, agent)
                 ready = info.ready,
                 agree = info.agree,
                 out = info.out,
-                -- TODO: dismiss pass
-                pass = info.pass,
                 out_magic = info.out_magic>0,
             }
             local out_card = info.out_card

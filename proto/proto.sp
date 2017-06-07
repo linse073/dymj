@@ -68,9 +68,8 @@
     show_card 16 : show_card
     own_count 17 : integer
     out 18 : boolean
-    pass 19 : boolean
-    out_magic 20 : boolean
-    chi_count 21 : *integer
+    out_magic 19 : boolean
+    chi_count 20 : *integer
 }
 
 .chess_info {
