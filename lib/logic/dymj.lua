@@ -1082,10 +1082,11 @@ function dymj:clear_all_op()
 end
 
 function dymj:start()
+    local card
     if self._custom_card then
-        self._card = util.clone(self._custom_card)
+        card = util.clone(self._custom_card)
     else
-        local card = {
+        card = {
             01,02,03,04,05,06,07,08,09,
             01,02,03,04,05,06,07,08,09,
             01,02,03,04,05,06,07,08,09,
@@ -1107,13 +1108,13 @@ function dymj:start()
             41,43,45,
             41,43,45,
         }
-        self._card = card
         util.shuffle(card, self._rand)
     end
+    self._card = card
     self._status = base.CHESS_STATUS_START
-    self._left = #self._card
     self._out_card = 0
     self._out_index = 0
+    local left = #card
     local role = self._role
     for j = 1, base.MJ_FOUR do
         local v = role[(self._banker+j-2)%base.MJ_FOUR+1]
@@ -1128,6 +1129,7 @@ function dymj:start()
         v.respond = {}
         v.op = {}
         v.out_card = {}
+        v.out = false
         local chi_count = {}
         for i = 1, base.MJ_FOUR do
             chi_count[i] = 0
@@ -1137,11 +1139,14 @@ function dymj:start()
         v.out_magic = 0
         local deal_card = {}
         for i = 1, base.MJ_ROLE_CARD do
-            deal_card[i] = self:deal(v)
+            local c = card[left]
+            left = left - 1
+            type_card[c] = type_card[c] + 1
+            deal_card[i] = c
         end
-        v.out = false
         v.deal_card = deal_card
     end
+    self._left = left
     self:deal(role[self._banker])
 end
 
