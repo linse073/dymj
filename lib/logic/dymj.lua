@@ -260,7 +260,7 @@ function dymj:leave(id, msg)
                 v.agree = nil
             end
         end
-        self._pause = false
+        self._pause = true
         info.agree = true
         local rmsg, rinfo = func.update_msg({
             {index=info.index, action=base.MJ_OP_CLOSE, agree=true},
@@ -289,13 +289,14 @@ end
 
 function dymj:is_all_agree()
     local role = self._role
+    local count = 0
     for i = 1, base.MJ_FOUR do
         local v = role[i]
-        if v and not v.agree then
-            return false
+        if v.agree then
+            count = count + 1
         end
     end
-    return true
+    return count >= 3
 end
 
 function dymj:reply(id, msg)
