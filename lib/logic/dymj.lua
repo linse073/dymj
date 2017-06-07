@@ -375,7 +375,7 @@ function dymj:ready(id, msg)
         for k, v in ipairs(self._role) do
             if v.id ~= id then
                 local last_deal
-                if v.index == self._banker then
+                if k == self._banker then
                     last_deal = v.last_deal
                 end
                 skynet.send(v.agent, "lua", "notify", func.update_msg({
@@ -398,10 +398,10 @@ local CHI_RULE = {
 function dymj:analyze(card, index)
     local has_respond = false
     for k, v in ipairs(self._role) do
-        if v.index ~= index and not self:is_out_magic() and v.chi_count[index] < base.MJ_CHI_COUNT then
+        if k ~= index and not self:is_out_magic(k) and v.chi_count[index] < base.MJ_CHI_COUNT then
             local type_card = v.type_card
             local chi = false
-            if v.index == index%base.MJ_FOUR+1 then
+            if k == index%base.MJ_FOUR+1 then
                 for k1, v1 in ipairs(CHI_RULE) do
                     local c1, c2 = card+v1[1], card+v1[2]
                     if valid_card(c1) and type_card[c1]>=1 
@@ -458,7 +458,8 @@ function dymj:out_card(id, msg)
     if type_card[card] == 0 then
         error{code = error_code.NO_OUT_CARD}
     end
-    if self:is_out_magic(info.index) and card ~= self._deal_card then
+    local index = info.index
+    if self:is_out_magic(index) and card ~= self._deal_card then
         error{code = error_code.OUT_CARD_LIMIT}
     end
     info.out = false
@@ -470,7 +471,7 @@ function dymj:out_card(id, msg)
         info.gang_count = 0
     end
     self._out_card = card
-    self._out_index = info.index
+    self._out_index = index
     info.out_card[#info.out_card+1] = card
     if self._left <= 20 then
         return self:conclude(id)
@@ -478,21 +479,21 @@ function dymj:out_card(id, msg)
         local chess
         local deal_index
         local role = self._role
-        if not self:analyze(card, info.index) then
-            deal_index = info.index%base.MJ_FOUR+1
+        if not self:analyze(card, index) then
+            deal_index = index%base.MJ_FOUR+1
             local r = role[deal_index]
             local c = self:deal(r)
             chess = {deal_index=deal_index, left=self._left}
             skynet.send(r.agent, "lua", "notify", func.update_msg({
-                {index=info.index, out_card={card}, out_index=msg.index},
+                {index=index, out_card={card}, out_index=msg.index},
                 {index=deal_index, last_deal=c},
             }, chess))
         end
         local rmsg, rinfo = func.update_msg({
-            {index=info.index, out_card={card}, out_index=msg.index},
+            {index=index, out_card={card}, out_index=msg.index},
         }, chess)
         for k, v in ipairs(role) do
-            if v.id ~= id and v.index ~= deal_index then
+            if v.id ~= id and k ~= deal_index then
                 skynet.send(v.agent, "lua", "notify", rmsg, rinfo)
             end
         end
@@ -780,7 +781,8 @@ function dymj:chi(id, msg)
     if not info.respond[base.MJ_OP_CHI] then
         error{code = error_code.ERROR_OPERATION}
     end
-    if info.index ~= out_index%base.MJ_FOUR+1 then
+    local index = info.index
+    if index ~= out_index%base.MJ_FOUR+1 then
         error{code = error_code.ERROR_OPERATION}
     end
     local valid = false
@@ -797,10 +799,10 @@ function dymj:chi(id, msg)
     if not valid then
         error{code = error_code.ERROR_OPERATION}
     end
-    if self:check_prior(info.index, base.MJ_OP_CHI) then
+    if self:check_prior(index, base.MJ_OP_CHI) then
         info.op[base.MJ_OP_CHI] = card
         return func.update_msg({
-            {index=info.index, action=base.MJ_OP_CHI},
+            {index=index, action=base.MJ_OP_CHI},
         })
     else
         self:clear_all_op()
@@ -822,7 +824,7 @@ function dymj:chi(id, msg)
         local role_out = self._role[out_index].out_card
         role_out[#role_out] = nil
         local rmsg, rinfo = func.update_msg({
-            {index=info.index, weave_card={weave}},
+            {index=index, weave_card={weave}},
         })
         broadcast(rmsg, rinfo, self._role, id)
         return rmsg, rinfo
@@ -866,6 +868,7 @@ end
 
 function dymj:gang(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
+    local index = info.index
     local out_index = self._out_index
     if info.chi_count[out_index] >= base.MJ_CHI_COUNT then
         error{code = error_code.CHI_COUNT_LIMIT}
@@ -891,13 +894,13 @@ function dymj:gang(id, msg)
     local role_out = self._role[out_index].out_card
     role_out[#role_out] = nil
     local c = self:deal(info)
-    local chess = {deal_index=info.index, left=self._left}
+    local chess = {deal_index=index, left=self._left}
     local rmsg, rinfo = func.update_msg({
-        {index=info.index, weave_card={weave}},
+        {index=index, weave_card={weave}},
     }, chess)
     broadcast(rmsg, rinfo, self._role, id)
     return func.update_msg({
-        {index=info.index, weave_card={weave}, last_deal=c},
+        {index=index, weave_card={weave}, last_deal=c},
     }, chess)
 end
 
@@ -1000,11 +1003,11 @@ function dymj:pass(id, msg)
                     local role_out = role[out_index].out_card
                     role_out[#role_out] = nil
                     local rmsg, rinfo = func.update_msg({
-                        {index=v.index, weave_card={weave}},
+                        {index=k, weave_card={weave}},
                     })
                     broadcast(rmsg, rinfo, role, id)
                     return func.update_msg({
-                        {index=v.index, weave_card={weave}}, 
+                        {index=k, weave_card={weave}}, 
                         user,
                     })
                 end
@@ -1025,7 +1028,7 @@ function dymj:pass(id, msg)
             end
             local rmsg, rinfo = func.update_msg(nil, chess)
             for k, v in ipairs(role) do
-                if v.id ~= id and v.index ~= deal_index then
+                if v.id ~= id and k ~= deal_index then
                     skynet.send(v.agent, "lua", "notify", rmsg, rinfo)
                 end
             end
