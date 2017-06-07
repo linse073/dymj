@@ -85,6 +85,7 @@
     rand 9 : integer
     out_card 10 : integer
     out_index 11 : integer
+    old_banker 12 : integer
 }
 
 .chess_all {

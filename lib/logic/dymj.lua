@@ -87,6 +87,7 @@ function dymj:pack(id, agent)
             status = status,
             count = self._count,
             pause = self._pause,
+            old_banker = self._old_banker,
         }
         local user = {}
         local role = self._role
@@ -692,9 +693,9 @@ function dymj:hu(id, msg)
     end
     local user = {}
     local role = self._role
+    local banker = self._banker
     for k, v in ipairs(role) do
         v.ready = false
-        local banker = self._banker
         local score
         if k == index then
             if k == banker then
@@ -729,6 +730,7 @@ function dymj:hu(id, msg)
     end
     user[index].action = base.MJ_OP_HU
     user[index].show_card.last_deal = role[index].last_deal
+    self._old_banker = banker
     self._banker = index
     local rmsg, rinfo = func.update_msg(user, {
         status=self._status, count=self._count, banker=self._banker,
@@ -1135,6 +1137,7 @@ function dymj:start()
     self._status = base.CHESS_STATUS_START
     self._out_card = 0
     self._out_index = 0
+    self._old_banker = nil
     local left = #card
     local role = self._role
     for j = 1, base.MJ_FOUR do
