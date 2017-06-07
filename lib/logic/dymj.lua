@@ -93,7 +93,7 @@ function dymj:pack(id, agent)
         for i = 1, base.MJ_FOUR do
             local info = role[i]
             if info then
-                user[#user+1] = {
+                local u = {
                     account = info.account,
                     id = info.id,
                     sex = info.sex,
@@ -104,6 +104,21 @@ function dymj:pack(id, agent)
                     score = info.score,
                     ready = info.ready,
                 }
+                local type_card = info.type_card
+                if type_card then
+                    local own_card = {}
+                    for k1, v1 in pairs(type_card) do
+                        for i = 1, v1 do
+                            own_card[#own_card+1] = k1
+                        end
+                    end
+                    u.show_card = {
+                        own_card = own_card,
+                        weave_card = info.weave_card,
+                        score = 0,
+                    }
+                end
+                user[#user+1] = u
             end
         end
         return {info=chess, user=user}
