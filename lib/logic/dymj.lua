@@ -108,14 +108,14 @@ function dymj:pack(id, agent)
                 if type_card then
                     local own_card = {}
                     for k1, v1 in pairs(type_card) do
-                        for i = 1, v1 do
+                        for j = 1, v1 do
                             own_card[#own_card+1] = k1
                         end
                     end
                     u.show_card = {
                         own_card = own_card,
                         weave_card = info.weave_card,
-                        score = 0,
+                        score = info.last_score,
                     }
                 end
                 user[#user+1] = u
@@ -705,6 +705,7 @@ function dymj:hu(id, msg)
                 score = -mul
             end
         end
+        v.last_score = score
         v.score = v.score + score
         local own_card = {}
         for k1, v1 in pairs(v.type_card) do
@@ -1043,6 +1044,7 @@ function dymj:conclude(id, msg)
     local role = self._role
     for k, v in ipairs(role) do
         v.ready = false
+        v.last_score = 0
         local own_card = {}
         for k1, v1 in pairs(v.type_card) do
             for i = 1, v1 do
