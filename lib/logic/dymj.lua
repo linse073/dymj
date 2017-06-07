@@ -115,12 +115,12 @@ function dymj:pack(id, agent)
                     end
                     local show_card = {
                         own_card = own_card,
-                        weave_card = info.weave_card,
                         score = info.last_score,
                     }
                     if info.last_score > 0 then
                         show_card.last_deal = info.last_deal
                     end
+                    u.weave_card = info.weave_card
                     u.show_card = show_card
                 end
                 user[#user+1] = u
@@ -1062,7 +1062,6 @@ function dymj:conclude(id, msg)
             ready = false,
             show_card = {
                 own_card = own_card,
-                weave_card = v.weave_card,
                 score = 0,
             },
         }
