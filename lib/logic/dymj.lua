@@ -886,7 +886,6 @@ function dymj:gang(id, msg)
         out_card = out_card,
     }
     info.weave_card[#info.weave_card+1] = weave
-    info.out = true
     info.gang_count = info.gang_count + 1
     info.chi_count[out_index] = info.chi_count[out_index] + 1
     local role_out = self._role[out_index].out_card
@@ -904,6 +903,9 @@ end
 
 function dymj:hide_gang(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
+    if not info.out then
+        error{code = error_code.ERROR_OPERATION}
+    end
     local index = info.index
     -- if self._deal_index ~= index then
     --     error{code = error_code.ERROR_DEAL_INDEX}
@@ -944,7 +946,6 @@ function dymj:hide_gang(id, msg)
     else
         error{code = error_code.ERROR_OPERATION}
     end
-    info.out = true
     info.gang_count = info.gang_count + 1
     local c = self:deal(info)
     local chess = {deal_index=index, left=self._left}
