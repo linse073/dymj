@@ -87,6 +87,8 @@
     out_card 10 : integer
     out_index 11 : integer
     old_banker 12 : integer
+    close_index 13 : integer
+    close_time 14 : integer
 }
 
 .chess_all {

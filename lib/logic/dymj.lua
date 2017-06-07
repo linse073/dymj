@@ -3,6 +3,7 @@ local share = require "share"
 local broadcast = require "broadcast"
 local util = require "util"
 local func = require "func"
+local timer = require "timer"
 
 local string = string
 local ipairs = ipairs
@@ -46,6 +47,7 @@ function dymj:init(number, rule, rand, card)
     self._id = {}
     self._count = 0
     self._pause = false
+    self._close_index = 0
 end
 
 function dymj:destroy()
@@ -88,6 +90,8 @@ function dymj:pack(id, agent)
             count = self._count,
             pause = self._pause,
             old_banker = self._old_banker,
+            close_index = self._close_index,
+            close_time = self._close_time,
         }
         local user = {}
         local role = self._role
@@ -140,6 +144,8 @@ function dymj:pack(id, agent)
             deal_index = self._deal_index,
             out_card = self._out_card,
             out_index = self._out_index,
+            close_index = self._close_index,
+            close_time = self._close_time,
         }
         local user = {}
         local role = self._role
@@ -217,6 +223,7 @@ function dymj:enter(info, agent, index)
         status = self._status,
         count = self._count,
         pause = self._pause,
+        close_index = self._close_index,
     })
 end
 
@@ -254,7 +261,11 @@ function dymj:leave(id, msg)
         error{code = error_code.NOT_IN_CHESS}
     end
     local role = self._role
+    local index = info.index
     if self._count > 0 or self._status == base.CHESS_STATUS_START then
+        if self._close_index > 0 then
+            error{code = error_code.IN_CLOSE_PROCESS}
+        end
         for i = 1, base.MJ_FOUR do
             local v = role[i]
             if v then
@@ -262,26 +273,41 @@ function dymj:leave(id, msg)
             end
         end
         self._pause = true
+        local now = floor(skynet.time())
+        self._close_time = now
+        self._close_index = index
         info.agree = true
         local rmsg, rinfo = func.update_msg({
-            {index=info.index, action=base.MJ_OP_CLOSE, agree=true},
-        }, {pause=self._pause})
+            {index=index, agree=true},
+        }, {pause=self._pause, close_index=index, close_time=now})
         broadcast(rmsg, rinfo, role, id)
+        timer.add_once_routine("close_timer", function()
+            self._status = base.CHESS_STATUS_EXIT
+            self._pause = false
+            self._close_index = 0
+            local rmsg, rinfo = func.update_msg(nil, {
+                status = self._status, 
+                pause = self._pause,
+                close_index = self._close_index,
+            })
+            broadcast(rmsg, rinfo, role)
+            self:finish()
+        end, 60)
         return rmsg, rinfo
-    elseif info.index == 1 then
+    elseif index == 1 then
         self._status = base.CHESS_STATUS_EXIT
         local rmsg, rinfo = func.update_msg({
-            {index=info.index, action=base.MJ_OP_LEAVE},
+            {index=index, action=base.MJ_OP_LEAVE},
         }, {status=self._status})
         broadcast(rmsg, rinfo, role, id)
         self:finish()
         return rmsg, rinfo
     else
         self._id[id] = nil
-        role[info.index] = nil
+        role[index] = nil
         skynet.call(info.agent, "lua", "action", "role", "leave")
         local rmsg, rinfo = func.update_msg({
-            {index=info.index, action=base.MJ_OP_LEAVE},
+            {index=index, action=base.MJ_OP_LEAVE},
         })
         broadcast(rmsg, rinfo, role)
         return rmsg, rinfo
@@ -316,11 +342,19 @@ function dymj:reply(id, msg)
     if info.agree then
         if self:is_all_agree() then
             self._status = base.CHESS_STATUS_EXIT
+            self._pause = false
+            self._close_index = 0
             chess.status = self._status
+            chess.pause = self._pause
+            chess.close_index = self._close_index
+            timer.del_once_routine("close_timer")
         end
     else
         self._pause = false
+        self._close_index = 0
         chess.pause = self._pause
+        chess.close_index = self._close_index
+        timer.del_once_routine("close_timer")
     end
     broadcast(rmsg, rinfo, self._role, id)
     if self._status == base.CHESS_STATUS_EXIT then
