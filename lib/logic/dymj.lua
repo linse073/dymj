@@ -440,19 +440,19 @@ function dymj:out_card(id, msg)
         error{code = error_code.OUT_CARD_LIMIT}
     end
     info.out = false
+    type_card[card] = type_card[card] - 1
+    if card == self._magic_card then
+        info.out_magic = info.out_magic + 1
+    else
+        info.out_magic = 0
+        info.gang_count = 0
+    end
+    self._out_card = card
+    self._out_index = info.index
+    info.out_card[#info.out_card+1] = card
     if self._left <= 20 then
         return self:conclude(id)
     else
-        type_card[card] = type_card[card] - 1
-        if card == self._magic_card then
-            info.out_magic = info.out_magic + 1
-        else
-            info.out_magic = 0
-            info.gang_count = 0
-        end
-        self._out_card = card
-        self._out_index = info.index
-        info.out_card[#info.out_card+1] = card
         local chess
         local deal_index
         local role = self._role
