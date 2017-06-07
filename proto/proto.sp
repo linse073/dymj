@@ -70,6 +70,7 @@
     out 18 : boolean
     out_magic 19 : boolean
     chi_count 20 : *integer
+    hu 21 : boolean
 }
 
 .chess_info {

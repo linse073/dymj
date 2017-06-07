@@ -182,6 +182,7 @@ function dymj:pack(id, agent)
                 u.own_count = #own_card
                 u.last_deal = info.last_deal
                 u.chi_count = info.chi_count
+                u.hu = info.hu
             else
                 local count = 0
                 for k, v in pairs(info.type_card) do
@@ -648,6 +649,9 @@ function dymj:hu(id, msg)
     if self._deal_index ~= index then
         error{code = error_code.ERROR_DEAL_INDEX}
     end
+    if not info.hu then
+        error{code = error_code.CAN_NOT_HU}
+    end
     local type_card = info.type_card
     local mul = 1
     local hu, four_count, mc = self:is_qidui(type_card)
@@ -813,6 +817,7 @@ function dymj:chi(id, msg)
         }
         info.weave_card[#info.weave_card+1] = weave
         info.out = true
+        info.hu = false
         info.chi_count[out_index] = info.chi_count[out_index] + 1
         local role_out = self._role[out_index].out_card
         role_out[#role_out] = nil
@@ -848,6 +853,7 @@ function dymj:peng(id, msg)
     }
     info.weave_card[#info.weave_card+1] = weave
     info.out = true
+    info.hu = false
     info.chi_count[out_index] = info.chi_count[out_index] + 1
     local role_out = self._role[out_index].out_card
     role_out[#role_out] = nil
@@ -988,6 +994,7 @@ function dymj:pass(id, msg)
                     }
                     v.weave_card[#v.weave_card+1] = weave
                     v.out = true
+                    v.hu = false
                     v.chi_count[out_index] = v.chi_count[out_index] + 1
                     local role_out = role[out_index].out_card
                     role_out[#role_out] = nil
@@ -1083,6 +1090,7 @@ function dymj:deal(info)
     info.type_card[c] = info.type_card[c] + 1
     info.last_deal = c
     info.out = true
+    info.hu = true
     self._deal_index = info.index
     self._deal_card = c
     self:clear_all_op()
@@ -1154,6 +1162,7 @@ function dymj:start()
         v.op = {}
         v.out_card = {}
         v.out = false
+        v.hu = false
         local chi_count = {}
         for i = 1, base.MJ_FOUR do
             chi_count[i] = 0
