@@ -746,8 +746,8 @@ end
 function dymj:check_prior(index, op)
     local front = true
     local role = self._role
-    for i = 1, base.MJ_FOUR do
-        local n = (self._deal_index+i-1)%base.MJ_FOUR+1
+    for i = 1, base.MJ_FOUR-1 do
+        local n = (self._out_index+i-1)%base.MJ_FOUR+1
         if n == index then
             front = false
         else
