@@ -46,6 +46,8 @@
     own_card 0 : *integer
     score 1 : integer
     last_deal 2 : integer
+    top_score 3 : integer
+    hu_count 4 : integer
 }
 
 .chess_user {

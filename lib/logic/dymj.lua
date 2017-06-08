@@ -51,6 +51,7 @@ function dymj:init(number, rule, rand, card)
 end
 
 function dymj:destroy()
+    timer.del_once_routine("close_timer")
 end
 
 local function finish()
@@ -209,6 +210,8 @@ function dymj:enter(info, agent, index)
     info.index = index
     info.score = 0
     info.ready = false
+    info.hu_count = 0
+    info.top_score = 0
     role[index] = info
     self._id[info.id] = info
     local user = {}
@@ -721,6 +724,7 @@ function dymj:hu(id, msg)
         end
     end
     self:clear_all_op()
+    info.hu_count = info.hu_count + 1
     self._count = self._count + 1
     if self._count == self._total_count then
         self._status = base.CHESS_STATUS_FINISH
@@ -747,6 +751,9 @@ function dymj:hu(id, msg)
             end
         end
         v.last_score = score
+        if score > v.top_score then
+            v.top_score = score
+        end
         v.score = v.score + score
         local own_card = {}
         for k1, v1 in pairs(v.type_card) do
@@ -761,6 +768,8 @@ function dymj:hu(id, msg)
             show_card = {
                 own_card = own_card,
                 score = score,
+                top_score = v.top_score,
+                hu_count = v.hu_count,
             },
         }
     end
