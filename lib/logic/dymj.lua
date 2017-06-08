@@ -337,6 +337,9 @@ function dymj:reply(id, msg)
     else
         self._pause = false
     end
+    local rmsg, rinfo = func.update_msg({
+        {index=info.index, agree=info.agree},
+    }, chess)
     if not self._pause then
         self._close_index = 0
         chess.pause = self._pause
@@ -346,9 +349,6 @@ function dymj:reply(id, msg)
             v.agree = nil
         end
     end
-    local rmsg, rinfo = func.update_msg({
-        {index=info.index, agree=info.agree},
-    }, chess)
     broadcast(rmsg, rinfo, self._role, id)
     if self._status == base.CHESS_STATUS_EXIT then
         self:finish()
