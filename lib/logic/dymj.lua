@@ -292,10 +292,9 @@ function dymj:leave(id, msg)
         end, 180)
         return rmsg, rinfo
     elseif index == 1 then
-        self._status = base.CHESS_STATUS_EXIT
         local rmsg, rinfo = func.update_msg({
             {index=index, action=base.MJ_OP_LEAVE},
-        }, {status=self._status})
+        })
         broadcast(rmsg, rinfo, role, id)
         self:finish()
         return rmsg, rinfo
