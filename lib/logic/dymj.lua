@@ -286,7 +286,7 @@ function dymj:leave(id, msg)
             })
             broadcast(rmsg, rinfo, role)
             self:finish()
-        end, 300)
+        end, 180)
         return rmsg, rinfo
     elseif index == 1 then
         self._status = base.CHESS_STATUS_EXIT
