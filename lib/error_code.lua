@@ -41,6 +41,7 @@ local type_code = {
         ERROR_OUT_INDEX="出牌索引不匹配",
         CAN_NOT_HU="只能自摸胡",
         IN_CLOSE_PROCESS="解散过程中",
+        NOT_IN_CLOSE="尚未解散房间",
     },
 }
 

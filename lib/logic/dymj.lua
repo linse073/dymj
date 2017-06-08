@@ -323,6 +323,9 @@ function dymj:reply(id, msg)
     if not info then
         error{code = error_code.NOT_IN_CHESS}
     end
+    if self._close_index == 0 then
+        error{code = error_code.NOT_IN_CLOSE}
+    end
     if info.agree ~= nil then
         error{code = error_code.ALREADY_REPLY}
     end
