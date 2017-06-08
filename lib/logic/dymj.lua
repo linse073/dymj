@@ -266,12 +266,6 @@ function dymj:leave(id, msg)
         if self._close_index > 0 then
             error{code = error_code.IN_CLOSE_PROCESS}
         end
-        for i = 1, base.MJ_FOUR do
-            local v = role[i]
-            if v then
-                v.agree = nil
-            end
-        end
         self._pause = true
         local now = floor(skynet.time())
         self._close_time = now
@@ -292,7 +286,7 @@ function dymj:leave(id, msg)
             })
             broadcast(rmsg, rinfo, role)
             self:finish()
-        end, 60)
+        end, 300)
         return rmsg, rinfo
     elseif index == 1 then
         self._status = base.CHESS_STATUS_EXIT
@@ -315,10 +309,8 @@ function dymj:leave(id, msg)
 end
 
 function dymj:is_all_agree()
-    local role = self._role
     local count = 0
-    for i = 1, base.MJ_FOUR do
-        local v = role[i]
+    for k, v in ipairs(self._role) do
         if v.agree then
             count = count + 1
         end
@@ -336,26 +328,27 @@ function dymj:reply(id, msg)
     end
     info.agree = msg.agree
     local chess = {}
-    local rmsg, rinfo = func.update_msg({
-        {index=info.index, agree=info.agree},
-    }, chess)
     if info.agree then
         if self:is_all_agree() then
             self._status = base.CHESS_STATUS_EXIT
-            self._pause = false
-            self._close_index = 0
             chess.status = self._status
-            chess.pause = self._pause
-            chess.close_index = self._close_index
-            timer.del_once_routine("close_timer")
+            self._pause = false
         end
     else
         self._pause = false
+    end
+    if not self._pause then
         self._close_index = 0
         chess.pause = self._pause
         chess.close_index = self._close_index
         timer.del_once_routine("close_timer")
+        for k, v in ipairs(self._role) do
+            v.agree = nil
+        end
     end
+    local rmsg, rinfo = func.update_msg({
+        {index=info.index, agree=info.agree},
+    }, chess)
     broadcast(rmsg, rinfo, self._role, id)
     if self._status == base.CHESS_STATUS_EXIT then
         self:finish()
