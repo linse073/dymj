@@ -109,6 +109,8 @@ function dymj:pack(id, agent)
                     index = info.index,
                     score = info.score,
                     ready = info.ready,
+                    top_score = info.top_score,
+                    hu_count = info.hu_count,
                 }
                 local type_card = info.type_card
                 if type_card then
@@ -165,6 +167,8 @@ function dymj:pack(id, agent)
                 agree = info.agree,
                 out = info.out,
                 out_magic = info.out_magic>0,
+                top_score = info.top_score,
+                hu_count = info.hu_count,
             }
             local out_card = info.out_card
             if out_card and #out_card > 0 then
