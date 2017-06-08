@@ -751,9 +751,6 @@ function dymj:hu(id, msg)
             end
         end
         v.last_score = score
-        if score > v.top_score then
-            v.top_score = score
-        end
         v.score = v.score + score
         local own_card = {}
         for k1, v1 in pairs(v.type_card) do
@@ -761,20 +758,25 @@ function dymj:hu(id, msg)
                 own_card[#own_card+1] = k1
             end
         end
-        user[k] = {
+        local u = {
             index = k,
             ready = false,
             score = v.score,
             show_card = {
                 own_card = own_card,
                 score = score,
-                top_score = v.top_score,
-                hu_count = v.hu_count,
             },
         }
+        if score > v.top_score then
+            v.top_score = score
+            u.top_score = score
+        end
+        user[k] = u
     end
-    user[index].action = base.MJ_OP_HU
-    user[index].show_card.last_deal = role[index].last_deal
+    local win = user[index]
+    win.hu_count = info.hu_count
+    win.action = base.MJ_OP_HU
+    win.show_card.last_deal = info.last_deal
     self._old_banker = banker
     self._banker = index
     local rmsg, rinfo = func.update_msg(user, {

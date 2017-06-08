@@ -46,8 +46,6 @@
     own_card 0 : *integer
     score 1 : integer
     last_deal 2 : integer
-    top_score 3 : integer
-    hu_count 4 : integer
 }
 
 .chess_user {
@@ -73,6 +71,8 @@
     out_magic 19 : boolean
     chi_count 20 : *integer
     hu 21 : boolean
+    top_score 22 : integer
+    hu_count 23 : integer
 }
 
 .chess_info {
