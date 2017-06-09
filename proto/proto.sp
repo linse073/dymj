@@ -6,32 +6,11 @@
     room_card 4 : integer
     nick_name 5 : string
     head_img 6 : string
-}
-
-.other_info {
-    account 0 : string
-    id 1 : integer
-    sex 2 : integer
-    nick_name 3 : string
-    head_img 4 : string
-    ip 5 : string
+    ip 7 : string
 }
 
 .other_all {
-    other 0 : *other_info
-}
-
-.update_other {
-    id 0 : integer
-}
-
-.brief_info {
-    account 0 : string
-    id 1 : integer
-    sex 2 : integer
-    nick_name 3 : string
-    head_img 4 : string
-    ip 5 : string
+    other 0 : *user_info
 }
 
 .weave_card {
@@ -96,6 +75,35 @@
 .chess_all {
     info 0 : chess_info
     user 1 : *chess_user
+}
+
+.record_info {
+    .chess_action {
+        op 0 : integer
+        out_card 1 : integer
+        out_index 2 : integer
+        deal_card 3 : integer
+    }
+
+    id 0 : integer
+    time 1 : integer
+    info 2 : chess_info
+    user 3 : *chess_user
+    aciton 4 : *chess_action
+}
+
+.chess_record {
+    .record_detail {
+        id 0 : integer
+        time 1 : integer
+        score 2 : *integer
+    }
+
+    id 0 : integer
+    time 1 : integer
+    info 2 : chess_info
+    user 3 : *chess_user
+    record 4 : *record_detail
 }
 
 .user_all {

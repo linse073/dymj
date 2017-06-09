@@ -32,6 +32,9 @@ config.mongo = {
         "offline",
         "status",
         "register",
+        "user_record",
+        "record_info",
+        "record_detail",
     },
     index = {
         {"account", {"key", unique=true}},
@@ -39,6 +42,9 @@ config.mongo = {
         {"info", {"id", unique=true}},
         {"offline", {"id", unique=true}},
         {"status", {"key", unique=true}},
+        {"user_record", {"id", unique=true}},
+        {"record_info", {"id", unique=true}},
+        {"record_detail", {"id", unique=true}},
     },
 }
 

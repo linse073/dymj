@@ -5,6 +5,7 @@ local util = require "util"
 local loginservice = tonumber(...)
 
 local assert = assert
+local ipairs = ipairs
 
 local gen_key = util.gen_key
 local gen_account = util.gen_account
@@ -14,6 +15,12 @@ local account_db
 local status_key
 local status
 local config
+
+local id_key = {
+    "account",
+    "record",
+    "record_detail",
+}
 
 local CMD = {}
 
@@ -56,7 +63,13 @@ function CMD.open(conf, gatename)
     status_key = gen_key(conf.serverid, "status")
     status = skynet.call(status_db, "lua", "findOne", {key=status_key})
     if not status then
-        status = {accountid = 1}
+        status = {}
+    end
+    for k, v in ipairs(status) do
+        local key = v .. "id"
+        if not status[key] then
+            status[key] = 1
+        end
     end
     local server_mgr = skynet.queryservice("server_mgr")
     skynet.call(server_mgr, "lua", "register", conf.serverid, skynet.self())
@@ -73,6 +86,24 @@ function CMD.gen_account(info)
 		skynet.call(status_db, "lua", "update", {key=status_key}, {["$set"]={accountid=status.accountid}}, true)
     end
     return new, account, errmsg
+end
+
+local function gen_func(k, v)
+    return function(...)
+        local key = v .. "id"
+        local value = status[key]
+        local id = value * 10000 + k * 1000 + config.serverid
+        value = value + 1
+        status[key] = value
+        skynet.call(status_db, "lua", "update", {key=status_key}, {["$set"]={[key]=value}}, true)
+        return id
+    end
+end
+for k, v in ipairs(id_key) do
+    local key = "gen_" .. v
+    if not CMD[key] then
+        CMD[key] = gen_func(k, v)
+    end
 end
 
 skynet.start(function()
