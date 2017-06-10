@@ -29,10 +29,11 @@ end
 
 local dymj = {}
 
-function dymj:init(number, rule, rand, card)
+function dymj:init(number, rule, rand, server, card)
     self._number = number
     self._rule = rule
     self._rand = rand
+    self._server = server
     self._custom_card = card
     local p, c = string.unpack("BB", rule)
     if c == 1 then
@@ -48,6 +49,16 @@ function dymj:init(number, rule, rand, card)
     self._count = 0
     self._pause = false
     self._close_index = 0
+    self._record = {
+        id = skynet.call(server, "lua", "gen_record"),
+        time = floor(skynet.time()),
+        info = {
+            name = "dymj",
+            number = number,
+            rule = rule,
+        },
+        record = {},
+    }
 end
 
 function dymj:destroy()
@@ -55,6 +66,7 @@ function dymj:destroy()
 end
 
 local function finish()
+    skynet.call(skynet.self(), "lua", "destroy")
     local table_mgr = skynet.queryservice("table_mgr")
     skynet.call(table_mgr, "lua", "free", skynet.self())
 end
@@ -402,7 +414,9 @@ function dymj:ready(id, msg)
         chess.status = self._status
         chess.left = self._left
         chess.deal_index = self._deal_index
-        chess.rand = floor(skynet.time())
+        local now = floor(skynet.time())
+        chess.rand = now
+        self._detail.info.rand = now
         user.own_card = info.deal_card
         if info.index == self._banker then
             user.last_deal = info.last_deal
@@ -509,6 +523,12 @@ function dymj:out_card(id, msg)
     self._out_card = card
     self._out_index = index
     info.out_card[#info.out_card+1] = card
+    local record_action = self._detail.action
+    record_action[#record_action+1] = {
+        index = index,
+        card = card,
+        out_index = msg.index,
+    }
     if self._left <= 20 then
         return self:conclude(id)
     else
@@ -737,6 +757,13 @@ function dymj:hu(id, msg)
     local user = {}
     local role = self._role
     local banker = self._banker
+    local detail = self._detail
+    local record_score = {}
+    local record_detail = {
+        id = detail.id,
+        time = detail.time,
+        score = record_score,
+    }
     for k, v in ipairs(role) do
         v.ready = false
         local score
@@ -753,6 +780,7 @@ function dymj:hu(id, msg)
                 score = -mul
             end
         end
+        record_score[k] = score
         v.last_score = score
         v.score = v.score + score
         local own_card = {}
@@ -775,6 +803,25 @@ function dymj:hu(id, msg)
             u.top_score = score
         end
         user[k] = u
+    end
+    if self._record.user then
+    else
+        local record_user = {}
+        for k, v in ipairs(role) do
+            record_user[k] = {
+                account = v.account,
+                id = v.id,
+                sex = v.sex,
+                nick_name = v.nick_name,
+                head_img = v.head_img,
+                ip = v.ip,
+                index = index,
+            }
+        end
+        self._record.user = record_user
+        self._record.record = {record_detail}
+        for k, v in ipairs(role) do
+        end
     end
     local win = user[index]
     win.hu_count = info.hu_count
@@ -849,6 +896,12 @@ function dymj:chi(id, msg)
             {index=index, action=base.MJ_OP_CHI},
         })
     else
+        local record_action = self._detail.action
+        record_action[#record_action+1] = {
+            index = index,
+            op = base.MJ_OP_CHI,
+            card = card,
+        }
         self:clear_all_op()
         for i = card, card+2 do
             if i ~= out_card then
@@ -889,6 +942,12 @@ function dymj:peng(id, msg)
     if not (type_card[out_card] >= 2) then
         error{code = error_code.ERROR_OPERATION}
     end
+    local record_action = self._detail.action
+    record_action[#record_action+1] = {
+        index = index,
+        op = base.MJ_OP_PENG,
+        card = out_card,
+    }
     self:clear_all_op()
     type_card[out_card] = type_card[out_card] - 2
     local weave = {
@@ -925,6 +984,12 @@ function dymj:gang(id, msg)
     if not (type_card[out_card] >= 3) then
         error{code = error_code.ERROR_OPERATION}
     end
+    local record_action = self._detail.action
+    record_action[#record_action+1] = {
+        index = index,
+        op = base.MJ_OP_GANG,
+        card = out_card,
+    }
     type_card[out_card] = type_card[out_card] - 3
     local weave = {
         op = base.MJ_OP_GANG,
@@ -964,6 +1029,12 @@ function dymj:hide_gang(id, msg)
     if card == self._magic_card then
         error{code = error_code.ERROR_OPERATION}
     end
+    local record_action = self._detail.action
+    record_action[#record_action+1] = {
+        index = index,
+        op = base.MJ_OP_HIDE_GANG,
+        card = card,
+    }
     local type_card = info.type_card
     local weave
     local weave_card = info.weave_card
@@ -1027,6 +1098,12 @@ function dymj:pass(id, msg)
                 -- NOTICE: only check MJ_OP_CHI
                 local card = v.op[base.MJ_OP_CHI]
                 if card > 0 and not self:check_prior(k, base.MJ_OP_CHI) then
+                    local record_action = self._detail.action
+                    record_action[#record_action+1] = {
+                        index = index,
+                        op = base.MJ_OP_CHI,
+                        card = card,
+                    }
                     self:clear_all_op()
                     local type_card = v.type_card
                     for i = card, card+2 do
@@ -1142,6 +1219,11 @@ function dymj:deal(info)
     self._deal_index = info.index
     self._deal_card = c
     self:clear_all_op()
+    local record_action = self._detail.action
+    record_action[#record_action+1] = {
+        index = info.index,
+        deal_card = c,
+    }
     return c
 end
 
@@ -1196,8 +1278,10 @@ function dymj:start()
     self._old_banker = nil
     local left = #card
     local role = self._role
+    local record_user = {}
     for j = 1, base.MJ_FOUR do
-        local v = role[(self._banker+j-2)%base.MJ_FOUR+1]
+        local index = (self._banker+j-2)%base.MJ_FOUR+1
+        local v = role[index]
         local type_card = {}
         for i = 1, base.MJ_CARD_INDEX do
             if not mj_invalid_card[i] then
@@ -1226,8 +1310,33 @@ function dymj:start()
             deal_card[i] = c
         end
         v.deal_card = deal_card
+        record_user[index] = {
+            account = v.account,
+            id = v.id,
+            sex = v.sex,
+            nick_name = v.nick_name,
+            head_img = v.head_img,
+            ip = v.ip,
+            index = index,
+            score = v.score,
+            own_card = deal_card,
+        }
     end
     self._left = left
+    self._detail = {
+        id = skynet.call(self._server, "lua", "gen_record_detail"),
+        time = floor(skynet.time()),
+        info = {
+            name = "dymj",
+            number = self._number,
+            rule = self._rule,
+            banker = self._banker,
+            left = left,
+            count = self._count,
+        },
+        user = record_user,
+        action = {},
+    }
     self:deal(role[self._banker])
 end
 

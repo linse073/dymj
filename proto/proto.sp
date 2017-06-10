@@ -79,10 +79,11 @@
 
 .record_info {
     .chess_action {
-        op 0 : integer
-        out_card 1 : integer
-        out_index 2 : integer
-        deal_card 3 : integer
+        index 0 : integer
+        op 1 : integer
+        card 2 : integer
+        out_index 3 : integer
+        deal_card 4 : integer
     }
 
     id 0 : integer

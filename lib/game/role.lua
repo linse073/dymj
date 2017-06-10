@@ -245,7 +245,8 @@ function proc.new_chess(msg)
         error{code = error_code.INTERNAL_ERROR}
     end
     local card = data[msg.name .. "_card"]
-    local rmsg, info = skynet.call(chess_table, "lua", "init", name, msg.rule, data.info, skynet.self(), card)
+    local rmsg, info = skynet.call(chess_table, "lua", "init", 
+        name, msg.rule, data.info, skynet.self(), data.server_address, card)
     if rmsg == "update_user" then
         data.chess_table = chess_table
         skynet.call(chess_mgr, "lua", "add", data.id, chess_table)

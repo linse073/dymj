@@ -110,6 +110,7 @@ function server.login_handler(info)
     local gate = gameserver.gate
 	info.id = id
 	info.serverid = gameserver.id
+    info.server_address = gameserver.address
 	local subid = skynet.call(gate.address, "lua", "login", info)
     user_online[id] = {gate=gate, subid=subid, server=sname}
     user_login[id] = nil
