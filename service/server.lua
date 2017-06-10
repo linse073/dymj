@@ -65,7 +65,7 @@ function CMD.open(conf, gatename)
     if not status then
         status = {}
     end
-    for k, v in ipairs(status) do
+    for k, v in ipairs(id_key) do
         local key = v .. "id"
         if not status[key] then
             status[key] = 1
