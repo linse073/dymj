@@ -14,6 +14,7 @@ local floor = math.floor
 local number = tonumber(...)
 local cz
 local rand
+local master_db
 
 local CMD = {}
 util.timer_wrap(CMD)
@@ -23,7 +24,7 @@ local logic
 function CMD.init(name, rule, info, agent, server, card)
     rand.init(floor(skynet.time()))
     logic = setmetatable({}, require(name))
-    logic:init(number, rule, rand, server, card)
+    logic:init(number, rule, rand, server, master_db, card)
     return logic:enter(info, agent, 1)
 end
 
@@ -39,6 +40,7 @@ end
 skynet.start(function()
     cz = share.cz
     rand = share.rand
+    master_db = skynet.queryservice("mongo_master")
 
 	skynet.dispatch("lua", function(session, source, command, ...)
 		local f = CMD[command]

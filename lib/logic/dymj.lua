@@ -29,11 +29,14 @@ end
 
 local dymj = {}
 
-function dymj:init(number, rule, rand, server, card)
+function dymj:init(number, rule, rand, server, master_db, card)
     self._number = number
     self._rule = rule
     self._rand = rand
     self._server = server
+    self._user_record_db = skynet.call(master_db, "lua", "get", "user_record")
+    self._record_info_db = skynet.call(master_db, "lua", "get", "record_info")
+    self._record_detail_db = skynet.call(master_db, "lua", "get", "record_detail")
     self._custom_card = card
     local p, c = string.unpack("BB", rule)
     if c == 1 then
@@ -820,8 +823,18 @@ function dymj:hu(id, msg)
         end
         self._record.user = record_user
         self._record.record = {record_detail}
-        for k, v in ipairs(role) do
-        end
+        -- for k, v in ipairs(role) do
+        --     local ur = skynet.call(self._user_record_db, "lua", "findeOne", {id=v.id})
+        --     if not ur then
+        --         ur = {
+        --             _id = v.id,
+        --             id = v.id,
+        --             record = {},
+        --         }
+        --     end
+        --     if #ur >= 12 then
+        --     end
+        -- end
     end
     local win = user[index]
     win.hu_count = info.hu_count
