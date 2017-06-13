@@ -180,3 +180,8 @@
 .dymj_card {
     card 0 : *integer
 }
+
+.enter_game {
+    number 0 : integer
+    name 1 : string
+}
