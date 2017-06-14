@@ -4,6 +4,7 @@ local queue = require "skynet.queue"
 local ipairs = ipairs
 local assert = assert
 local tonumber = tonumber
+local table = table
 
 local offline_db
 local user_db
@@ -17,7 +18,7 @@ local function add(id, module, func, ...)
     if agent then
         skynet.call(agent, "lua", "action", module, func, ...)
     else
-        skynet.call(offline_db, "lua", "update", {id=id}, {["$push"]={data={module, func, ...}}}, true)
+        skynet.call(offline_db, "lua", "update", {id=id}, {["$push"]={data=table.pack(module, func, ...)}}, true)
     end
 end
 
