@@ -158,6 +158,7 @@ function role.heart_beat()
 end
 
 function role.afk()
+    local data = game.data
     local chess_table = data.chess_table
     if chess_table then
         skynet.call(chess_table, "lua", "status", data.id, base.USER_STATUS_LOST)
@@ -243,7 +244,7 @@ function proc.enter_game(msg)
     local chess_table = skynet.call(chess_mgr, "lua", "get", user.id)
     if chess_table then
         data.chess_table = chess_table
-        ret.chess = skynet.call(chess_table, "lua", "pack", user.id, skynet.self())
+        ret.chess = skynet.call(chess_table, "lua", "pack", user.id, user.ip, skynet.self())
     elseif msg.name and msg.number then
         chess_table = skynet.call(table_mgr, "lua", "get", msg.number)
         if chess_table then

@@ -116,26 +116,87 @@ function dymj:custom_card(name, card)
     return "response", ""
 end
 
-function dymj:pack(id, agent)
-    local status = self._status
-    if status == base.CHESS_STATUS_READY then
-        local chess = {
-            name = "dymj",
-            number = self._number,
-            rule = self._rule,
-            banker = self._banker,
-            status = status,
-            count = self._count,
-            pause = self._pause,
-            old_banker = self._old_banker,
-            close_index = self._close_index,
-            close_time = self._close_time,
-        }
-        local user = {}
-        local role = self._role
-        for i = 1, base.MJ_FOUR do
-            local info = role[i]
-            if info then
+function dymj:pack(id, ip, agent)
+    local si = self._id[id]
+    if si then
+        si.ip = ip
+        si.status = base.USER_STATUS_ONLINE
+        si.agent = agent
+        local status = self._status
+        if status == base.CHESS_STATUS_READY then
+            local chess = {
+                name = "dymj",
+                number = self._number,
+                rule = self._rule,
+                banker = self._banker,
+                status = status,
+                count = self._count,
+                pause = self._pause,
+                old_banker = self._old_banker,
+                close_index = self._close_index,
+                close_time = self._close_time,
+            }
+            local user = {}
+            local role = self._role
+            for i = 1, base.MJ_FOUR do
+                local info = role[i]
+                if info then
+                    local u = {
+                        account = info.account,
+                        id = info.id,
+                        sex = info.sex,
+                        nick_name = info.nick_name,
+                        head_img = info.head_img,
+                        ip = info.ip,
+                        index = info.index,
+                        score = info.score,
+                        ready = info.ready,
+                        top_score = info.top_score,
+                        hu_count = info.hu_count,
+                        status = info.status,
+                    }
+                    local type_card = info.type_card
+                    if type_card then
+                        local own_card = {}
+                        for k1, v1 in pairs(type_card) do
+                            for j = 1, v1 do
+                                own_card[#own_card+1] = k1
+                            end
+                        end
+                        local show_card = {
+                            own_card = own_card,
+                            score = info.last_score,
+                        }
+                        if info.last_score > 0 then
+                            show_card.last_deal = info.last_deal
+                        end
+                        u.weave_card = info.weave_card
+                        u.show_card = show_card
+                    end
+                    user[#user+1] = u
+                end
+            end
+            return {info=chess, user=user}
+        elseif status == base.CHESS_STATUS_START then
+            local chess = {
+                name = "dymj",
+                number = self._number,
+                rule = self._rule,
+                banker = self._banker,
+                status = self._status,
+                count = self._count,
+                pause = self._pause,
+                left = self._left,
+                deal_index = self._deal_index,
+                out_card = self._out_card,
+                out_index = self._out_index,
+                close_index = self._close_index,
+                close_time = self._close_time,
+            }
+            local user = {}
+            local role = self._role
+            for i = 1, base.MJ_FOUR do
+                local info = role[i]
                 local u = {
                     account = info.account,
                     id = info.id,
@@ -146,101 +207,51 @@ function dymj:pack(id, agent)
                     index = info.index,
                     score = info.score,
                     ready = info.ready,
+                    agree = info.agree,
+                    out = info.out,
+                    out_magic = info.out_magic>0,
                     top_score = info.top_score,
                     hu_count = info.hu_count,
+                    status = info.status,
                 }
-                local type_card = info.type_card
-                if type_card then
+                local out_card = info.out_card
+                if out_card and #out_card > 0 then
+                    u.out_card = out_card
+                end
+                local weave_card = info.weave_card
+                if weave_card and #weave_card > 0 then
+                    u.weave_card = weave_card
+                end
+                if info.op[base.MJ_OP_CHI] > 0 then
+                    u.action = base.MJ_OP_CHI
+                end
+                if info.id == id then
                     local own_card = {}
-                    for k1, v1 in pairs(type_card) do
-                        for j = 1, v1 do
-                            own_card[#own_card+1] = k1
+                    for k, v in pairs(info.type_card) do
+                        for i = 1, v do
+                            own_card[#own_card+1] = k
                         end
                     end
-                    local show_card = {
-                        own_card = own_card,
-                        score = info.last_score,
-                    }
-                    if info.last_score > 0 then
-                        show_card.last_deal = info.last_deal
+                    u.own_card = own_card
+                    u.own_count = #own_card
+                    u.last_deal = info.last_deal
+                    u.chi_count = info.chi_count
+                    u.hu = info.hu
+                else
+                    local count = 0
+                    for k, v in pairs(info.type_card) do
+                        count = count + v
                     end
-                    u.weave_card = info.weave_card
-                    u.show_card = show_card
+                    u.own_count = count
                 end
                 user[#user+1] = u
             end
+            return {info=chess, user=user}
         end
-        return {info=chess, user=user}
-    elseif status == base.CHESS_STATUS_START then
-        local chess = {
-            name = "dymj",
-            number = self._number,
-            rule = self._rule,
-            banker = self._banker,
-            status = self._status,
-            count = self._count,
-            pause = self._pause,
-            left = self._left,
-            deal_index = self._deal_index,
-            out_card = self._out_card,
-            out_index = self._out_index,
-            close_index = self._close_index,
-            close_time = self._close_time,
-        }
-        local user = {}
-        local role = self._role
-        for i = 1, base.MJ_FOUR do
-            local info = role[i]
-            local u = {
-                account = info.account,
-                id = info.id,
-                sex = info.sex,
-                nick_name = info.nick_name,
-                head_img = info.head_img,
-                ip = info.ip,
-                index = info.index,
-                score = info.score,
-                ready = info.ready,
-                agree = info.agree,
-                out = info.out,
-                out_magic = info.out_magic>0,
-                top_score = info.top_score,
-                hu_count = info.hu_count,
-            }
-            local out_card = info.out_card
-            if out_card and #out_card > 0 then
-                u.out_card = out_card
-            end
-            local weave_card = info.weave_card
-            if weave_card and #weave_card > 0 then
-                u.weave_card = weave_card
-            end
-            if info.op[base.MJ_OP_CHI] > 0 then
-                u.action = base.MJ_OP_CHI
-            end
-            if info.id == id then
-                info.agent = agent
-                local own_card = {}
-                for k, v in pairs(info.type_card) do
-                    for i = 1, v do
-                        own_card[#own_card+1] = k
-                    end
-                end
-                u.own_card = own_card
-                u.own_count = #own_card
-                u.last_deal = info.last_deal
-                u.chi_count = info.chi_count
-                u.hu = info.hu
-            else
-                local count = 0
-                for k, v in pairs(info.type_card) do
-                    count = count + v
-                end
-                u.own_count = count
-            end
-            user[#user+1] = u
-        end
-        return {info=chess, user=user}
+        local rmsg, rinfo = func.update_msg({
+            {index=si.index, status=si.status, ip=ip},
+        })
+        broadcast(rmsg, rinfo, self._role, id)
     end
 end
 
