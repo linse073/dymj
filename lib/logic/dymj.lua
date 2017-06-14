@@ -76,7 +76,7 @@ function dymj:status(id, status, addr)
     local info = self._id[id]
     if info then
         info.status = status
-        if status == base.USER_STATUS_ONLINE then
+        if addr then
             info.ip = addr
         end
         local rmsg, rinfo = func.update_msg({
