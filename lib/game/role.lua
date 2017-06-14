@@ -151,6 +151,14 @@ function role.heart_beat()
     end
 end
 
+function role.afk()
+    
+end
+
+function role.btk()
+
+end
+
 function role.repair(user, now)
 end
 

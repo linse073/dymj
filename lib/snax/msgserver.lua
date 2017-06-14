@@ -187,6 +187,9 @@ function server.start(conf)
 		u.fd = fd
 		u.ip = addr
 		connection[fd] = u
+        if conf.connect_handler then
+            conf.connect_handler(username)
+        end
 	end
 
 	local function auth(fd, addr, msg, sz)

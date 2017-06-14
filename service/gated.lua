@@ -90,6 +90,13 @@ function server.disconnect_handler(username)
 	end
 end
 
+function server.connect_handler(username)
+    local u = username_map[username]
+    if u then
+        skynet.call(u.agent, "lua", "btk")
+    end
+end
+
 -- call by self (when recv a request from client)
 function server.request_handler(username, msg)
 	local u = username_map[username]

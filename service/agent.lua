@@ -54,6 +54,15 @@ function CMD.afk()
 	local data = game.data
     if data then
         skynet.error(string.format("%d afk", data.id))
+        game.iter("afk")
+    end
+end
+
+function CMD.btk()
+    local data = game.data
+    if data then
+        skynet.error(string.format("%d btk", data.id))
+        game.iter("btk")
     end
 end
 
