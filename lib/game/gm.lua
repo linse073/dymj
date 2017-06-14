@@ -30,7 +30,7 @@ function proc.add_room_card(msg)
         error{code = error_code.ERROR_ARGS}
     end
     local p = update_user()
-    role.add_room_card(p, msg.num)
+    role.add_room_card(msg.num, p)
     return "update_user", {update=p}
 end
 

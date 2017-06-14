@@ -13,6 +13,8 @@ local math = math
 local floor = math.floor
 local tonumber = tonumber
 local pcall = pcall
+local table = table
+local select = select
 
 local game
 
@@ -153,10 +155,12 @@ end
 function role.repair(user, now)
 end
 
-function role.add_room_card(p, num)
+function role.add_room_card(num, p)
     local user = game.data.user
     user.room_card = user.room_card + num
-    p.user.room_card = user.room_card
+    if p then
+        p.user.room_card = user.room_card
+    end
 end
 
 function role.leave()
@@ -194,12 +198,11 @@ function proc.enter_game(msg)
     user.last_login_time = user.login_time
     user.login_time = now
 	game.iter("enter")
-    local p = update_user()
     local ret = {user=user}
     local om = skynet.call(offline_mgr, "lua", "get", user.id)
     if om then
         for k, v in ipairs(om) do
-			game.one(v[1], "add", v[2], p)
+            game.one(v[1], v[2], select(3, table.unpack(v)))
         end
     end
     local pack = game.iter_ret("pack_all")
