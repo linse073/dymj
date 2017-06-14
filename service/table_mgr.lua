@@ -106,11 +106,13 @@ function CMD.get(number)
     end
 end
 
-skynet.start(function()
+function CMD.open()
     rand = random()
     rand.init(floor(skynet.time()))
     new_table(100)
+end
 
+skynet.start(function()
 	skynet.dispatch("lua", function(session, source, command, ...)
 		local f = assert(CMD[command])
         skynet.retpack(f(...))

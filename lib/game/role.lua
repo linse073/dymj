@@ -25,6 +25,7 @@ local error_code
 local base
 local cz
 local rand
+local valid_chess
 local role_mgr
 local offline_mgr
 local table_mgr
@@ -39,6 +40,7 @@ skynet.init(function()
     base = share.base
     cz = share.cz
     rand = share.rand
+    valid_chess = share.valid_chess
     role_mgr = skynet.queryservice("role_mgr")
     offline_mgr = skynet.queryservice("offline_mgr")
     table_mgr = skynet.queryservice("table_mgr")
@@ -265,9 +267,7 @@ function proc.get_role(msg)
 end
 
 function proc.new_chess(msg)
-    local name = "logic." .. msg.name
-    local ok, chess = pcall(require, name)
-    if not ok then
+    if not valid_chess[msg.name] then
         error{code = error_code.NO_CHESS}
     end
     local data = game.data
@@ -282,7 +282,7 @@ function proc.new_chess(msg)
     end
     local card = data[msg.name .. "_card"]
     local rmsg, info = skynet.call(chess_table, "lua", "init", 
-        name, msg.rule, data.info, skynet.self(), data.server_address, card)
+        msg.name, msg.rule, data.info, skynet.self(), data.server_address, card)
     if rmsg == "update_user" then
         data.chess_table = chess_table
         skynet.call(chess_mgr, "lua", "add", data.id, chess_table)

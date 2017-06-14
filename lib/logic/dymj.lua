@@ -15,12 +15,21 @@ local cz
 local base
 local error_code
 local mj_invalid_card
+local user_record_db
+local record_info_db
+local record_detail_db
+local table_mgr
 
 skynet.init(function()
     cz = share.cz
     base = share.base
     error_code = share.error_code
     mj_invalid_card = share.mj_invalid_card
+    local master = skynet.queryservice("mongo_master")
+    user_record_db = skynet.call(master, "lua", "get", "user_record")
+    record_info_db = skynet.call(master, "lua", "get", "record_info")
+    record_detail_db = skynet.call(master, "lua", "get", "record_detail")
+    table_mgr = skynet.queryservice("table_mgr")
 end)
 
 local function valid_card(c)
@@ -29,14 +38,11 @@ end
 
 local dymj = {}
 
-function dymj:init(number, rule, rand, server, master_db, card)
+function dymj:init(number, rule, rand, server, card)
     self._number = number
     self._rule = rule
     self._rand = rand
     self._server = server
-    self._user_record_db = skynet.call(master_db, "lua", "get", "user_record")
-    self._record_info_db = skynet.call(master_db, "lua", "get", "record_info")
-    self._record_detail_db = skynet.call(master_db, "lua", "get", "record_detail")
     self._custom_card = card
     local p, c = string.unpack("BB", rule)
     if c == 1 then
@@ -70,7 +76,6 @@ end
 
 local function finish()
     skynet.call(skynet.self(), "lua", "destroy")
-    local table_mgr = skynet.queryservice("table_mgr")
     skynet.call(table_mgr, "lua", "free", skynet.self())
 end
 function dymj:finish()

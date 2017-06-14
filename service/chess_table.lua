@@ -10,11 +10,12 @@ local string = string
 local setmetatable = setmetatable
 local math = math
 local floor = math.floor
+local pairs = pairs
 
 local number = tonumber(...)
 local cz
 local rand
-local master_db
+local chess = {}
 
 local CMD = {}
 util.timer_wrap(CMD)
@@ -23,8 +24,8 @@ local logic
 
 function CMD.init(name, rule, info, agent, server, card)
     rand.init(floor(skynet.time()))
-    logic = setmetatable({}, require(name))
-    logic:init(number, rule, rand, server, master_db, card)
+    logic = setmetatable({}, chess[name])
+    logic:init(number, rule, rand, server, card)
     return logic:enter(info, agent, 1)
 end
 
@@ -40,7 +41,9 @@ end
 skynet.start(function()
     cz = share.cz
     rand = share.rand
-    master_db = skynet.queryservice("mongo_master")
+    for k, v in pairs(share.valid_chess) do
+        chess[v] = require("logic." .. v)
+    end
 
 	skynet.dispatch("lua", function(session, source, command, ...)
 		local f = CMD[command]
