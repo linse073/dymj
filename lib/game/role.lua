@@ -177,7 +177,6 @@ function role.leave()
     cz.start()
     assert(data.chess_table, string.format("user %d not in chess.", data.id))
     skynet.error(string.format("user %d leave chess.", data.id))
-    skynet.call(chess_mgr, "lua", "del", data.id)
     data.chess_table = nil
     cz.finish()
 end
@@ -285,7 +284,6 @@ function proc.new_chess(msg)
         msg.name, msg.rule, data.info, skynet.self(), data.server_address, card)
     if rmsg == "update_user" then
         data.chess_table = chess_table
-        skynet.call(chess_mgr, "lua", "add", data.id, chess_table)
     else
         skynet.call(table_mgr, "lua", "free", chess_table)
     end
@@ -307,7 +305,6 @@ function proc.join(msg)
     local rmsg, info = skynet.call(chess_table, "lua", "join", msg.name, data.info, skynet.self())
     if rmsg == "update_user" then
         data.chess_table = chess_table
-        skynet.call(chess_mgr, "lua", "add", data.id, chess_table)
     end
     cz.finish()
     return rmsg, info

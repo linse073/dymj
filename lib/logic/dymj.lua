@@ -19,6 +19,7 @@ local user_record_db
 local record_info_db
 local record_detail_db
 local table_mgr
+local chess_mgr
 
 skynet.init(function()
     cz = share.cz
@@ -30,6 +31,7 @@ skynet.init(function()
     record_info_db = skynet.call(master, "lua", "get", "record_info")
     record_detail_db = skynet.call(master, "lua", "get", "record_detail")
     table_mgr = skynet.queryservice("table_mgr")
+    chess_mgr = skynet.queryservice("chess_mgr")
 end)
 
 local function valid_card(c)
@@ -85,6 +87,7 @@ function dymj:finish()
     for i = 1, base.MJ_FOUR do
         local v = role[i]
         if v then
+            skynet.call(chess_mgr, "lua", "del", v.id)
             skynet.call(v.agent, "lua", "action", "role", "leave")
         end
     end
@@ -238,6 +241,7 @@ function dymj:enter(info, agent, index)
     info.top_score = 0
     role[index] = info
     self._id[info.id] = info
+    skynet.call(chess_mgr, "lua", "add", info.id, skynet.self())
     local user = {}
     for i = 1, base.MJ_FOUR do
         user[#user+1] = role[i] -- role[i] can be nil
@@ -325,6 +329,7 @@ function dymj:leave(id, msg)
     else
         self._id[id] = nil
         role[index] = nil
+        skynet.call(chess_mgr, "lua", "del", id)
         skynet.call(info.agent, "lua", "action", "role", "leave")
         local rmsg, rinfo = func.update_msg({
             {index=index, action=base.MJ_OP_LEAVE},
