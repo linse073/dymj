@@ -188,7 +188,7 @@ function server.start(conf)
 		u.ip = addr
 		connection[fd] = u
         if conf.connect_handler then
-            conf.connect_handler(username)
+            conf.connect_handler(username, addr)
         end
 	end
 

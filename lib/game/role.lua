@@ -131,6 +131,10 @@ function role.exit()
         role.save_user()
     end
     notify.exit()
+    local chess_table = data.chess_table
+    if chess_table then
+        skynet.call(chess_table, "lua", "status", data.id, base.USER_STATUS_LOGOUT)
+    end
 end
 
 function role.save_user()
@@ -154,11 +158,31 @@ function role.heart_beat()
 end
 
 function role.afk()
-    
+    local chess_table = data.chess_table
+    if chess_table then
+        skynet.call(chess_table, "lua", "status", data.id, base.USER_STATUS_LOST)
+    end
 end
 
-function role.btk()
-
+local function btk()
+    local data = game.data
+    local chess_table = data.chess_table
+    if chess_table then
+        skynet.call(chess_table, "lua", "status", data.id, base.USER_STATUS_ONLINE, addr)
+    else
+        local p = update_user()
+        p.user.ip = addr
+        notify.add("update_user", {update=p})
+    end
+end
+function role.btk(addr)
+    local data = game.data
+    data.ip = addr
+    data.user.ip = addr
+    data.info.ip = addr
+    if data.enter then
+        skynet.fork(btk)
+    end
 end
 
 function role.repair(user, now)
@@ -195,11 +219,10 @@ end
 
 function proc.enter_game(msg)
 	cz.start()
-	-- local data = game.data
-    -- if data.user then
-        -- error{code = error_code.ROLE_ALREADY_ENTER}
-    -- end
 	local data = game.data
+    if data.enter then
+        error{code = error_code.ROLE_ALREADY_ENTER}
+    end
 	local user = data.user
     local now = floor(skynet.time())
     role.repair(user, now)
@@ -234,6 +257,7 @@ function proc.enter_game(msg)
     end
     timer.add_routine("save_role", role.save_routine, 300)
     skynet.call(role_mgr, "lua", "enter", data.info, skynet.self())
+    data.enter = true
     cz.finish()
     return "info_all", {user=ret, start_time=start_utc_time}
 end

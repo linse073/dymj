@@ -90,10 +90,10 @@ function server.disconnect_handler(username)
 	end
 end
 
-function server.connect_handler(username)
+function server.connect_handler(username, addr)
     local u = username_map[username]
     if u then
-        skynet.call(u.agent, "lua", "btk")
+        skynet.call(u.agent, "lua", "btk", addr)
     end
 end
 

@@ -72,6 +72,20 @@ function dymj:init(number, rule, rand, server, card)
     }
 end
 
+function dymj:status(id, status, addr)
+    local info = self._id[id]
+    if info then
+        info.status = status
+        if status == base.USER_STATUS_ONLINE then
+            info.ip = addr
+        end
+        local rmsg, rinfo = func.update_msg({
+            {index=info.index, status=status, ip=addr},
+        })
+        broadcast(rmsg, rinfo, self._role, id)
+    end
+end
+
 function dymj:destroy()
     timer.del_once_routine("close_timer")
 end
@@ -239,6 +253,7 @@ function dymj:enter(info, agent, index)
     info.ready = false
     info.hu_count = 0
     info.top_score = 0
+    info.status = base.USER_STATUS_ONLINE
     role[index] = info
     self._id[info.id] = info
     skynet.call(chess_mgr, "lua", "add", info.id, skynet.self())

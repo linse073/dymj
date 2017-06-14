@@ -58,11 +58,11 @@ function CMD.afk()
     end
 end
 
-function CMD.btk()
+function CMD.btk(addr)
     local data = game.data
     if data then
         skynet.error(string.format("%d btk", data.id))
-        game.iter("btk")
+        game.iter("btk", addr)
     end
 end
 

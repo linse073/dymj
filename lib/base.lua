@@ -22,6 +22,10 @@ local base = {
     CHESS_STATUS_START = 2,
     CHESS_STATUS_FINISH = 3,
     CHESS_STATUS_EXIT = 4,
+
+    USER_STATUS_ONLINE = 0,
+    USER_STATUS_LOST = 1,
+    USER_STATUS_LOGOUT = 2,
 }
 
 return base

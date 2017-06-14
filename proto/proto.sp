@@ -52,6 +52,7 @@
     hu 21 : boolean
     top_score 22 : integer
     hu_count 23 : integer
+    status 24 : integer
 }
 
 .chess_info {
