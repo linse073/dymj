@@ -30,10 +30,12 @@ skynet.start(function()
 				response(id, code)
 			else
 				local path, query = urllib.parse(url)
-				if query then
+                local resp = ""
+				if path and query then
+                    local func = path:match("://(.*)$")
 					local q = urllib.parse_query(query)
 				end
-				response(id, code)
+				response(id, code, resp)
 			end
 		else
 			if url == sockethelper.socket_error then
