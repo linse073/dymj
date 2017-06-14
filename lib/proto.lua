@@ -27,6 +27,7 @@ local type_msg = {
 
     [2100] = {
         "enter_game",
+        "get_offline",
     },
 
     [2200] = {

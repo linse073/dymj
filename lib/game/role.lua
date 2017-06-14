@@ -14,7 +14,6 @@ local floor = math.floor
 local tonumber = tonumber
 local pcall = pcall
 local table = table
-local select = select
 
 local game
 
@@ -202,7 +201,7 @@ function proc.enter_game(msg)
     local om = skynet.call(offline_mgr, "lua", "get", user.id)
     if om then
         for k, v in ipairs(om) do
-            game.one(v[1], v[2], select(3, table.unpack(v)))
+            game.one(table.unpack(v))
         end
     end
     local pack = game.iter_ret("pack_all")
@@ -228,6 +227,22 @@ function proc.enter_game(msg)
     skynet.call(role_mgr, "lua", "enter", data.info, skynet.self())
     cz.finish()
     return "info_all", {user=ret, start_time=start_utc_time}
+end
+
+function proc.get_offline(msg)
+    local data = game.data
+    local om = skynet.call(offline_mgr, "lua", "get", user.id)
+    if om then
+        local p = update_user()
+        for k, v in ipairs(om) do
+            v[#v+1] = p
+            v.n = v.n + 1
+            game.one(table.unpack(v))
+        end
+        return "update_user", {update=p}
+    else
+        return "response", ""
+    end
 end
 
 function proc.get_role(msg)
