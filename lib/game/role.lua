@@ -97,7 +97,7 @@ local function get_user()
 				account = user.account,
 				id = user.id,
 				sex = user.sex,
-				nick_name = user.nic_name,
+				nick_name = user.nick_name,
 				head_img = user.head_img,
 				ip = user.ip,
 			}
