@@ -122,6 +122,10 @@ function dymj:pack(id, ip, agent)
         si.ip = ip
         si.status = base.USER_STATUS_ONLINE
         si.agent = agent
+        local rmsg, rinfo = func.update_msg({
+            {index=si.index, status=si.status, ip=ip},
+        })
+        broadcast(rmsg, rinfo, self._role, id)
         local status = self._status
         if status == base.CHESS_STATUS_READY then
             local chess = {
@@ -248,10 +252,6 @@ function dymj:pack(id, ip, agent)
             end
             return {info=chess, user=user}
         end
-        local rmsg, rinfo = func.update_msg({
-            {index=si.index, status=si.status, ip=ip},
-        })
-        broadcast(rmsg, rinfo, self._role, id)
     end
 end
 
