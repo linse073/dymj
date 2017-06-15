@@ -347,7 +347,8 @@ function proc.join(msg)
         error{code = error_code.ALREAD_IN_CHESS}
     end
     assert(not skynet.call(chess_mgr, "lua", "get", data.id), string.format("Chess mgr has %d.", data.id))
-    local rmsg, info = skynet.call(chess_table, "lua", "join", msg.name, data.info, skynet.self())
+    local user = data.user
+    local rmsg, info = skynet.call(chess_table, "lua", "join", msg.name, data.info, user.room_card, skynet.self())
     if rmsg == "update_user" then
         data.chess_table = chess_table
     end

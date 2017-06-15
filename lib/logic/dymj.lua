@@ -285,14 +285,14 @@ function dymj:enter(info, agent, index)
     })
 end
 
-function dymj:join(name, info, agent)
+function dymj:join(name, info, room_card, agent)
     if name ~= "dymj" then
         error{code = error_code.ERROR_CHESS_NAME}
     end
     if self._status ~= base.CHESS_STATUS_READY then
         error{code = error_code.ERROR_CHESS_STATUS}
     end
-    if self._rule.aa_pay and info.room_card < self._rule.total_count/8 then
+    if self._rule.aa_pay and room_card < self._rule.total_count/8 then
         error{code = error_code.ROOM_CARD_LIMIT}
     end
     local role = self._role
