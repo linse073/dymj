@@ -13,17 +13,17 @@ local cs = queue()
 
 local CMD = {}
 
-local function add(id, ...)
+local function add(id, module, func, ...)
     local agent = skynet.call(role_mgr, "lua", "get", id)
     if agent then
-        skynet.call(agent, "lua", "action", true, {}, ...)
+        skynet.call(agent, "lua", "action", module, func, true, {}, ...)
     else
-        skynet.call(offline_db, "lua", "update", {id=id}, {["$push"]={data=table.pack(false, ...)}}, true)
+        skynet.call(offline_db, "lua", "update", {id=id}, {["$push"]={data=table.pack(module, func, false, ...)}}, true)
     end
 end
 
-local function offline(id, ...)
-    skynet.call(offline_db, "lua", "update", {id=id}, {["$push"]={data=table.pack(false, ...)}}, true)
+local function offline(id, module, func, ...)
+    skynet.call(offline_db, "lua", "update", {id=id}, {["$push"]={data=table.pack(module, func, false, ...)}}, true)
 end
 
 local function get(id)
@@ -34,20 +34,20 @@ local function get(id)
     end
 end
 
-function CMD.broadcast(...)
+function CMD.broadcast(module, func, ...)
     local cursor = skynet.call(user_db, "lua", "find", nil, {"id"})
     while cursor:hasNext() do
         local r = cursor:next()
-        cs(add, r.id, ...)
+        cs(add, r.id, module, func, ...)
     end
 end
 
-function CMD.add(id, ...)
-    cs(add, id, ...)
+function CMD.add(id, module, func, ...)
+    cs(add, id, module, func, ...)
 end
 
-function CMD.offline(id, ...)
-    cs(offline, id, ...)
+function CMD.offline(id, module, func, ...)
+    cs(offline, id, module, func, ...)
 end
 
 function CMD.get(id)
