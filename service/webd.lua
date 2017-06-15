@@ -75,16 +75,24 @@ if mode == "agent" then
                         local p = process[func]
                         if p then
                             local s = ""
-                            for k, v in ipairs(p[1]) do
-                                s = s .. q[v] .. "&"
-                            end
-                            s = s .. web_sign
-                            local sign = md5.sum(s)
                             local ret
-                            if sign ~= q.sign then
-                                ret = {error="eror sign"}
-                            else
-                                ret = p[2](q)
+                            for k, v in ipairs(p[1]) do
+                                local a = q[v]
+                                if a then
+                                    s = s .. a .. "&"
+                                else
+                                    ret = {error="error parameter"}
+                                    break
+                                end
+                            end
+                            if not ret then
+                                s = s .. web_sign
+                                local sign = md5.sum(s)
+                                if sign ~= q.sign then
+                                    ret = {error="eror sign"}
+                                else
+                                    ret = p[2](q)
+                                end
                             end
                             resp = cjson.encode(ret)
                         end
