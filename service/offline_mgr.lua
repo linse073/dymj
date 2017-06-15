@@ -16,10 +16,14 @@ local CMD = {}
 local function add(id, ...)
     local agent = skynet.call(role_mgr, "lua", "get", id)
     if agent then
-        skynet.call(agent, "lua", "action", ...)
+        skynet.call(agent, "lua", "action", true, {}, ...)
     else
-        skynet.call(offline_db, "lua", "update", {id=id}, {["$push"]={data=table.pack(...)}}, true)
+        skynet.call(offline_db, "lua", "update", {id=id}, {["$push"]={data=table.pack(false, ...)}}, true)
     end
+end
+
+local function offline(id, ...)
+    skynet.call(offline_db, "lua", "update", {id=id}, {["$push"]={data=table.pack(false, ...)}}, true)
 end
 
 local function get(id)
@@ -40,6 +44,10 @@ end
 
 function CMD.add(id, ...)
     cs(add, id, ...)
+end
+
+function CMD.offline(id, ...)
+    cs(offline, id, ...)
 end
 
 function CMD.get(id)

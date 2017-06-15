@@ -189,11 +189,12 @@ end
 function role.repair(user, now)
 end
 
-function role.add_room_card(num, p)
+function role.add_room_card(p, inform, num)
     local user = game.data.user
     user.room_card = user.room_card + num
-    if p then
-        p.user.room_card = user.room_card
+    p.user.room_card = user.room_card
+    if inform then
+        notify.add("update_user", {update=p})
     end
 end
 
@@ -233,7 +234,10 @@ function proc.enter_game(msg)
     local ret = {user=user}
     local om = skynet.call(offline_mgr, "lua", "get", user.id)
     if om then
+        local p = update_user()
         for k, v in ipairs(om) do
+            table.insert(v, 3, p)
+            v.n = v.n + 1
             game.one(table.unpack(v))
         end
     end
@@ -269,7 +273,7 @@ function proc.get_offline(msg)
     if om then
         local p = update_user()
         for k, v in ipairs(om) do
-            v[#v+1] = p
+            table.insert(v, 3, p)
             v.n = v.n + 1
             game.one(table.unpack(v))
         end
