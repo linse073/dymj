@@ -139,8 +139,8 @@ end
 
 function role.save_user()
     local data = game.data
-    skynet.call(user_db, "lua", "save", data.user)
-    skynet.call(info_db, "lua", "save", data.info)
+    skynet.call(user_db, "lua", "safe_insert", data.user)
+    skynet.call(info_db, "lua", "safe_insert", data.info)
 end
 
 function role.save_routine()
