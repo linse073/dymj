@@ -20,6 +20,7 @@ local record_info_db
 local record_detail_db
 local table_mgr
 local chess_mgr
+local offline_mgr
 
 skynet.init(function()
     cz = share.cz
@@ -32,6 +33,7 @@ skynet.init(function()
     record_detail_db = skynet.call(master, "lua", "get", "record_detail")
     table_mgr = skynet.queryservice("table_mgr")
     chess_mgr = skynet.queryservice("chess_mgr")
+    offline_mgr = skynet.queryservice("offline_mgr")
 end)
 
 local function valid_card(c)
@@ -46,12 +48,6 @@ function dymj:init(number, rule, rand, server, card)
     self._rand = rand
     self._server = server
     self._custom_card = card
-    local p, c = string.unpack("BB", rule)
-    if c == 1 then
-        self._total_count = 8
-    else
-        self._total_count = 16
-    end
     self._magic_card = 45
     self._banker = rand.randi(1, base.MJ_FOUR)
     self._status = base.CHESS_STATUS_READY
@@ -136,7 +132,7 @@ function dymj:pack(id, ip, agent)
             local chess = {
                 name = "dymj",
                 number = self._number,
-                rule = self._rule,
+                rule = self._rule.pack,
                 banker = self._banker,
                 status = status,
                 count = self._count,
@@ -190,7 +186,7 @@ function dymj:pack(id, ip, agent)
             local chess = {
                 name = "dymj",
                 number = self._number,
-                rule = self._rule,
+                rule = self._rule.pack,
                 banker = self._banker,
                 status = self._status,
                 count = self._count,
@@ -280,7 +276,7 @@ function dymj:enter(info, agent, index)
     return func.update_msg(user, {
         name = "dymj",
         number = self._number,
-        rule = self._rule,
+        rule = self._rule.pack,
         banker = self._banker,
         status = self._status,
         count = self._count,
@@ -295,6 +291,9 @@ function dymj:join(name, info, agent)
     end
     if self._status ~= base.CHESS_STATUS_READY then
         error{code = error_code.ERROR_CHESS_STATUS}
+    end
+    if self._rule.aa_pay and info.room_card < self._rule.total_count/8 then
+        error{code = error_code.ROOM_CARD_LIMIT}
     end
     local role = self._role
     local index
@@ -748,6 +747,19 @@ function dymj:is_qidui(type_card)
     return count==14, four_count, magic_count
 end
 
+function dymj:consume_card()
+    if self._rule.aa_pay then
+        local count = -self._rule.total_count/8
+        for k, v in ipairs(self._role) do
+            skynet.call(offline_mgr, "lua", "add", v.id, "role", "add_room_card", count)
+        end
+    else
+        local id = self._role[1].id
+        local count = -self._rule.total_count/2
+        skynet.call(offline_mgr, "lua", "add", id, "role", "add_room_card", count)
+    end
+end
+
 function dymj:hu(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     local index = info.index
@@ -797,10 +809,13 @@ function dymj:hu(id, msg)
     self:clear_all_op()
     info.hu_count = info.hu_count + 1
     self._count = self._count + 1
-    if self._count == self._total_count then
+    if self._count == self._rule.total_count then
         self._status = base.CHESS_STATUS_FINISH
     else
         self._status = base.CHESS_STATUS_READY
+    end
+    if self._count == 1 then
+        self:consume_card()
     end
     local user = {}
     local role = self._role
@@ -1232,10 +1247,13 @@ function dymj:conclude(id, msg)
         error{code = error_code.CONCLUDE_CARD_LIMIT}
     end
     self._count = self._count + 1
-    if self._count == self._total_count then
+    if self._count == self._rule.total_count then
         self._status = base.CHESS_STATUS_FINISH
     else
         self._status = base.CHESS_STATUS_READY
+    end
+    if self._count == 1 then
+        self:consume_card()
     end
     local user = {}
     local role = self._role
@@ -1387,7 +1405,7 @@ function dymj:start()
         info = {
             name = "dymj",
             number = self._number,
-            rule = self._rule,
+            rule = self._rule.pack,
             banker = self._banker,
             left = left,
             count = self._count,

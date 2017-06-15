@@ -303,6 +303,22 @@ function proc.new_chess(msg)
     if data.chess_table then
         error{code = error_code.ALREAD_IN_CHESS}
     end
+    local rule = {pack=msg.rule}
+    local p, c = string.unpack("BB", msg.rule)
+    if p == 1 then
+        rule.aa_pay = true
+    else
+        rule.aa_pay = false
+    end
+    if c == 1 then
+        rule.total_count = 8
+    else
+        rule.total_count = 16
+    end
+    local user = data.user
+    if not rule.aa_pay and user.room_card < rule.total_count/2 then
+        error{code = error_code.ROOM_CARD_LIMIT}
+    end
     assert(not skynet.call(chess_mgr, "lua", "get", data.id), string.format("Chess mgr has %d.", data.id))
     local chess_table = skynet.call(table_mgr, "lua", "new")
     if not chess_table then
@@ -310,7 +326,7 @@ function proc.new_chess(msg)
     end
     local card = data[msg.name .. "_card"]
     local rmsg, info = skynet.call(chess_table, "lua", "init", 
-        msg.name, msg.rule, data.info, skynet.self(), data.server_address, card)
+        msg.name, rule, data.info, skynet.self(), data.server_address, card)
     if rmsg == "update_user" then
         data.chess_table = chess_table
     else
