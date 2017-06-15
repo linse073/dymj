@@ -139,7 +139,6 @@ end
 
 function role.save_user()
     local data = game.data
-    print("save user %d", data.id)
     skynet.call(user_db, "lua", "save", data.user)
     skynet.call(info_db, "lua", "save", data.info)
 end
