@@ -26,7 +26,7 @@ function CMD.enter(info, agent)
     local roleid = info.id
     assert(not role_list[roleid], string.format("Role already enter %d.", roleid))
     info.agent = agent
-    role_list[roleid] = agent
+    role_list[roleid] = info
     -- CMD.broadcast("other_info", info, roleid)
     -- notify(roleid, agent, area)
     skynet.error(string.format("Role enter %d.", roleid))
@@ -65,7 +65,7 @@ function CMD.get_user(roleid)
         if info then
             return info, false
         else
-            skynet.error(string.format("No role info %d.", roleid))
+            skynet.error(string.format("No user info %d.", roleid))
         end
     end
 end
@@ -79,7 +79,7 @@ function CMD.get_info(roleid)
         if info then
             return info, false
         else
-            skynet.error(string.format("No role rank info %d.", roleid))
+            skynet.error(string.format("No role info %d.", roleid))
         end
     end
 end

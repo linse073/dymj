@@ -89,7 +89,7 @@ if mode == "agent" then
                                 s = s .. web_sign
                                 local sign = md5.sumhexa(s)
                                 if sign ~= q.sign then
-                                    ret = {error="eror sign"}
+                                    ret = {error="error sign"}
                                 else
                                     ret = p[2](q)
                                 end
