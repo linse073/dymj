@@ -27,7 +27,7 @@ if mode == "agent" then
     local process = {
         query = {{"id", "time"}, function(q)
             local id = tonumber(q.id)
-            local info = skynet.call(role_mgr, "lua", "get_info", id)
+            local info = skynet.call(role_mgr, "lua", "get_user", id)
             if info then
                 return {
                     account = info.account,
