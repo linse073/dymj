@@ -15,7 +15,7 @@ local CMD = {}
 local function add(id, module, func, ...)
     local agent = skynet.call(role_mgr, "lua", "get", id)
     if agent then
-        skynet.call(agent, "lua", "action", module, func, true, {}, ...)
+        skynet.call(agent, "lua", "action", module, func, {}, true, ...)
     else
         skynet.call(offline_db, "lua", "update", {id=id}, {["$push"]={data={module, func, false, ...}}}, true)
     end
