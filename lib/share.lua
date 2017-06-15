@@ -1,5 +1,5 @@
 local skynet = require "skynet"
-local sharedata = require "sharedata"
+local sharedata = require "skynet.sharedata"
 local sprotoloader = require "sprotoloader"
 local crit_zone = require "crit_zone"
 local random = require "random"
