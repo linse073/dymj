@@ -237,7 +237,6 @@ function proc.enter_game(msg)
         local p = update_user()
         for k, v in ipairs(om) do
             table.insert(v, 3, p)
-            v.n = v.n + 1
             game.one(table.unpack(v))
         end
     end
@@ -274,7 +273,6 @@ function proc.get_offline(msg)
         local p = update_user()
         for k, v in ipairs(om) do
             table.insert(v, 3, p)
-            v.n = v.n + 1
             game.one(table.unpack(v))
         end
         return "update_user", {update=p}

@@ -43,7 +43,7 @@ if mode == "agent" then
             local id = tonumber(q.id)
             local info = skynet.call(role_mgr, "lua", "get_info", id)
             if info then
-                skynet.call(offline_mgr, "lua", "add", id, "role", "add_room_card", q.card)
+                skynet.call(offline_mgr, "lua", "add", id, "role", "add_room_card", tonumber(q.card))
                 return {ret="OK"}
             else
                 return {error="no player"}
