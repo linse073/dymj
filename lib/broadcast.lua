@@ -25,7 +25,7 @@ end
 local function broadcast(msg, info, range, exclude)
     local c = pack_msg(msg, info)
     for k, v in pairs(range) do
-        if v.id ~= exclude then
+        if v.id ~= exclude and v.agent then
             -- TODO: offline
             skynet.send(v.agent, "lua", "notify", c)
         end

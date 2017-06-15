@@ -79,6 +79,9 @@ function dymj:status(id, status, addr)
         if addr then
             info.ip = addr
         end
+        if status == base.USER_STATUS_LOGOUT then
+            info.agent = nil
+        end
         local rmsg, rinfo = func.update_msg({
             {index=info.index, status=status, ip=addr},
         })
@@ -102,7 +105,9 @@ function dymj:finish()
         local v = role[i]
         if v then
             skynet.call(chess_mgr, "lua", "del", v.id)
-            skynet.call(v.agent, "lua", "action", "role", "leave")
+            if v.agent then
+                skynet.call(v.agent, "lua", "action", "role", "leave")
+            end
         end
     end
     skynet.fork(finish)
@@ -356,7 +361,9 @@ function dymj:leave(id, msg)
         self._id[id] = nil
         role[index] = nil
         skynet.call(chess_mgr, "lua", "del", id)
-        skynet.call(info.agent, "lua", "action", "role", "leave")
+        if info.agent then
+            skynet.call(info.agent, "lua", "action", "role", "leave")
+        end
         local rmsg, rinfo = func.update_msg({
             {index=index, action=base.MJ_OP_LEAVE},
         })
@@ -462,7 +469,7 @@ function dymj:ready(id, msg)
         end
         -- other
         for k, v in ipairs(self._role) do
-            if v.id ~= id then
+            if v.id ~= id and v.agent then
                 local last_deal
                 if k == self._banker then
                     last_deal = v.last_deal
@@ -579,16 +586,18 @@ function dymj:out_card(id, msg)
             local r = role[deal_index]
             local c = self:deal(r)
             chess = {deal_index=deal_index, left=self._left}
-            skynet.send(r.agent, "lua", "notify", func.update_msg({
-                {index=index, out_card={card}, out_index=msg.index},
-                {index=deal_index, last_deal=c},
-            }, chess))
+            if r.agent then
+                skynet.send(r.agent, "lua", "notify", func.update_msg({
+                    {index=index, out_card={card}, out_index=msg.index},
+                    {index=deal_index, last_deal=c},
+                }, chess))
+            end
         end
         local rmsg, rinfo = func.update_msg({
             {index=index, out_card={card}, out_index=msg.index},
         }, chess)
         for k, v in ipairs(role) do
-            if v.id ~= id and k ~= deal_index then
+            if v.id ~= id and k ~= deal_index and v.agent then
                 skynet.send(v.agent, "lua", "notify", rmsg, rinfo)
             end
         end
@@ -1191,14 +1200,14 @@ function dymj:pass(id, msg)
             chess = {deal_index=deal_index, left=self._left}
             if r.id == id then
                 user.last_deal = c
-            else
+            elseif r.agent then
                 skynet.send(r.agent, "lua", "notify", func.update_msg({
                     {index=deal_index, last_deal=c},
                 }, chess))
             end
             local rmsg, rinfo = func.update_msg(nil, chess)
             for k, v in ipairs(role) do
-                if v.id ~= id and k ~= deal_index then
+                if v.id ~= id and k ~= deal_index and v.agent then
                     skynet.send(v.agent, "lua", "notify", rmsg, rinfo)
                 end
             end
