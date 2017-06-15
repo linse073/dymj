@@ -18,6 +18,10 @@ local type_code = {
         ERROR_SIGN="签名错误",
     },
 
+    [1200] = {
+        ROLE_ALREADY_ENTER="已经登陆",
+    },
+
     [3000] = {
         NOT_JOIN_CHESS="尚未加入棋局",
         CHESS_ROLE_FULL="棋局人数已满",
