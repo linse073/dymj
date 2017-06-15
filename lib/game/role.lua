@@ -314,8 +314,14 @@ function proc.new_chess(msg)
         rule.total_count = 16
     end
     local user = data.user
-    if not rule.aa_pay and user.room_card < rule.total_count/2 then
-        error{code = error_code.ROOM_CARD_LIMIT}
+    if rule.aa_pay then
+        if user.room_card < rule.total_count/8 then
+            error{code = error_code.ROOM_CARD_LIMIT}
+        end
+    else
+        if user.room_card < rule.total_count/2 then
+            error{code = error_code.ROOM_CARD_LIMIT}
+        end
     end
     assert(not skynet.call(chess_mgr, "lua", "get", data.id), string.format("Chess mgr has %d.", data.id))
     local chess_table = skynet.call(table_mgr, "lua", "new")
