@@ -1,5 +1,6 @@
 local skynet = require "skynet"
 local queue = require "skynet.queue"
+local util = require "util"
 
 local ipairs = ipairs
 local assert = assert
@@ -9,13 +10,14 @@ local offline_db
 local user_db
 local role_mgr
 local cs = queue()
+local update_user = util.update_user
 
 local CMD = {}
 
 local function add(id, module, func, ...)
     local agent = skynet.call(role_mgr, "lua", "get", id)
     if agent then
-        skynet.call(agent, "lua", "action", module, func, {}, true, ...)
+        skynet.call(agent, "lua", "action", module, func, update_user(), true, ...)
     else
         skynet.call(offline_db, "lua", "update", {id=id}, {["$push"]={data={module, func, false, ...}}}, true)
     end
