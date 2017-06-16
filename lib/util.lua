@@ -1,4 +1,4 @@
-local crypt = require "crypt"
+local crypt = require "skynet.crypt"
 
 local pairs = pairs
 local ipairs = ipairs
