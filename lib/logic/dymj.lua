@@ -71,17 +71,19 @@ end
 function dymj:status(id, status, addr)
     local info = self._id[id]
     if info then
-        info.status = status
-        if addr then
-            info.ip = addr
+        if status~=info.status or (addr and addr~=info.ip) then
+            info.status = status
+            if addr then
+                info.ip = addr
+            end
+            if status == base.USER_STATUS_LOGOUT then
+                info.agent = nil
+            end
+            local rmsg, rinfo = func.update_msg({
+                {index=info.index, status=status, ip=addr},
+            })
+            broadcast(rmsg, rinfo, self._role, id)
         end
-        if status == base.USER_STATUS_LOGOUT then
-            info.agent = nil
-        end
-        local rmsg, rinfo = func.update_msg({
-            {index=info.index, status=status, ip=addr},
-        })
-        broadcast(rmsg, rinfo, self._role, id)
     end
 end
 
