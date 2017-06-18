@@ -27,16 +27,6 @@ function func.game_day(t, start_time)
     return (st - start_time) // day_second
 end
 
-function func.update_msg(chess_user, chess_info, user)
-    return "update_user", {update={
-        user = user,
-        chess = {
-            info = chess_info,
-            user = chess_user,
-        },
-    }}
-end
-
 function func.return_msg(ok, msg, info)
     if not ok then
         if type(msg) == "string" then
