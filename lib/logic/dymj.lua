@@ -38,7 +38,7 @@ local function valid_card(c)
 end
 
 local function session_msg(msg, info, user)
-    info.chess.session = user.session
+    info.update.chess.session = user.session
     user.session = user.session + 1
     return msg, info
 end
@@ -313,7 +313,7 @@ function dymj:enter(info, agent, index)
         pause = self._pause,
         close_index = self._close_index,
     })
-    rinfo.chess.start_session = info.session
+    rinfo.update.chess.start_session = info.session
     return rmsg, rinfo
 end
 
