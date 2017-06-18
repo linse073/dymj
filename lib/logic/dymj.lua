@@ -514,9 +514,9 @@ function dymj:ready(id, msg)
             end
         end
     else
-        broadcast(user, chess, self._role, id)
+        broadcast({user}, chess, self._role, id)
     end
-    return session_msg(info, user, chess)
+    return session_msg(info, {user}, chess)
 end
 
 local CHI_RULE = {

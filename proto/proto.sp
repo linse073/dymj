@@ -76,8 +76,8 @@
 .chess_all {
     info 0 : chess_info
     user 1 : *chess_user
-    start_session 3 : integer
-    session 4 : integer
+    start_session 2 : integer
+    session 3 : integer
 }
 
 .record_info {
