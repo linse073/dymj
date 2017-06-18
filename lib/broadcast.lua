@@ -22,10 +22,21 @@ local function pack_msg(msg, info)
     return string.pack(">s2", string.pack(">I2", id) .. info)
 end
 
-local function broadcast(msg, info, range, exclude)
+local function broadcast(msg, info, range, ...)
     local c = pack_msg(msg, info)
-    for k, v in pairs(range) do
-        if v.id ~= exclude and v.agent then
+    if ... then
+        local exclude = {}
+        for k, v in ipairs({...}) do
+            exclude[v] = v
+        end
+        for k, v in pairs(range) do
+            if not exclude[v.id] then
+                -- TODO: offline
+                skynet.send(v.agent, "lua", "notify", c)
+            end
+        end
+    else
+        for k, v in pairs(range) do
             -- TODO: offline
             skynet.send(v.agent, "lua", "notify", c)
         end

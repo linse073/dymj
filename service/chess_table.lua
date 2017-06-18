@@ -49,12 +49,15 @@ skynet.start(function()
 		local f = CMD[command]
         local ok, rmsg, info
         if f then
+            cz.start()
             ok, rmsg, info = pcall(f, ...)
+            cz.finish()
         else
             f = assert(logic[command], string.format("No logic procedure %s.", command))
+            cz.start()
             ok, rmsg, info = pcall(f, logic, ...)
+            cz.finish()
         end
-        cz.over()
         skynet.retpack(func.return_msg(ok, rmsg, info))
 	end)
 end)
