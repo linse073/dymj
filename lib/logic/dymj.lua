@@ -2,12 +2,14 @@ local skynet = require "skynet"
 local share = require "share"
 local util = require "util"
 local timer = require "timer"
+local bson = require "bson"
 
 local string = string
 local ipairs = ipairs
 local pairs = pairs
 local table = table
 local floor = math.floor
+local os = os
 
 local base
 local error_code
@@ -89,6 +91,7 @@ function dymj:init(number, rule, rand, server, card)
     self._close_index = 0
     self._record = {
         time = floor(skynet.time()),
+        expire = bson.date(os.time()),
         info = {
             name = "dymj",
             number = number,
@@ -1450,6 +1453,7 @@ function dymj:start()
     self._left = left
     self._detail = {
         time = floor(skynet.time()),
+        expire = bson.date(os.time()),
         info = {
             name = "dymj",
             number = self._number,

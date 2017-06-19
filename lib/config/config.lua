@@ -24,6 +24,8 @@ config.redis = {
     },
 }
 
+local expire_time = 3*24*60*60
+
 config.mongo = {
     host = "127.0.0.1",
     name = {
@@ -45,9 +47,9 @@ config.mongo = {
         {"status", {"key", unique=true}},
         {"user_record", {"id", unique=true}},
         {"record_info", {"id", unique=true}},
-        {"record_info", {"time", expireAfterSeconds=60}},
+        {"record_info", {"expire", expireAfterSeconds=expire_time}},
         {"record_detail", {"id", unique=true}},
-        {"record_detail", {"time", expireAfterSeconds=60}},
+        {"record_detail", {"expire", expireAfterSeconds=expire_time}},
     },
 }
 
