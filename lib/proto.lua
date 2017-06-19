@@ -23,6 +23,9 @@ local type_msg = {
         "chess_info",
         "chess_user",
         "chess_all",
+        "chess_record",
+        "record_info",
+        "record_all",
     },
 
     [2100] = {
@@ -38,6 +41,7 @@ local type_msg = {
     [2300] = {
         "new_chess",
         "join",
+        "get_record",
     },
 
     [20000] = {

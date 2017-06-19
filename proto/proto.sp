@@ -111,6 +111,10 @@
     record 4 : *record_detail
 }
 
+.record_all {
+    record 0 : *chess_record
+}
+
 .user_all {
     user 0 : user_info
     chess 1 : chess_all

@@ -34,6 +34,8 @@ local gm_level = tonumber(skynet.getenv("gm_level"))
 local start_utc_time = tonumber(skynet.getenv("start_utc_time"))
 local user_db
 local info_db
+local user_record_db
+local record_info_db
 
 skynet.init(function()
     error_code = share.error_code
@@ -48,6 +50,8 @@ skynet.init(function()
 	local master = skynet.queryservice("mongo_master")
     user_db = skynet.call(master, "lua", "get", "user")
     info_db = skynet.call(master, "lua", "get", "info")
+    user_record_db = skynet.call(master, "lua", "get", "user_record")
+    record_info_db = skynet.call(master, "lua", "get", "record_info")
 end)
 
 function role.init_module()
@@ -359,6 +363,26 @@ function proc.join(msg)
     end
     cz.finish()
     return rmsg, info
+end
+
+function proc.get_record(msg)
+    local data = game.data
+    local ur = skynet.call(user_record_db, "lua", "findOne", {id=data.id})
+    local ret = {}
+    if ur then
+        local nr = {}
+        for k, v in ipairs(ur.record) do
+            local ri = skynet.call(record_info_db, "lua", "findOne", {id=v})
+            if ri then
+                ret[#ret+1] = ri
+                nr[#nr+1] = v
+            end
+        end
+        if #nr ~= #ur.record then
+            skynet.call(user_record_db, "lua", "update", {id=data.id}, {["$set"]={record=nr}}, true)
+        end
+    end
+    return "record_all", ret
 end
 
 return role
