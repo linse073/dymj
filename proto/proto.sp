@@ -193,3 +193,7 @@
     number 0 : integer
     name 1 : string
 }
+
+.review_record {
+    id 0 : integer
+}
