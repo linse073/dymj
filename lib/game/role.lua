@@ -36,6 +36,7 @@ local user_db
 local info_db
 local user_record_db
 local record_info_db
+local record_detail_db
 
 skynet.init(function()
     error_code = share.error_code
@@ -52,6 +53,7 @@ skynet.init(function()
     info_db = skynet.call(master, "lua", "get", "info")
     user_record_db = skynet.call(master, "lua", "get", "user_record")
     record_info_db = skynet.call(master, "lua", "get", "record_info")
+    record_detail_db = skynet.call(master, "lua", "get", "record_detail")
 end)
 
 function role.init_module()
@@ -383,6 +385,17 @@ function proc.get_record(msg)
         end
     end
     return "record_all", ret
+end
+
+function proc.review_record(msg)
+    if not msg.id then
+        error{code = error_code.ERROR_ARGS}
+    end
+    local rd = skynet.call(record_detail_db, "lua", "findOne", {id=msg.id})
+    if not rd then
+        error{code = error_code.NO_RECORD}
+    end
+    return "record_info", rd
 end
 
 return role

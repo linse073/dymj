@@ -47,6 +47,7 @@ local type_code = {
         IN_CLOSE_PROCESS="解散过程中",
         NOT_IN_CLOSE="尚未解散房间",
         ROOM_CARD_LIMIT="房卡不足",
+        NO_RECORD="战绩已删除",
     },
 }
 

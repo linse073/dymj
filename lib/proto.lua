@@ -42,6 +42,7 @@ local type_msg = {
         "new_chess",
         "join",
         "get_record",
+        "review_record",
     },
 
     [20000] = {
