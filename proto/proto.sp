@@ -94,6 +94,7 @@
     info 2 : chess_info
     user 3 : *chess_user
     aciton 4 : *chess_action
+    score 5 : *integer
 }
 
 .chess_record {

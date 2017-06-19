@@ -87,10 +87,7 @@ function dymj:init(number, rule, rand, server, card)
     self._count = 0
     self._pause = false
     self._close_index = 0
-    local rid = skynet.call(server, "lua", "gen_record")
     self._record = {
-        _id = rid,
-        id = rid,
         time = floor(skynet.time()),
         info = {
             name = "dymj",
@@ -851,7 +848,14 @@ function dymj:hu(id, msg)
     local role = self._role
     local banker = self._banker
     local detail = self._detail
+    local record_action = detail.action
+    record_action[#record_action+1] = {
+        index = index,
+        op = base.MJ_OP_HU,
+    }
+    detail.id = skynet.call(self._server, "lua", "gen_record_detail")
     local record_score = {}
+    detail.score = record_score
     local record_detail = {
         id = detail.id,
         time = detail.time,
@@ -897,10 +901,12 @@ function dymj:hu(id, msg)
         end
         user[k] = u
     end
+    skynet.call(record_detail_db, "lua", "safe_insert", detail)
     local sr = self._record
-    if sr.user then
+    if sr.id then
         skynet.call(record_info_db, "lua", "update", {id=v.id}, {["$push"]={record=record_detail}}, true)
     else
+        si.id = skynet.call(server, "lua", "gen_record")
         local record_user = {}
         for k, v in ipairs(role) do
             record_user[k] = {
@@ -912,12 +918,10 @@ function dymj:hu(id, msg)
                 ip = v.ip,
                 index = index,
             }
+            skynet.call(user_record_db, "lua", "update", {id=v.id}, {["$push"]={record=si.id}}, true)
         end
         sr.user = record_user
         sr.record = {record_detail}
-        for k, v in ipairs(role) do
-            skynet.call(user_record_db, "lua", "update", {_id=v.id, id=v.id}, {["$push"]={record=sr.id}}, true)
-        end
         skynet.call(record_info_db, "lua", "safe_insert", sr)
     end
     local win = user[index]
@@ -1291,6 +1295,35 @@ function dymj:conclude(id, msg)
             },
         }
     end
+    local detail = self._detail
+    detail.id = skynet.call(self._server, "lua", "gen_record_detail")
+    local record_detail = {
+        id = detail.id,
+        time = detail.time,
+    }
+    skynet.call(record_detail_db, "lua", "safe_insert", detail)
+    local sr = self._record
+    if sr.id then
+        skynet.call(record_info_db, "lua", "update", {id=v.id}, {["$push"]={record=record_detail}}, true)
+    else
+        si.id = skynet.call(server, "lua", "gen_record")
+        local record_user = {}
+        for k, v in ipairs(role) do
+            record_user[k] = {
+                account = v.account,
+                id = v.id,
+                sex = v.sex,
+                nick_name = v.nick_name,
+                head_img = v.head_img,
+                ip = v.ip,
+                index = index,
+            }
+            skynet.call(user_record_db, "lua", "update", {id=v.id}, {["$push"]={record=si.id}}, true)
+        end
+        sr.user = record_user
+        sr.record = {record_detail}
+        skynet.call(record_info_db, "lua", "safe_insert", sr)
+    end
     local ci = {
         status=self._status, count=self._count,
     }
@@ -1416,7 +1449,6 @@ function dymj:start()
     end
     self._left = left
     self._detail = {
-        id = skynet.call(self._server, "lua", "gen_record_detail"),
         time = floor(skynet.time()),
         info = {
             name = "dymj",
