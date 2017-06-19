@@ -166,7 +166,7 @@ function role.afk()
     end
 end
 
-local function btk()
+local function btk(addr)
     local data = game.data
     local chess_table = data.chess_table
     if chess_table then
@@ -183,7 +183,7 @@ function role.btk(addr)
     data.user.ip = addr
     data.info.ip = addr
     if data.enter then
-        skynet.fork(btk)
+        skynet.fork(btk, addr)
     end
 end
 
