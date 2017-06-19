@@ -44,7 +44,9 @@ config.mongo = {
         {"status", {"key", unique=true}},
         {"user_record", {"id", unique=true}},
         {"record_info", {"id", unique=true}},
+        {"record_info", {"time", expireAfterSeconds=60}},
         {"record_detail", {"id", unique=true}},
+        {"record_detail", {"time", expireAfterSeconds=60}},
     },
 }
 
