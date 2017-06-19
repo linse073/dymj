@@ -384,7 +384,7 @@ function proc.get_record(msg)
             skynet.call(user_record_db, "lua", "update", {id=data.id}, {["$set"]={record=nr}}, true)
         end
     end
-    return "record_all", ret
+    return "record_all", {record=ret}
 end
 
 function proc.review_record(msg)

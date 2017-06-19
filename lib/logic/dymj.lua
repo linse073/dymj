@@ -95,7 +95,7 @@ function dymj:init(number, rule, rand, server, card)
         info = {
             name = "dymj",
             number = number,
-            rule = rule,
+            rule = rule.pack,
         },
     }
 end
