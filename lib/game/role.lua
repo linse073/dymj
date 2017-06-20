@@ -388,8 +388,8 @@ function proc.get_record(msg)
                 end
             end
         end
-        util.reverse(nr)
         if count ~= len then
+            util.reverse(nr)
             skynet.call(user_record_db, "lua", "update", {id=data.id}, {["$set"]={record=nr}}, true)
         end
     end
