@@ -90,8 +90,6 @@ function dymj:init(number, rule, rand, server, card)
     self._pause = false
     self._close_index = 0
     self._record = {
-        time = floor(skynet.time()),
-        expire = bson.date(os.time()),
         info = {
             name = "dymj",
             number = number,
@@ -904,10 +902,19 @@ function dymj:hu(id, msg)
         end
         user[k] = u
     end
+    local now = floor(skynet.time())
+    local expire = bson.date(os.time())
+    detail.time = now
+    detail.expire = expire
     skynet.call(record_detail_db, "lua", "safe_insert", detail)
     local sr = self._record
+    sr.expire = expire
+    sr.time = now
     if sr.id then
-        skynet.call(record_info_db, "lua", "update", {id=sr.id}, {["$push"]={record=record_detail}}, true)
+        skynet.call(record_info_db, "lua", "update", {id=sr.id}, {
+            ["$push"] = {record=record_detail},
+            ["$set"] = {expire=expire, time=now},
+        }, true)
     else
         sr.id = skynet.call(self._server, "lua", "gen_record")
         local record_user = {}
@@ -1452,8 +1459,6 @@ function dymj:start()
     end
     self._left = left
     self._detail = {
-        time = floor(skynet.time()),
-        expire = bson.date(os.time()),
         info = {
             name = "dymj",
             number = self._number,
