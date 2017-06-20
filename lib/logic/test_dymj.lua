@@ -22,7 +22,6 @@ skynet.init(function()
     base = share.base
     error_code = share.error_code
     mj_invalid_card = share.mj_invalid_card
-    local master = skynet.queryservice("mongo_master")
     table_mgr = skynet.queryservice("table_mgr")
     chess_mgr = skynet.queryservice("chess_mgr")
     offline_mgr = skynet.queryservice("offline_mgr")
@@ -481,7 +480,6 @@ function dymj:ready(id, msg)
         chess.deal_index = self._deal_index
         local now = floor(skynet.time())
         chess.rand = now
-        self._detail.info.rand = now
         user.own_card = info.deal_card
         if info.index == self._banker then
             user.last_deal = info.last_deal
@@ -588,12 +586,6 @@ function dymj:out_card(id, msg)
     self._out_card = card
     self._out_index = index
     info.out_card[#info.out_card+1] = card
-    local record_action = self._detail.action
-    record_action[#record_action+1] = {
-        index = index,
-        card = card,
-        out_index = msg.index,
-    }
     if self._left <= 20 then
         return self:conclude(id)
     else
@@ -948,12 +940,6 @@ function dymj:chi(id, msg)
             {index=index, action=base.MJ_OP_CHI},
         })
     else
-        local record_action = self._detail.action
-        record_action[#record_action+1] = {
-            index = index,
-            op = base.MJ_OP_CHI,
-            card = card,
-        }
         self:clear_all_op()
         for i = card, card+2 do
             if i ~= out_card then
@@ -994,12 +980,6 @@ function dymj:peng(id, msg)
     if not (type_card[out_card] >= 2) then
         error{code = error_code.ERROR_OPERATION}
     end
-    local record_action = self._detail.action
-    record_action[#record_action+1] = {
-        index = index,
-        op = base.MJ_OP_PENG,
-        card = out_card,
-    }
     self:clear_all_op()
     type_card[out_card] = type_card[out_card] - 2
     local weave = {
@@ -1036,12 +1016,6 @@ function dymj:gang(id, msg)
     if not (type_card[out_card] >= 3) then
         error{code = error_code.ERROR_OPERATION}
     end
-    local record_action = self._detail.action
-    record_action[#record_action+1] = {
-        index = index,
-        op = base.MJ_OP_GANG,
-        card = out_card,
-    }
     type_card[out_card] = type_card[out_card] - 3
     local weave = {
         op = base.MJ_OP_GANG,
@@ -1080,12 +1054,6 @@ function dymj:hide_gang(id, msg)
     if card == self._magic_card then
         error{code = error_code.ERROR_OPERATION}
     end
-    local record_action = self._detail.action
-    record_action[#record_action+1] = {
-        index = index,
-        op = base.MJ_OP_HIDE_GANG,
-        card = card,
-    }
     local type_card = info.type_card
     local weave
     local weave_card = info.weave_card
@@ -1148,12 +1116,6 @@ function dymj:pass(id, msg)
                 -- NOTICE: only check MJ_OP_CHI
                 local card = v.op[base.MJ_OP_CHI]
                 if card > 0 and not self:check_prior(k, base.MJ_OP_CHI) then
-                    local record_action = self._detail.action
-                    record_action[#record_action+1] = {
-                        index = index,
-                        op = base.MJ_OP_CHI,
-                        card = card,
-                    }
                     self:clear_all_op()
                     local type_card = v.type_card
                     for i = card, card+2 do
@@ -1266,11 +1228,6 @@ function dymj:deal(info)
     self._deal_index = info.index
     self._deal_card = c
     self:clear_all_op()
-    local record_action = self._detail.action
-    record_action[#record_action+1] = {
-        index = info.index,
-        deal_card = c,
-    }
     return c
 end
 
