@@ -89,7 +89,7 @@ function dymj:init(number, rule, rand, server, card)
                 rand.randi(1, 255), rand.randi(1, 255), rand.randi(i*10000, n*10000)),
             android = true,
         }
-        self:enter(info, nil. i+1)
+        self:enter(info, nil, i+1)
         info.ready = true
     end
 end
@@ -845,15 +845,19 @@ function dymj:check_prior(index, op)
 end
 
 function dymj:android_out(info)
-    local own_card = {}
-    for k, v in pairs(info.type_card) do
-        for i = 1, v do
-            own_card[#own_card+1] = k
+    if self:is_out_magic(info.index) then
+        pcall(self.out_card, self, info.id, {card=info.last_deal, index=1})
+    else
+        local own_card = {}
+        for k, v in pairs(info.type_card) do
+            for i = 1, v do
+                own_card[#own_card+1] = k
+            end
         end
+        local len = #own_card
+        local index = self._rand.randi(1, len)
+        pcall(self.out_card, self, info.id, {card=own_card[index], index=index})
     end
-    local len = #own_card
-    local index = self._rand.randi(1, len)
-    pcall(self.out_card, self, info.id, {card=own_card[index], index=index})
 end
 
 function dymj:chi(id, msg)

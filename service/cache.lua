@@ -31,7 +31,7 @@ skynet.start(function()
     end
     sharedata.new("mj_invalid_card", mj_invalid_card)
 
-    local chess = {"dymj"}
+    local chess = {"dymj", "test_dymj"}
     local valid_chess = {}
     for k, v in ipairs(chess) do
         valid_chess[v] = v
