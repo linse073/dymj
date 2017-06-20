@@ -1,15 +1,12 @@
 local skynet = require "skynet"
 local share = require "share"
 local util = require "util"
-local timer = require "timer"
-local bson = require "bson"
 
 local string = string
 local ipairs = ipairs
 local pairs = pairs
 local table = table
 local floor = math.floor
-local os = os
 
 local base
 local error_code
@@ -42,7 +39,7 @@ local function session_msg(user, chess_user, chess_info)
 end
 
 local function send(user, chess_user, chess_info)
-    if user.agent then
+    if not user.android and user.agent then
         local m, i = session_msg(user, chess_user, chess_info)
         skynet.call(user.agent, "lua", "notify", m, i)
     end
@@ -82,6 +79,19 @@ function dymj:init(number, rule, rand, server, card)
     self._count = 0
     self._pause = false
     self._close_index = 0
+    for i = 1, 3 do
+        local n = i + 1
+        local info = {
+            account = string.format("android_%d", rand.randi(i*10000, n*10000)),
+            id = rand.randi(i*111111, n*111111),
+            sex = rand.randi(1, 2),
+            ip = string.format("192.168.%d.%d:%d", 
+                rand.randi(1, 255), rand.randi(1, 255), rand.randi(i*10000, n*10000)),
+            android = true,
+        }
+        self:enter(info, nil. i+1)
+        info.ready = true
+    end
 end
 
 function dymj:status(id, status, addr)
@@ -103,7 +113,6 @@ function dymj:status(id, status, addr)
 end
 
 function dymj:destroy()
-    timer.del_once_routine("close_timer")
 end
 
 local function finish()
@@ -116,7 +125,7 @@ function dymj:finish()
     self._id = {}
     for i = 1, base.MJ_FOUR do
         local v = role[i]
-        if v then
+        if v and not v.android then
             skynet.call(chess_mgr, "lua", "del", v.id)
             if v.agent then
                 skynet.call(v.agent, "lua", "action", "role", "leave")
@@ -284,7 +293,9 @@ function dymj:enter(info, agent, index)
     info.status = base.USER_STATUS_ONLINE
     role[index] = info
     self._id[info.id] = info
-    skynet.call(chess_mgr, "lua", "add", info.id, skynet.self())
+    if not info.android then
+        skynet.call(chess_mgr, "lua", "add", info.id, skynet.self())
+    end
     local user = {}
     for i = 1, base.MJ_FOUR do
         user[#user+1] = role[i] -- role[i] can be nil
@@ -343,103 +354,12 @@ function dymj:leave(id, msg)
     end
     local role = self._role
     local index = info.index
-    if self._count > 0 or self._status == base.CHESS_STATUS_START then
-        if self._close_index > 0 then
-            error{code = error_code.IN_CLOSE_PROCESS}
-        end
-        self._pause = true
-        local now = floor(skynet.time())
-        self._close_time = now
-        self._close_index = index
-        info.agree = true
-        local cu = {
-            {index=index, agree=true},
-        }
-        local ci = {pause=self._pause, close_index=index, close_time=now}
-        broadcast(cu, ci, role, id)
-        timer.add_once_routine("close_timer", function()
-            self._status = base.CHESS_STATUS_EXIT
-            self._pause = false
-            self._close_index = 0
-            broadcast(nil, {
-                status = self._status, 
-                pause = self._pause,
-                close_index = self._close_index,
-            }, role)
-            self:finish()
-        end, 180)
-        return session_msg(info, cu, ci)
-    elseif index == 1 then
-        local cu = {
-            {index=index, action=base.MJ_OP_LEAVE},
-        }
-        broadcast(cu, nil, role, id)
-        self:finish()
-        return session_msg(info, cu)
-    else
-        self._id[id] = nil
-        role[index] = nil
-        skynet.call(chess_mgr, "lua", "del", id)
-        if info.agent then
-            skynet.call(info.agent, "lua", "action", "role", "leave")
-        end
-        local cu = {
-            {index=index, action=base.MJ_OP_LEAVE},
-        }
-        broadcast(cu, nil, role)
-        return session_msg(info, cu)
-    end
-end
-
-function dymj:is_all_agree()
-    local count = 0
-    for k, v in ipairs(self._role) do
-        if v.agree then
-            count = count + 1
-        end
-    end
-    return count >= 3
-end
-
-function dymj:reply(id, msg)
-    local info = self._id[id]
-    if not info then
-        error{code = error_code.NOT_IN_CHESS}
-    end
-    if self._close_index == 0 then
-        error{code = error_code.NOT_IN_CLOSE}
-    end
-    if info.agree ~= nil then
-        error{code = error_code.ALREADY_REPLY}
-    end
-    info.agree = msg.agree
-    local chess = {}
-    if info.agree then
-        if self:is_all_agree() then
-            self._status = base.CHESS_STATUS_EXIT
-            chess.status = self._status
-            self._pause = false
-        end
-    else
-        self._pause = false
-    end
     local cu = {
-        {index=info.index, agree=info.agree},
+        {index=index, action=base.MJ_OP_LEAVE},
     }
-    if not self._pause then
-        self._close_index = 0
-        chess.pause = self._pause
-        chess.close_index = self._close_index
-        timer.del_once_routine("close_timer")
-        for k, v in ipairs(self._role) do
-            v.agree = nil
-        end
-    end
-    broadcast(cu, chess, self._role, id)
-    if self._status == base.CHESS_STATUS_EXIT then
-        self:finish()
-    end
-    return session_msg(info, cu, chess)
+    broadcast(cu, nil, role, id)
+    self:finish()
+    return session_msg(info, cu)
 end
 
 function dymj:is_all_ready()
@@ -519,18 +439,18 @@ function dymj:analyze(card, index)
                     local c1, c2 = card+v1[1], card+v1[2]
                     if valid_card(c1) and type_card[c1]>=1 
                         and valid_card(c2) and type_card[c2]>=1 then
-                        chi = true
+                        chi = card+v1[3]
                         break
                     end
                 end
             end
             local peng = false
             if type_card[card] >= 2 then
-                peng = true
+                peng = card
             end
             local gang = false
             if type_card[card] >= 3 then
-                gang = true
+                gang = card
             end
             local respond = v.respond
             respond[base.MJ_OP_CHI], respond[base.MJ_OP_PENG], respond[base.MJ_OP_GANG] = chi, peng, gang
@@ -602,6 +522,26 @@ function dymj:out_card(id, msg)
                 {index=index, out_card={card}, out_index=msg.index},
                 {index=deal_index, last_deal=c},
             }, chess)
+        else
+            for k, v in ipairs(role) do
+                if v.android then
+                    local respond = v.respond
+                    local chi, peng, gang = respond[base.MJ_OP_CHI], respond[base.MJ_OP_PENG], respond[base.MJ_OP_GANG]
+                    if gang then
+                        skynet.fork(function()
+                            pcall(self.gang, self, v.id)
+                        end)
+                    elseif peng then
+                        skynet.fork(function()
+                            pcall(self.peng, self, v.id)
+                        end)
+                    elseif chi then
+                        skynet.fork(function()
+                            pcall(self.chi, self, v.id, {card=chi})
+                        end)
+                    end
+                end
+            end
         end
         local cu = {
             {index=index, out_card={card}, out_index=msg.index},
@@ -904,6 +844,18 @@ function dymj:check_prior(index, op)
     return false
 end
 
+function dymj:android_out(info)
+    local own_card = {}
+    for k, v in pairs(info.type_card) do
+        for i = 1, v do
+            own_card[#own_card+1] = k
+        end
+    end
+    local len = #own_card
+    local index = self._rand.randi(1, len)
+    pcall(self.out_card, self, info.id, {card=own_card[index], index=index})
+end
+
 function dymj:chi(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     local out_index = self._out_index
@@ -954,6 +906,11 @@ function dymj:chi(id, msg)
         }
         info.weave_card[#info.weave_card+1] = weave
         info.out = true
+        if info.android then
+            skynet.fork(function()
+                self:android_out(info)
+            end)
+        end
         info.hu = false
         info.chi_count[out_index] = info.chi_count[out_index] + 1
         local role_out = self._role[out_index].out_card
@@ -990,6 +947,11 @@ function dymj:peng(id, msg)
     }
     info.weave_card[#info.weave_card+1] = weave
     info.out = true
+    if info.android then
+        skynet.fork(function()
+            self:android_out(info)
+        end)
+    end
     info.hu = false
     info.chi_count[out_index] = info.chi_count[out_index] + 1
     local role_out = self._role[out_index].out_card
@@ -1131,6 +1093,11 @@ function dymj:pass(id, msg)
                     }
                     v.weave_card[#v.weave_card+1] = weave
                     v.out = true
+                    if v.android then
+                        skynet.fork(function()
+                            self:android_out(v)
+                        end)
+                    end
                     v.hu = false
                     v.chi_count[out_index] = v.chi_count[out_index] + 1
                     local role_out = role[out_index].out_card
@@ -1218,6 +1185,55 @@ function dymj:conclude(id, msg)
     return session_msg(info, user, ci)
 end
 
+function dymj:android_deal(info)
+    local type_card = info.type_card
+    local hu = self:is_qidui(type_card)
+    local magic_card = self._magic_card
+    if hu then
+        skynet.fork(function()
+            pcall(self.hu, self, info.id)
+        end)
+        return
+    else
+        local tc = {}
+        for k, v in pairs(type_card) do
+            if v > 0 then
+                tc[k] = v
+            end
+        end
+        local magic_count = tc[magic_card] or 0
+        tc[magic_card] = nil
+        local weave_card = {}
+        if self:check_hu(tc, weave_card, magic_count) then
+            skynet.fork(function()
+                pcall(self.hu, self, info.id)
+            end)
+            return
+        end
+    end
+    if not self:is_out_magic(info.index) then
+        for k1, v1 in pairs(type_card) do
+            if k1 ~= magic_card and v1 >= 4 then
+                skynet.fork(function()
+                    pcall(self.gang, self, info.id, {card=k1})
+                end)
+                return
+            end
+        end
+        for k1, v1 in ipairs(info.weave_card) do
+            if v1.op == base.MJ_OP_PENG and type_card[v1.card] >= 1 then
+                skynet.fork(function()
+                    pcall(self.gang, self, info.id, {card=v1.card})
+                end)
+                return
+            end
+        end
+    end
+    skynet.fork(function()
+        self:android_out(info)
+    end)
+end
+
 function dymj:deal(info)
     local c = self._card[self._left]
     self._left = self._left - 1
@@ -1228,6 +1244,9 @@ function dymj:deal(info)
     self._deal_index = info.index
     self._deal_card = c
     self:clear_all_op()
+    if info.android then
+        self:android_deal(info)
+    end
     return c
 end
 
