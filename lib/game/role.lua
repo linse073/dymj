@@ -71,7 +71,6 @@ local function get_user()
 			user.ip = data.ip
 			data.user = user
 			data.info = {
-				_id = user._id,
 				account = user.account,
 				id = user.id,
 				sex = user.sex,
@@ -82,7 +81,6 @@ local function get_user()
 		else
 			local now = floor(skynet.time())
 			local user = {
-				_id = data.id,
 				account = data.uid,
 				id = data.id,
 				sex = data.sex or rand.randi(1, 2),
@@ -99,7 +97,6 @@ local function get_user()
 			skynet.call(user_db, "lua", "safe_insert", user)
 			data.user = user
 			local info = {
-				_id = user._id,
 				account = user.account,
 				id = user.id,
 				sex = user.sex,
