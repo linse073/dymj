@@ -872,16 +872,25 @@ function dymj:android_out(info)
         end, trace)
     else
         local own_card = {}
+        local magic_card = self._magic_card
         for k, v in pairs(info.type_card) do
-            for i = 1, v do
-                own_card[#own_card+1] = k
+            if k ~= magic_card then
+                for i = 1, v do
+                    own_card[#own_card+1] = k
+                end
             end
         end
         local len = #own_card
-        local index = self._rand.randi(1, len)
-        xpcall(function()
-            self:out_card(info.id, {card=own_card[index], index=index})
-        end, trace)
+        if len > 0 then
+            local index = self._rand.randi(1, len)
+            xpcall(function()
+                self:out_card(info.id, {card=own_card[index], index=index})
+            end, trace)
+        else
+            xpcall(function()
+                self:out_card(info.id, {card=magic_card, index=1})
+            end, trace)
+        end
     end
 end
 
