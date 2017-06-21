@@ -7,6 +7,8 @@ local ipairs = ipairs
 local pairs = pairs
 local table = table
 local floor = math.floor
+local xpcall = xpcall
+local type = type
 
 local base
 local error_code
@@ -61,6 +63,16 @@ local function broadcast(chess_user, chess_info, role, ...)
             send(v, chess_user, chess_info)
         end
     end
+end
+
+local function trace(msg)
+    local t = type(msg)
+    if t == "table" then
+        util.dump(msg)
+    else
+        skynet.error(msg)
+    end
+    return msg
 end
 
 local dymj = {}
@@ -529,15 +541,21 @@ function dymj:out_card(id, msg)
                     local chi, peng, gang = respond[base.MJ_OP_CHI], respond[base.MJ_OP_PENG], respond[base.MJ_OP_GANG]
                     if gang then
                         skynet.fork(function()
-                            pcall(self.gang, self, v.id)
+                            xpcall(function()
+                                self:gang(v.id)
+                            end, trace)
                         end)
                     elseif peng then
                         skynet.fork(function()
-                            pcall(self.peng, self, v.id)
+                            xpcall(function()
+                                self:peng(v.id)
+                            end, trace)
                         end)
                     elseif chi then
                         skynet.fork(function()
-                            pcall(self.chi, self, v.id, {card=chi})
+                            xpcall(function()
+                                self:chi(v.id, {card=chi})
+                            end, trace)
                         end)
                     end
                 end
@@ -696,13 +714,13 @@ end
 
 function dymj:consume_card()
     if self._rule.aa_pay then
-        local count = -self._rule.total_count/8
+        local count = -self._rule.total_count//8
         for k, v in ipairs(self._role) do
             skynet.call(offline_mgr, "lua", "add", v.id, "role", "add_room_card", count)
         end
     else
         local id = self._role[1].id
-        local count = -self._rule.total_count/2
+        local count = -self._rule.total_count//2
         skynet.call(offline_mgr, "lua", "add", id, "role", "add_room_card", count)
     end
 end
@@ -849,7 +867,9 @@ end
 
 function dymj:android_out(info)
     if self:is_out_magic(info.index) then
-        pcall(self.out_card, self, info.id, {card=info.last_deal, index=1})
+        xpcall(function()
+            self:out_card(info.id, {card=info.last_deal, index=1})
+        end, trace)
     else
         local own_card = {}
         for k, v in pairs(info.type_card) do
@@ -859,7 +879,9 @@ function dymj:android_out(info)
         end
         local len = #own_card
         local index = self._rand.randi(1, len)
-        pcall(self.out_card, self, info.id, {card=own_card[index], index=index})
+        xpcall(function()
+            self:out_card(info.id, {card=own_card[index], index=index})
+        end, trace)
     end
 end
 
@@ -1202,7 +1224,9 @@ function dymj:android_deal(info)
     local magic_card = self._magic_card
     if hu then
         skynet.fork(function()
-            pcall(self.hu, self, info.id)
+            xpcall(function()
+                self:hu(info.id)
+            end, trace)
         end)
         return
     else
@@ -1217,7 +1241,9 @@ function dymj:android_deal(info)
         local weave_card = {}
         if self:check_hu(tc, weave_card, magic_count) then
             skynet.fork(function()
-                pcall(self.hu, self, info.id)
+                xpcall(function()
+                    self:hu(info.id)
+                end, trace)
             end)
             return
         end
@@ -1226,7 +1252,9 @@ function dymj:android_deal(info)
         for k1, v1 in pairs(type_card) do
             if k1 ~= magic_card and v1 >= 4 then
                 skynet.fork(function()
-                    pcall(self.gang, self, info.id, {card=k1})
+                    xpcall(function()
+                        self:hide_gang(info.id, {card=k1})
+                    end, trace)
                 end)
                 return
             end
@@ -1234,7 +1262,9 @@ function dymj:android_deal(info)
         for k1, v1 in ipairs(info.weave_card) do
             if v1.op == base.MJ_OP_PENG and type_card[v1.card] >= 1 then
                 skynet.fork(function()
-                    pcall(self.gang, self, info.id, {card=v1.card})
+                    xpcall(function()
+                        self:hide_gang(info.id, {card=v1.card})
+                    end, trace)
                 end)
                 return
             end
