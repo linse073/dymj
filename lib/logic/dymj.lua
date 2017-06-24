@@ -801,7 +801,9 @@ function dymj:hu(id, msg)
     local mul = 1
     local hu, four_count, mc = self:is_qidui(type_card)
     local magic_card = self._magic_card
+    local hu_type
     if hu then
+        hu_type = base.HU_7DUI
         mul = 2^(four_count+1)
         if (self._deal_card ~= magic_card and type_card[self._deal_card]%2 == 1)
             or (self._deal_card == magic_card and mc > 0) then
@@ -822,14 +824,23 @@ function dymj:hu(id, msg)
         if not self:check_hu(tc, weave_card, magic_count) then
             error{code = error_code.ERROR_OPERATION}
         end
+        hu_type = base.HU_NONE
         local head = weave_card[1]
         if head[1] == self._deal_card and head[2] == 0 then
+            if info.gang_count > 0 then
+                hu_type = base.HU_GANGBAO
+            else
+                hu_type = base.HU_BAOTOU
+            end
             mul = 2^info.gang_count
             mul = mul * 2^(info.out_magic+1)
         else
             local out_card = info.out_card
             local len = #out_card
             if len == 0 or out_card[len] ~= magic_card then
+                if info.gang_count > 0 then
+                    hu_type = base.HU_GANGKAI
+                end
                 mul = 2^info.gang_count
             end
         end
@@ -937,7 +948,9 @@ function dymj:hu(id, msg)
     local win = user[index]
     win.hu_count = info.hu_count
     win.action = base.MJ_OP_HU
-    win.show_card.last_deal = info.last_deal
+    local ws = win.show_card
+    ws.last_deal = info.last_deal
+    ws.hu = hu_type
     self._old_banker = banker
     self._banker = index
     local ci = {
