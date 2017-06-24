@@ -27,7 +27,7 @@ local base = {
     USER_STATUS_LOST = 1,
     USER_STATUS_LOGOUT = 2,
     
-    HU_NONE = 1
+    HU_NONE = 1,
     HU_7DUI = 2,
     HU_BAOTOU = 3,
     HU_GANGBAO = 4,
