@@ -54,6 +54,7 @@
     top_score 22 : integer
     hu_count 23 : integer
     status 24 : integer
+    chat_text 25 : string
 }
 
 .chess_info {
@@ -197,4 +198,8 @@
 
 .review_record {
     id 0 : integer
+}
+
+.chat_info {
+    text 0 : string
 }

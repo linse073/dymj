@@ -405,6 +405,18 @@ function dymj:leave(id, msg)
     end
 end
 
+function dymj:chat_info(id, msg)
+    local info = self._id[id]
+    if not info then
+        error{code = error_code.NOT_IN_CHESS}
+    end
+    local cu = {
+        {index=info.index, chat_text=msg.text}
+    }
+    broadcast(cu, nil, self._role, id)
+    return session_msg(info, cu)
+end
+
 function dymj:is_all_agree()
     local count = 0
     for k, v in ipairs(self._role) do

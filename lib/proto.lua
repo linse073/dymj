@@ -57,6 +57,7 @@ local type_msg = {
         "conclude",
         "leave",
         "reply",
+        "chat_info",
     },
 }
 
