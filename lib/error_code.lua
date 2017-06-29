@@ -24,13 +24,13 @@ local type_code = {
 
     [3000] = {
         NOT_JOIN_CHESS="尚未加入房间",
-        CHESS_ROLE_FULL="该房间人数已满",
+        CHESS_ROLE_FULL="对不起，房间人数已满",
         ALREAD_IN_CHESS="已经在房间中",
         NO_CHESS="游戏不存在",
         NOT_IN_CHESS="不在房间中",
         ALREADY_READY="已经准备好了",
         ERROR_CHESS_STATUS="房间状态错误",
-        ERROR_CHESS_NUMBER="该房间不存在",
+        ERROR_CHESS_NUMBER="是不是记错门牌号了？",
         ERROR_CHESS_NAME="游戏不匹配",
         ERROR_DEAL_INDEX="发牌索引不匹配",
         NO_OUT_CARD="出牌不存在",
