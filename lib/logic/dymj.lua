@@ -1351,7 +1351,7 @@ function dymj:conclude(id, msg)
                 nick_name = v.nick_name,
                 head_img = v.head_img,
                 ip = v.ip,
-                index = index,
+                index = v.index,
             }
             skynet.call(user_record_db, "lua", "update", {id=v.id}, {["$push"]={record=sr.id}}, true)
         end
