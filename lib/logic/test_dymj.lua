@@ -111,6 +111,12 @@ function dymj:init(number, rule, rand, server, card)
     end
 end
 
+function dymj:next_action(key, action)
+    timer.add_once_routine(key, function()
+        skynet.fork(xpcall, action, trace)
+    end, self._rand.randi(1, 5))
+end
+
 function dymj:status(id, status, addr)
     local info = self._id[id]
     if info then
@@ -562,23 +568,17 @@ function dymj:out_card(id, msg)
                     local respond = v.respond
                     local chi, peng, gang = respond[base.MJ_OP_CHI], respond[base.MJ_OP_PENG], respond[base.MJ_OP_GANG]
                     if gang then
-                        timer.add_once_routine("dymj_android_gang", function()
-                            skynet.fork(xpcall, function()
-                                self:gang(v.id)
-                            end, trace)
-                        end, self._rand.randi(1, 5))
+                        self:next_action("dymj_android_gang", function()
+                            self:gang(v.id)
+                        end)
                     elseif peng then
-                        timer.add_once_routine("dymj_android_peng", function()
-                            skynet.fork(xpcall, function()
-                                self:peng(v.id)
-                            end, trace)
-                        end, self._rand.randi(1, 5))
+                        self:next_action("dymj_android_peng", function()
+                            self:peng(v.id)
+                        end)
                     elseif chi then
-                        timer.add_once_routine("dymj_android_chi", function()
-                            skynet.fork(xpcall, function()
-                                self:chi(v.id, {card=chi})
-                            end, trace)
-                        end, self._rand.randi(1, 5))
+                        self:next_action("dymj_android_chi", function()
+                            self:chi(v.id, {card=chi})
+                        end)
                     end
                 end
             end
@@ -902,11 +902,9 @@ end
 
 function dymj:android_out(info)
     if self:is_out_magic(info.index) then
-        timer.add_once_routine("dymj_android_out", function()
-            skynet.fork(xpcall, function()
-                self:out_card(info.id, {card=info.last_deal, index=1})
-            end, trace)
-        end, self._rand.randi(1, 5))
+        self:next_action("dymj_android_out", function()
+            self:out_card(info.id, {card=info.last_deal, index=1})
+        end)
     else
         local own_card = {}
         local magic_card = self._magic_card
@@ -920,17 +918,13 @@ function dymj:android_out(info)
         local len = #own_card
         if len > 0 then
             local index = self._rand.randi(1, len)
-            timer.add_once_routine("dymj_android_out", function()
-                skynet.fork(xpcall, function()
-                    self:out_card(info.id, {card=own_card[index], index=index})
-                end, trace)
-            end, self._rand.randi(1, 5))
+            self:next_action("dymj_android_out", function()
+                self:out_card(info.id, {card=own_card[index], index=index})
+            end)
         else
-            timer.add_once_routine("dymj_android_out", function()
-                skynet.fork(xpcall, function()
-                    self:out_card(info.id, {card=magic_card, index=1})
-                end, trace)
-            end, self._rand.randi(1, 5))
+            self:next_action("dymj_android_out", function()
+                self:out_card(info.id, {card=magic_card, index=1})
+            end)
         end
     end
 end
@@ -1267,11 +1261,9 @@ function dymj:android_deal(info)
     local hu = self:is_qidui(type_card)
     local magic_card = self._magic_card
     if hu then
-        timer.add_once_routine("dymj_android_deal", function()
-            skynet.fork(xpcall, function()
-                self:hu(info.id)
-            end, trace)
-        end, self._rand.randi(1, 5))
+        self:next_action("dymj_android_deal", function()
+            self:hu(info.id)
+        end)
         return
     else
         local tc = {}
@@ -1284,32 +1276,26 @@ function dymj:android_deal(info)
         tc[magic_card] = nil
         local weave_card = {}
         if self:check_hu(tc, weave_card, magic_count) then
-            timer.add_once_routine("dymj_android_deal", function()
-                skynet.fork(xpcall, function()
-                    self:hu(info.id)
-                end, trace)
-            end, self._rand.randi(1, 5))
+            self:next_action("dymj_android_deal", function()
+                self:hu(info.id)
+            end)
             return
         end
     end
     if not self:is_out_magic(info.index) then
         for k1, v1 in pairs(type_card) do
             if k1 ~= magic_card and v1 >= 4 then
-                timer.add_once_routine("dymj_android_deal", function()
-                    skynet.fork(xpcall, function()
-                        self:hide_gang(info.id, {card=k1})
-                    end, trace)
-                end, self._rand.randi(1, 5))
+                self:next_action("dymj_android_deal", function()
+                    self:hide_gang(info.id, {card=k1})
+                end)
                 return
             end
         end
         for k1, v1 in ipairs(info.weave_card) do
             if v1.op == base.MJ_OP_PENG and type_card[v1.card] >= 1 then
-                timer.add_once_routine("dymj_android_deal", function()
-                    skynet.fork(xpcall, function()
-                        self:hide_gang(info.id, {card=v1.card})
-                    end, trace)
-                end, self._rand.randi(1, 5))
+                self:next_action("dymj_android_deal", function()
+                    self:hide_gang(info.id, {card=v1.card})
+                end)
                 return
             end
         end
