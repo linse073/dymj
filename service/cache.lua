@@ -13,7 +13,7 @@ skynet.start(function()
     -- share data
     local textdata = require("data.text")
     sharedata.new("textdata", textdata)
-    local rand_name = require("rand_name")
+    local rand_name = require("data.rand_name")
     sharedata.new("rand_name", rand_name)
 
     local base = require("base")
