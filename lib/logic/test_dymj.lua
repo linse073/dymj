@@ -566,19 +566,19 @@ function dymj:out_card(id, msg)
                             skynet.fork(xpcall, function()
                                 self:gang(v.id)
                             end, trace)
-                        end, self._rand.randi(3, 10))
+                        end, self._rand.randi(1, 5))
                     elseif peng then
                         timer.add_once_routine("dymj_android_peng", function()
                             skynet.fork(xpcall, function()
                                 self:peng(v.id)
                             end, trace)
-                        end, self._rand.randi(3, 10))
+                        end, self._rand.randi(1, 5))
                     elseif chi then
                         timer.add_once_routine("dymj_android_chi", function()
                             skynet.fork(xpcall, function()
                                 self:chi(v.id, {card=chi})
                             end, trace)
-                        end, self._rand.randi(3, 10))
+                        end, self._rand.randi(1, 5))
                     end
                 end
             end
@@ -906,7 +906,7 @@ function dymj:android_out(info)
             skynet.fork(xpcall, function()
                 self:out_card(info.id, {card=info.last_deal, index=1})
             end, trace)
-        end, self._rand.randi(3, 10))
+        end, self._rand.randi(1, 5))
     else
         local own_card = {}
         local magic_card = self._magic_card
@@ -924,13 +924,13 @@ function dymj:android_out(info)
                 skynet.fork(xpcall, function()
                     self:out_card(info.id, {card=own_card[index], index=index})
                 end, trace)
-            end, self._rand.randi(3, 10))
+            end, self._rand.randi(1, 5))
         else
             timer.add_once_routine("dymj_android_out", function()
                 skynet.fork(xpcall, function()
                     self:out_card(info.id, {card=magic_card, index=1})
                 end, trace)
-            end, self._rand.randi(3, 10))
+            end, self._rand.randi(1, 5))
         end
     end
 end
@@ -1271,7 +1271,7 @@ function dymj:android_deal(info)
             skynet.fork(xpcall, function()
                 self:hu(info.id)
             end, trace)
-        end, self._rand.randi(3, 10))
+        end, self._rand.randi(1, 5))
         return
     else
         local tc = {}
@@ -1288,7 +1288,7 @@ function dymj:android_deal(info)
                 skynet.fork(xpcall, function()
                     self:hu(info.id)
                 end, trace)
-            end, self._rand.randi(3, 10))
+            end, self._rand.randi(1, 5))
             return
         end
     end
@@ -1299,7 +1299,7 @@ function dymj:android_deal(info)
                     skynet.fork(xpcall, function()
                         self:hide_gang(info.id, {card=k1})
                     end, trace)
-                end, self._rand.randi(3, 10))
+                end, self._rand.randi(1, 5))
                 return
             end
         end
@@ -1309,7 +1309,7 @@ function dymj:android_deal(info)
                     skynet.fork(xpcall, function()
                         self:hide_gang(info.id, {card=v1.card})
                     end, trace)
-                end, self._rand.randi(3, 10))
+                end, self._rand.randi(1, 5))
                 return
             end
         end
