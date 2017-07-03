@@ -12,10 +12,11 @@ local tonumber = tonumber
 skynet.start(function()
     -- share data
     local textdata = require("data.text")
-    local base = require("base")
-
     sharedata.new("textdata", textdata)
+    local rand_name = require("rand_name")
+    sharedata.new("rand_name", rand_name)
 
+    local base = require("base")
     sharedata.new("base", base)
     local error_code = require("error_code")
     sharedata.new("error_code", error_code.code)

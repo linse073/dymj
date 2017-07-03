@@ -14,6 +14,8 @@ local type = type
 local base
 local error_code
 local mj_invalid_card
+local rand_name
+local rand_name_len
 local table_mgr
 local chess_mgr
 local offline_mgr
@@ -22,6 +24,8 @@ skynet.init(function()
     base = share.base
     error_code = share.error_code
     mj_invalid_card = share.mj_invalid_card
+    rand_name = share.rand_name
+    rand_name_len = #rand_name
     table_mgr = skynet.queryservice("table_mgr")
     chess_mgr = skynet.queryservice("chess_mgr")
     offline_mgr = skynet.queryservice("offline_mgr")
@@ -95,8 +99,8 @@ function dymj:init(number, rule, rand, server, card)
     for i = 1, 3 do
         local n = i + 1
         local info = {
-            account = string.format("android_%d", rand.randi(i*10000, n*10000)),
-            id = rand.randi(i*111111, n*111111),
+            account = string.format("%s_%d", rand_name[rand.randi(1, rand_name_len)], rand.randi(i*10000, n*10000)),
+            id = rand.randi(i*111, n*111),
             sex = rand.randi(1, 2),
             ip = string.format("192.168.%d.%d:%d", 
                 rand.randi(1, 255), rand.randi(1, 255), rand.randi(i*10000, n*10000)),

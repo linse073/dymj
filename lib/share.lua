@@ -9,6 +9,7 @@ local share = {}
 skynet.init(function()
     -- share with all agent
     share.textdata = sharedata.query("textdata")
+    share.rand_name = sharedata.query("rand_name")
 
     share.base = sharedata.query("base")
     share.error_code = sharedata.query("error_code")
