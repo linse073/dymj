@@ -55,6 +55,7 @@
     hu_count 23 : integer
     status 24 : integer
     chat_text 25 : string
+    chat_audio 26 : binary
 }
 
 .chess_info {
@@ -202,4 +203,5 @@
 
 .chat_info {
     text 0 : string
+    audio 1 : binary
 }
