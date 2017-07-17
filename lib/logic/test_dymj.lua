@@ -396,7 +396,7 @@ function dymj:chat_info(id, msg)
         error{code = error_code.NOT_IN_CHESS}
     end
     local cu = {
-        {index=info.index, chat_text=msg.text}
+        {index=info.index, chat_text=msg.text, chat_audio=msg.audio}
     }
     broadcast(cu, nil, self._role, id)
     return session_msg(info, cu)
