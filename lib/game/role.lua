@@ -258,7 +258,6 @@ function proc.enter_game(msg)
             local rmsg, info = skynet.call(chess_table, "lua", "join", msg.name, data.info, skynet.self())
             if rmsg == "update_user" then
                 data.chess_table = chess_table
-                skynet.call(chess_mgr, "lua", "add", data.id, chess_table)
                 ret.chess = info.update.chess
             end
         end
