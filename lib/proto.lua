@@ -43,6 +43,7 @@ local type_msg = {
         "join",
         "get_record",
         "review_record",
+        "iap",
     },
 
     [20000] = {
