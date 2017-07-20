@@ -20,6 +20,7 @@ local type_code = {
 
     [1200] = {
         ROLE_ALREADY_ENTER="已经登陆",
+        IAP_FAIL="苹果内支付失败",
     },
 
     [3000] = {

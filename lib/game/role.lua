@@ -3,6 +3,7 @@ local timer = require "timer"
 local share = require "share"
 local notify = require "notify"
 local util = require "util"
+local cjson = require "cjson"
 
 local pairs = pairs
 local ipairs = ipairs
@@ -30,6 +31,7 @@ local role_mgr
 local offline_mgr
 local table_mgr
 local chess_mgr
+local webclient
 local gm_level = tonumber(skynet.getenv("gm_level"))
 local start_utc_time = tonumber(skynet.getenv("start_utc_time"))
 local user_db
@@ -37,6 +39,7 @@ local info_db
 local user_record_db
 local record_info_db
 local record_detail_db
+local iap_log_db
 
 skynet.init(function()
     error_code = share.error_code
@@ -48,12 +51,14 @@ skynet.init(function()
     offline_mgr = skynet.queryservice("offline_mgr")
     table_mgr = skynet.queryservice("table_mgr")
     chess_mgr = skynet.queryservice("chess_mgr")
+    webclient = skynet.queryservice("webclient")
 	local master = skynet.queryservice("mongo_master")
     user_db = skynet.call(master, "lua", "get", "user")
     info_db = skynet.call(master, "lua", "get", "info")
     user_record_db = skynet.call(master, "lua", "get", "user_record")
     record_info_db = skynet.call(master, "lua", "get", "record_info")
     record_detail_db = skynet.call(master, "lua", "get", "record_detail")
+    iap_log_db = skynet.call(master, "lua", "get", "iap_log")
 end)
 
 function role.init_module()
@@ -401,6 +406,40 @@ function proc.review_record(msg)
         error{code = error_code.NO_RECORD}
     end
     return "record_info", rd
+end
+
+function proc.iap(msg)
+    if not msg.receipt then
+        error{code = error_code.ERROR_ARGS}
+    end
+    local url
+    if msg.sandbox then
+        url = "https://sandbox.itunes.apple.com/verifyReceipt"
+    else
+        url = "https://buy.itunes.apple.com/verifyReceipt"
+    end
+    local result, content = skynet.call(webclient, "lua", "request", url, nil, msg.receipt, 
+        false, "Content-Type: application/json")
+    local content = cjson.decode(content)
+    if content.status == 0 then
+        local receipt = content.receipt
+        cz.start()
+        local has = skynet.call(iap_log_db, "lua", "findOne", {transaction_id=receipt.transaction_id})
+        if not has then
+            skynet.call(iap_log_db, "lua", "safe_insert", receipt)
+        end
+        cz.finish()
+        if has then
+            return "update_user", {iap_index=msg.index}
+        else
+            local num = string.match(receipt.product_id, "com.moyi.dymj.store_(%d+)")
+            local p = update_user()
+            role.add_room_card(p, false, tonumber(num))
+            return "update_user", {update=p, iap_index=msg.index}
+        end
+    else
+        error{code = error_code.IAP_FAIL}
+    end
 end
 
 return role

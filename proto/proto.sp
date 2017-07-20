@@ -130,6 +130,7 @@
 
 .update_user {
     update 0 : user_all
+    iap_index 1 : integer
 }
 
 .heart_beat {
@@ -204,4 +205,10 @@
 .chat_info {
     text 0 : string
     audio 1 : binary
+}
+
+.iap {
+    index 0 : integer
+    receipt 1 : string
+    sandbox 2 : boolean
 }
