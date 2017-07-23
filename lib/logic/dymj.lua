@@ -918,6 +918,7 @@ function dymj:hu(id, msg)
     }
     for k, v in ipairs(role) do
         v.ready = false
+        v.deal_end = false
         local score
         if k == index then
             if k == banker then
@@ -943,7 +944,8 @@ function dymj:hu(id, msg)
         end
         local u = {
             index = k,
-            ready = false,
+            ready = v.ready,
+            deal_end = v.deal_end,
             score = v.score,
             show_card = {
                 own_card = own_card,
@@ -1345,6 +1347,7 @@ function dymj:conclude(id, msg)
     local role = self._role
     for k, v in ipairs(role) do
         v.ready = false
+        v.deal_end = false
         v.last_score = 0
         local own_card = {}
         for k1, v1 in pairs(v.type_card) do
@@ -1354,7 +1357,8 @@ function dymj:conclude(id, msg)
         end
         user[k] = {
             index = k,
-            ready = false,
+            ready = v.ready,
+            deal_end = v.deal_end,
             show_card = {
                 own_card = own_card,
                 score = 0,

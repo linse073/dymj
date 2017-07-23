@@ -108,6 +108,7 @@ function dymj:init(number, rule, rand, server, card)
         }
         self:enter(info, nil, i+1)
         info.ready = true
+        info.deal_end = true
     end
 end
 
@@ -855,8 +856,10 @@ function dymj:hu(id, msg)
     for k, v in ipairs(role) do
         if v.android then
             v.ready = true
+            v.deal_end = true
         else
             v.ready = false
+            v.deal_end = false
         end
         local score
         if k == index then
@@ -883,6 +886,7 @@ function dymj:hu(id, msg)
         local u = {
             index = k,
             ready = v.ready,
+            deal_end = v.deal_end,
             score = v.score,
             show_card = {
                 own_card = own_card,
@@ -1261,8 +1265,10 @@ function dymj:conclude(id, msg)
     for k, v in ipairs(role) do
         if v.android then
             v.ready = true
+            v.deal_end = true
         else
             v.ready = false
+            v.deal_end = false
         end
         v.last_score = 0
         local own_card = {}
@@ -1274,6 +1280,7 @@ function dymj:conclude(id, msg)
         user[k] = {
             index = k,
             ready = v.ready,
+            deal_end = v.deal_end,
             show_card = {
                 own_card = own_card,
                 score = 0,
