@@ -56,6 +56,7 @@
     status 24 : integer
     chat_text 25 : string
     chat_audio 26 : binary
+    deal_end 27 : boolean
 }
 
 .chess_info {

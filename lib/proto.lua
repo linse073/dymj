@@ -48,6 +48,7 @@ local type_msg = {
 
     [20000] = {
         "ready",
+        "deal_end",
         "out_card",
         "hu",
         "chi",

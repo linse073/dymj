@@ -209,6 +209,7 @@ function dymj:pack(id, ip, agent)
                         index = info.index,
                         score = info.score,
                         ready = info.ready,
+                        deal_end = info.deal_end,
                         top_score = info.top_score,
                         hu_count = info.hu_count,
                         status = info.status,
@@ -235,13 +236,13 @@ function dymj:pack(id, ip, agent)
                 end
             end
             return {info=chess, user=user, start_session=si.session}
-        elseif status == base.CHESS_STATUS_START then
+        elseif status == base.CHESS_STATUS_START or status == base.CHESS_STATUS_DEAL then
             local chess = {
                 name = "dymj",
                 number = self._number,
                 rule = self._rule.pack,
                 banker = self._banker,
-                status = self._status,
+                status = status,
                 count = self._count,
                 pause = self._pause,
                 left = self._left,
@@ -264,6 +265,7 @@ function dymj:pack(id, ip, agent)
                     index = info.index,
                     score = info.score,
                     ready = info.ready,
+                    deal_end = info.deal_end,
                     agree = info.agree,
                     out = info.out,
                     out_magic = info.out_magic>0,
@@ -315,6 +317,7 @@ function dymj:enter(info, agent, index)
     info.index = index
     info.score = 0
     info.ready = false
+    info.deal_end = false
     info.hu_count = 0
     info.top_score = 0
     info.session = 1
@@ -460,6 +463,37 @@ function dymj:ready(id, msg)
     else
         broadcast({user}, chess, self._role, id)
     end
+    return session_msg(info, {user}, chess)
+end
+
+function dymj:is_all_deal()
+    local role = self._role
+    for i = 1, base.MJ_FOUR do
+        local v = role[i]
+        if not v.deal_end then
+            return false
+        end
+    end
+    return true
+end
+
+function dymj:deal_end(id, msg)
+    local info = self:op_check(id, base.CHESS_STATUS_DEAL)
+    if info.deal_end then
+        error{code = error_code.ALREADY_DEAL_END}
+    end
+    info.deal_end = true
+    local user = {index=info.index, deal_end=true}
+    local chess = {}
+    if self:is_all_deal() then
+        self._status = Base.CHESS_STATUS_START
+        chess.status = self._status
+        local banker = self._role[self._banker]
+        if banker.android then
+            self:android_deal(banker)
+        end
+    end
+    broadcast({user}, chess, self._role, id)
     return session_msg(info, {user}, chess)
 end
 
@@ -1313,7 +1347,7 @@ function dymj:deal(info)
     self._deal_index = info.index
     self._deal_card = c
     self:clear_all_op()
-    if info.android then
+    if self._status == base.CHESS_STATUS_START and info.android then
         self:android_deal(info)
     end
     return c
@@ -1364,7 +1398,7 @@ function dymj:start()
         util.shuffle(card, self._rand)
     end
     self._card = card
-    self._status = base.CHESS_STATUS_START
+    self._status = base.CHESS_STATUS_DEAL
     self._out_card = 0
     self._out_index = 0
     self._old_banker = nil
