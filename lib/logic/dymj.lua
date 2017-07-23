@@ -554,7 +554,7 @@ function dymj:deal_end(id, msg)
     local user = {index=info.index, deal_end=true}
     local chess = {}
     if self:is_all_deal() then
-        self._status = Base.CHESS_STATUS_START
+        self._status = base.CHESS_STATUS_START
         chess.status = self._status
     end
     broadcast({user}, chess, self._role, id)
