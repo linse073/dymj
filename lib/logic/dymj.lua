@@ -966,13 +966,15 @@ function dymj:hu(id, msg)
     local sr = self._record
     sr.expire = expire
     sr.time = now
+    local record_id
     if sr.id then
         skynet.call(record_info_db, "lua", "update", {id=sr.id}, {
             ["$push"] = {record=record_detail},
             ["$set"] = {expire=expire, time=now},
         }, true)
     else
-        sr.id = skynet.call(self._server, "lua", "gen_record")
+        record_id = skynet.call(self._server, "lua", "gen_record")
+        sr.id = record_id
         local record_user = {}
         for k, v in ipairs(role) do
             record_user[k] = {
@@ -984,7 +986,7 @@ function dymj:hu(id, msg)
                 ip = v.ip,
                 index = v.index,
             }
-            skynet.call(user_record_db, "lua", "update", {id=v.id}, {["$push"]={record=sr.id}}, true)
+            skynet.call(user_record_db, "lua", "update", {id=v.id}, {["$push"]={record=record_id}}, true)
         end
         sr.user = record_user
         sr.record = {record_detail}
@@ -999,7 +1001,7 @@ function dymj:hu(id, msg)
     self._old_banker = banker
     self._banker = index
     local ci = {
-        status=self._status, count=self._count, banker=self._banker,
+        status=self._status, count=self._count, banker=self._banker, record_id=record_id
     }
     broadcast(user, ci, role, id)
     if self._status == base.CHESS_STATUS_FINISH then

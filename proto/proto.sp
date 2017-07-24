@@ -76,6 +76,7 @@
     old_banker 12 : integer
     close_index 13 : integer
     close_time 14 : integer
+    record_id 15 : integer
 }
 
 .chess_all {
