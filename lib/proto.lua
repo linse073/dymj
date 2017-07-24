@@ -36,6 +36,7 @@ local type_msg = {
     [2200] = {
         "add_room_card",
         "dymj_card",
+        "test_update_day",
     },
 
     [2300] = {
@@ -44,6 +45,8 @@ local type_msg = {
         "get_record",
         "review_record",
         "iap",
+        "update_day",
+        "share",
     },
 
     [20000] = {

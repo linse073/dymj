@@ -4,6 +4,7 @@ local share = require "share"
 local notify = require "notify"
 local util = require "util"
 local cjson = require "cjson"
+local func = require "func"
 
 local pairs = pairs
 local ipairs = ipairs
@@ -27,6 +28,7 @@ local base
 local cz
 local rand
 local valid_chess
+local game_day
 local role_mgr
 local offline_mgr
 local table_mgr
@@ -47,6 +49,7 @@ skynet.init(function()
     cz = share.cz
     rand = share.rand
     valid_chess = share.valid_chess
+    game_day = func.game_day
     role_mgr = skynet.queryservice("role_mgr")
     offline_mgr = skynet.queryservice("offline_mgr")
     table_mgr = skynet.queryservice("table_mgr")
@@ -98,6 +101,7 @@ local function get_user()
 				nick_name = data.nick_name,
 				head_img = data.head_img,
 				ip = data.ip,
+                day_card = false,
 			}
 			skynet.call(user_db, "lua", "safe_insert", user)
 			data.user = user
@@ -130,6 +134,7 @@ end
 
 function role.exit()
     timer.del_routine("save_role")
+    timer.del_routine("update_day")
     timer.del_routine("heart_beat")
     local data = game.data
     local user = data.user
@@ -143,6 +148,24 @@ function role.exit()
     if chess_table then
         skynet.call(chess_table, "lua", "status", data.id, base.USER_STATUS_LOGOUT)
     end
+end
+
+local function update_day(user, od, nd)
+    user.day_card = false
+end
+
+function role.update_day(od, nd)
+    local user = data.user
+    update_day(user, od, nd)
+    notify.add("update_day", {})
+end
+
+function role.test_update_day()
+    local user = data.user
+    local now = floor(skynet.time())
+    local nd = game_day(now)
+    update_user(user, nd, nd)
+    return "update_day", ""
 end
 
 function role.save_user()
@@ -196,6 +219,9 @@ function role.btk(addr)
 end
 
 function role.repair(user, now)
+    if user.day_card == nil then
+        user.day_card = false
+    end
 end
 
 function role.add_room_card(p, inform, num)
@@ -240,6 +266,13 @@ function proc.enter_game(msg)
     user.last_login_time = user.login_time
     user.login_time = now
 	game.iter("enter")
+    if user.logout_time > 0 then
+        local od = game_day(user.logout_time)
+        local nd = game_day(now)
+        if od ~= nd then
+            update_day(user, od, nd)
+        end
+    end
     local ret = {user=user}
     local om = skynet.call(offline_mgr, "lua", "get", user.id)
     if om then
@@ -268,6 +301,7 @@ function proc.enter_game(msg)
         end
     end
     timer.add_routine("save_role", role.save_routine, 300)
+    timer.add_day_routine("update_day", role.update_day)
     skynet.call(role_mgr, "lua", "enter", data.info, skynet.self())
     data.enter = true
     cz.finish()
@@ -440,6 +474,18 @@ function proc.iap(msg)
     else
         error{code = error_code.IAP_FAIL}
     end
+end
+
+function proc.share(msg)
+    local user = data.user
+    if user.day_card then
+        error{code = error_code.ALREADY_SHARE}
+    end
+    local p = update_user()
+    role.add_room_card(p, false, 4)
+    user.day_card = true
+    p.user.day_card = true
+    return "update_user", {update=p}
 end
 
 return role

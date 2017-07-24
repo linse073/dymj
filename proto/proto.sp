@@ -7,6 +7,7 @@
     nick_name 5 : string
     head_img 6 : string
     ip 7 : string
+    day_card 8 : boolean
 }
 
 .other_all {
