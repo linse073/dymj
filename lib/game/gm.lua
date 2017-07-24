@@ -51,4 +51,12 @@ function proc.dymj_card(msg)
     end
 end
 
+function proc.test_update_day(msg)
+    local data = game.data
+    if data.user.gm_level == 0 then
+        error{code = error_code.ROLE_NO_PERMIT}
+    end
+    return role.test_update_day()
+end
+
 return gm

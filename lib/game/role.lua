@@ -134,7 +134,7 @@ end
 
 function role.exit()
     timer.del_routine("save_role")
-    timer.del_routine("update_day")
+    timer.del_day_routine("update_day")
     timer.del_routine("heart_beat")
     local data = game.data
     local user = data.user
@@ -155,13 +155,13 @@ local function update_day(user, od, nd)
 end
 
 function role.update_day(od, nd)
-    local user = data.user
+    local user = game.data.user
     update_day(user, od, nd)
     notify.add("update_day", {})
 end
 
 function role.test_update_day()
-    local user = data.user
+    local user = game.data.user
     local now = floor(skynet.time())
     local nd = game_day(now)
     update_user(user, nd, nd)
@@ -477,7 +477,7 @@ function proc.iap(msg)
 end
 
 function proc.share(msg)
-    local user = data.user
+    local user = game.data.user
     if user.day_card then
         error{code = error_code.ALREADY_SHARE}
     end
