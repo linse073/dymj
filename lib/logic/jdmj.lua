@@ -792,30 +792,81 @@ function jdmj:check_hu(type_card, weave_card, magic_count)
     return false
 end
 
-function jdmj:is_qidui(type_card)
-    local magic_card = self._magic_card
-    local magic_count = type_card[magic_card]
-    local four_count = 0
+local function is_badui(type_card, magic_count)
+    local single_count = 0
     local count = 0
     for k, v in pairs(type_card) do
         count = count + v
-        if k ~= magic_card then
-            if v == 1 then
-                if magic_count <= 0 then
-                    return false
-                end
-                magic_count = magic_count - 1
-            elseif v == 3 then
-                if magic_count <= 0 then
-                    return false
-                end
-                magic_count = magic_count - 1
-            elseif v == 4 then
-                four_count = four_count + 1
+        if v == 1 or v == 3 then
+            if magic_count <= 0 then
+                single_count = single_count + 1
             end
+            magic_count = magic_count - 1
         end
     end
-    return count==14, four_count, magic_count
+    return count==17 and single_count<=1, magic_count
+end
+
+local function is_qingyise(type_card, magic_count, weave_card)
+    local has_color = {false, false, false, false, false}
+    for k, v in pairs(type_card) do
+        has_color[k//10+1] = true
+    end
+    for k, v in ipairs(weave_card) do
+        has_color[v.card//10+1] = true
+    end
+    local index
+    local color_none = 0
+    for k, v in ipairs(has_color) do
+        if v then
+            index = k
+        else
+            color_none = color_none + 1
+        end
+    end
+    return color_none>=4 and index<=3
+end
+
+local function is_qingfengzi(type_card, magic_count, weave_card)
+    local has_color = {false, false, false, false, false}
+    for k, v in pairs(type_card) do
+        has_color[k//10+1] = true
+    end
+    for k, v in ipairs(weave_card) do
+        has_color[v.card//10+1] = true
+    end
+    for i = 1, 3 do
+        if has_color[i] then
+            return false
+        end
+    end
+    return true
+end
+
+local match_count = {3, 3, 3, 4, 3}
+local function is_shisanbuda(type_card, magic_count, magic_card)
+    local color_card = {{}, {}, {}, {}, {}}
+    for k, v in pairs(type_card) do
+        local temp = color_card[k//10+1]
+        temp[#temp+1] = k
+    end
+    if magic_count > 0 then
+        local temp = color_card[magic_card//10+1]
+        temp[#temp+1] = magic_card
+    end
+    for k, v in ipairs(color_card) do
+        if #v ~= match_count[k] then
+            return false
+        end
+    end
+    for i = 1, 3 do
+        local temp = color_card[i]
+        table.sort(temp)
+        if temp[2] - temp[1] < 2 or temp[3] - temp[2] < 2 then
+            return false
+        end
+    end
+    return true
 end
 
 function jdmj:consume_card()
@@ -842,34 +893,35 @@ function jdmj:hu(id, msg)
     end
     local type_card = info.type_card
     local mul = 1
-    local hu, four_count, mc = self:is_qidui(type_card)
+    local tc = {}
+    for k, v in pairs(type_card) do
+        if v > 0 then
+            tc[k] = v
+        end
+    end
+    local magic_count = tc[magic_card] or 0
+    tc[magic_card] = nil
+    local hu, four_count, mc = is_badui(tc, magic_count)
     local magic_card = self._magic_card
+    local deal_card = self._deal_card
     local hu_type
     if hu then
         hu_type = base.HU_7DUI
         mul = 2^(four_count+1)
-        if (self._deal_card ~= magic_card and type_card[self._deal_card]%2 == 1)
-            or (self._deal_card == magic_card and mc > 0) then
+        if (deal_card ~= magic_card and type_card[deal_card]%2 == 1)
+            or (deal_card == magic_card and mc > 0) then
             mul = mul * 2^(info.out_magic+1)
         elseif type_card[magic_card] == 0 then
             mul = mul * 2
         end
     else
-        local tc = {}
-        for k, v in pairs(type_card) do
-            if v > 0 then
-                tc[k] = v
-            end
-        end
-        local magic_count = tc[magic_card] or 0
-        tc[magic_card] = nil
         local weave_card = {}
         if not self:check_hu(tc, weave_card, magic_count) then
             error{code = error_code.ERROR_OPERATION}
         end
         hu_type = base.HU_NONE
         local head = weave_card[1]
-        if head[1] == self._deal_card and head[2] == 0 then
+        if head[1] == deal_card and head[2] == 0 then
             if info.gang_count > 0 then
                 hu_type = base.HU_GANGBAO
             else
@@ -1500,7 +1552,7 @@ function jdmj:start()
         v.gang_count = 0
         v.out_magic = 0
         local deal_card = {}
-        for i = 1, base.MJ_ROLE_CARD do
+        for i = 1, base.JDMJ_ROLE_CARD do
             local c = card[left]
             left = left - 1
             type_card[c] = type_card[c] + 1

@@ -33,6 +33,11 @@ local base = {
     HU_BAOTOU = 3,
     HU_GANGBAO = 4,
     HU_GANGKAI = 5,
+
+    JDMJ_ROLE_CARD = 16,
+    
+    JDMJ_HU_NONE = 1,
+    JDMJ_HU_8DUI = 2,
 }
 
 return base
