@@ -892,6 +892,9 @@ function jdmj:hu(id, msg)
         error{code = error_code.CAN_NOT_HU}
     end
     local type_card = info.type_card
+    local magic_card = self._magic_card
+    local deal_card = self._deal_card
+    local wc = info.weave_card
     local mul = 1
     local tc = {}
     for k, v in pairs(type_card) do
@@ -901,19 +904,24 @@ function jdmj:hu(id, msg)
     end
     local magic_count = tc[magic_card] or 0
     tc[magic_card] = nil
-    local hu, four_count, mc = is_badui(tc, magic_count)
-    local magic_card = self._magic_card
-    local deal_card = self._deal_card
+    local hu, mc = is_badui(tc, magic_count)
     local hu_type
     if hu then
-        hu_type = base.HU_7DUI
-        mul = 2^(four_count+1)
-        if (deal_card ~= magic_card and type_card[deal_card]%2 == 1)
+        hu_type = base.JDMJ_HU_8DUI
+        if (deal_card ~= magic_card and tc[deal_card]%2 == 1)
             or (deal_card == magic_card and mc > 0) then
             mul = mul * 2^(info.out_magic+1)
-        elseif type_card[magic_card] == 0 then
-            mul = mul * 2
         end
+        if is_qingyise(tc, magic_count, wc) then
+            hu_type = JDMJ_HU_QINGYISE
+            mul = mul * 20
+        end
+    elseif is_qingfengzi(tc, magic_count, wc) then
+        hu_type = base.JDMJ_HU_QINGFENGZI
+        mul = mul * 20
+    elseif is_shisanbuda(tc, magic_count, magic_card) then
+        hu_type = base.JDMJ_HU_SHISANBUDA
+        mul = mul * 4
     else
         local weave_card = {}
         if not self:check_hu(tc, weave_card, magic_count) then
@@ -923,9 +931,9 @@ function jdmj:hu(id, msg)
         local head = weave_card[1]
         if head[1] == deal_card and head[2] == 0 then
             if info.gang_count > 0 then
-                hu_type = base.HU_GANGBAO
+                hu_type = base.JDMJ_HU_GANGBAO
             else
-                hu_type = base.HU_BAOTOU
+                hu_type = base.JDMJ_HU_BAOTOU
             end
             mul = 2^info.gang_count
             mul = mul * 2^(info.out_magic+1)
@@ -934,10 +942,14 @@ function jdmj:hu(id, msg)
             local len = #out_card
             if len == 0 or out_card[len] ~= magic_card then
                 if info.gang_count > 0 then
-                    hu_type = base.HU_GANGKAI
+                    hu_type = base.JDMJ_HU_GANGKAI
                 end
                 mul = 2^info.gang_count
             end
+        end
+        if is_qingyise(tc, magic_count, wc) then
+            hu_type = JDMJ_HU_QINGYISE
+            mul = mul * 10
         end
     end
     self:clear_all_op()

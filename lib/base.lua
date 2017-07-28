@@ -38,6 +38,12 @@ local base = {
     
     JDMJ_HU_NONE = 1,
     JDMJ_HU_8DUI = 2,
+    JDMJ_HU_QINGFENGZI = 3,
+    JDMJ_HU_SHISANBUDA = 4,
+    JDMJ_HU_GANGBAO = 5,
+    JDMJ_HU_BAOTOU = 6,
+    JDMJ_HU_GANGKAI = 7,
+    JDMJ_HU_QINGYISE = 8,
 }
 
 return base
