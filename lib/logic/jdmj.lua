@@ -569,10 +569,10 @@ local CHI_RULE = {
 function jdmj:analyze(card, index)
     local has_respond = false
     for k, v in ipairs(self._role) do
-        if k ~= index and not self:is_out_magic(k) and v.chi_count[index] < base.MJ_CHI_COUNT then
+        if k ~= index and not self:is_out_magic(k) then
             local type_card = v.type_card
             local chi = false
-            if k == index%base.MJ_FOUR+1 then
+            if k == index%base.MJ_FOUR+1 and v.chi_count[index] < base.MJ_CHI_COUNT then
                 for k1, v1 in ipairs(CHI_RULE) do
                     local c1, c2 = card+v1[1], card+v1[2]
                     if valid_card(c1) and type_card[c1]>=1 
@@ -650,7 +650,7 @@ function jdmj:out_card(id, msg)
         card = card,
         out_index = msg.index,
     }
-    if self._left <= 20 then
+    if self._left <= 18 then
         return self:conclude(id)
     else
         local chess
@@ -985,17 +985,9 @@ function jdmj:hu(id, msg)
         v.deal_end = false
         local score
         if k == index then
-            if k == banker then
-                score = mul * 24
-            else
-                score = mul * 10
-            end
+            score = mul * 10
         else
-            if k == banker or index == banker then
-                score = -mul * 8
-            else
-                score = -mul
-            end
+            score = -mul
         end
         record_score[k] = score
         v.last_score = score
@@ -1166,9 +1158,9 @@ end
 function jdmj:peng(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     local out_index = self._out_index
-    if info.chi_count[out_index] >= base.MJ_CHI_COUNT then
-        error{code = error_code.CHI_COUNT_LIMIT}
-    end
+    -- if info.chi_count[out_index] >= base.MJ_CHI_COUNT then
+    --     error{code = error_code.CHI_COUNT_LIMIT}
+    -- end
     if not info.respond[base.MJ_OP_PENG] then
         error{code = error_code.ERROR_OPERATION}
     end
@@ -1194,7 +1186,7 @@ function jdmj:peng(id, msg)
     info.weave_card[#info.weave_card+1] = weave
     info.out = true
     info.hu = false
-    info.chi_count[out_index] = info.chi_count[out_index] + 1
+    -- info.chi_count[out_index] = info.chi_count[out_index] + 1
     local role_out = self._role[out_index].out_card
     role_out[#role_out] = nil
     local cu = {
@@ -1208,9 +1200,9 @@ function jdmj:gang(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     local index = info.index
     local out_index = self._out_index
-    if info.chi_count[out_index] >= base.MJ_CHI_COUNT then
-        error{code = error_code.CHI_COUNT_LIMIT}
-    end
+    -- if info.chi_count[out_index] >= base.MJ_CHI_COUNT then
+    --     error{code = error_code.CHI_COUNT_LIMIT}
+    -- end
     if not info.respond[base.MJ_OP_GANG] then
         error{code = error_code.ERROR_OPERATION}
     end
@@ -1234,7 +1226,7 @@ function jdmj:gang(id, msg)
     }
     info.weave_card[#info.weave_card+1] = weave
     info.gang_count = info.gang_count + 1
-    info.chi_count[out_index] = info.chi_count[out_index] + 1
+    -- info.chi_count[out_index] = info.chi_count[out_index] + 1
     local role_out = self._role[out_index].out_card
     role_out[#role_out] = nil
     local c = self:deal(info)
@@ -1397,7 +1389,7 @@ function jdmj:conclude(id, msg)
     if self._deal_index ~= info.index then
         error{code = error_code.ERROR_DEAL_INDEX}
     end
-    if self._left > 20 then
+    if self._left > 18 then
         error{code = error_code.CONCLUDE_CARD_LIMIT}
     end
     self._count = self._count + 1
