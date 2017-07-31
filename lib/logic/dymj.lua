@@ -600,7 +600,6 @@ function dymj:analyze(card, index)
             end
             local op = v.op
             op[base.MJ_OP_CHI], op[base.MJ_OP_PENG], op[base.MJ_OP_GANG] = 0, 0, 0
-            v.deal_pass = false
         else
             self:clear_op(v)
         end
@@ -634,6 +633,7 @@ function dymj:out_card(id, msg)
         error{code = error_code.OUT_CARD_LIMIT}
     end
     info.out = false
+    info.hu = false
     type_card[card] = type_card[card] - 1
     if card == self._magic_card then
         info.out_magic = info.out_magic + 1
@@ -880,6 +880,17 @@ function dymj:hu(id, msg)
             end
         end
     end
+    local banker = self._banker
+    local scores
+    if index == banker then
+        local ts = -mul * 8
+        scores = {ts, ts, ts, ts}
+        scores[index] = mul * 24
+    else
+        scores = {-mul, -mul, -mul, -mul}
+        scores[banker] = -mul * 8
+        scores[index] = mul * 10
+    end
     self:clear_all_op()
     info.hu_count = info.hu_count + 1
     self._count = self._count + 1
@@ -893,7 +904,6 @@ function dymj:hu(id, msg)
     end
     local user = {}
     local role = self._role
-    local banker = self._banker
     local detail = self._detail
     local record_action = detail.action
     record_action[#record_action+1] = {
@@ -911,20 +921,7 @@ function dymj:hu(id, msg)
     for k, v in ipairs(role) do
         v.ready = false
         v.deal_end = false
-        local score
-        if k == index then
-            if k == banker then
-                score = mul * 24
-            else
-                score = mul * 10
-            end
-        else
-            if k == banker or index == banker then
-                score = -mul * 8
-            else
-                score = -mul
-            end
-        end
+        local score = scores[k]
         record_score[k] = score
         v.last_score = score
         v.score = v.score + score

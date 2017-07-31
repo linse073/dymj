@@ -59,6 +59,7 @@
     chat_text 25 : string
     chat_audio 26 : binary
     deal_end 27 : boolean
+    hu_pass 28 : boolean
 }
 
 .chess_info {
@@ -78,6 +79,7 @@
     close_index 13 : integer
     close_time 14 : integer
     record_id 15 : integer
+    hu_pass 16 : boolean
 }
 
 .chess_all {
