@@ -1317,6 +1317,7 @@ end
 
 function dymj:android_deal(info)
     local type_card = info.type_card
+    local magic_card = self._magic_card
     local tc = {}
     for k, v in pairs(type_card) do
         if v > 0 then
@@ -1326,7 +1327,6 @@ function dymj:android_deal(info)
     local magic_count = tc[magic_card] or 0
     tc[magic_card] = nil
     local hu = is_qidui(tc, magic_count)
-    local magic_card = self._magic_card
     if hu then
         self:next_action("dymj_android_deal", function()
             self:hu(info.id)
