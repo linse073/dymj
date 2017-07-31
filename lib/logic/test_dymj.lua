@@ -252,6 +252,8 @@ function dymj:pack(id, ip, agent)
                 out_index = self._out_index,
                 close_index = self._close_index,
                 close_time = self._close_time,
+                pass_status = self._pass_status,
+                can_out = self._can_out,
             }
             local user = {}
             for i = 1, base.MJ_FOUR do
@@ -268,7 +270,6 @@ function dymj:pack(id, ip, agent)
                     ready = info.ready,
                     deal_end = info.deal_end,
                     agree = info.agree,
-                    out = info.out,
                     out_magic = info.out_magic>0,
                     top_score = info.top_score,
                     hu_count = info.hu_count,
@@ -296,7 +297,7 @@ function dymj:pack(id, ip, agent)
                     u.own_count = #own_card
                     u.last_deal = info.last_deal
                     u.chi_count = info.chi_count
-                    u.hu = info.hu
+                    u.pass = info.pass
                 else
                     local count = 0
                     for k, v in pairs(info.type_card) do
@@ -354,7 +355,7 @@ function dymj:join(name, info, room_card, agent)
         error{code = error_code.ERROR_CHESS_NAME}
     end
     if self._status ~= base.CHESS_STATUS_READY then
-        error{code = error_code.ERROR_CHESS_STATUS}
+        error{code = error_code.ERROR_OPERATION}
     end
     if self._rule.aa_pay and room_card < self._rule.total_count/8 then
         error{code = error_code.ROOM_CARD_LIMIT}
@@ -419,7 +420,7 @@ end
 
 function dymj:op_check(id, status)
     if self._status ~= status then
-        error{code = error_code.ERROR_CHESS_STATUS}
+        error{code = error_code.ERROR_OPERATION}
     end
     local info = self._id[id]
     if not info then
@@ -434,7 +435,8 @@ function dymj:ready(id, msg)
         error{code = error_code.ALREADY_READY}
     end
     info.ready = true
-    local user = {index=info.index, ready=true}
+    local index = info.index
+    local user = {index=index, ready=true}
     local chess = {}
     if self:is_all_ready() then
         self:start()
@@ -445,7 +447,7 @@ function dymj:ready(id, msg)
         local now = floor(skynet.time())
         chess.rand = now
         user.own_card = info.deal_card
-        if info.index == self._banker then
+        if index == self._banker then
             user.last_deal = info.last_deal
         end
         -- other
@@ -456,7 +458,7 @@ function dymj:ready(id, msg)
                     last_deal = v.last_deal
                 end
                 send(v, {
-                    {index=info.index, ready=true}, 
+                    {index=index, ready=true}, 
                     {index=k, own_card=v.deal_card, last_deal=last_deal},
                 }, chess)
             end
@@ -504,6 +506,7 @@ local CHI_RULE = {
     {1, 2, 0},
 }
 function dymj:analyze(card, index)
+    self._pass_status = base.PASS_STATUS_OUT
     local has_respond = false
     for k, v in ipairs(self._role) do
         if k ~= index and not self:is_out_magic(k) and v.chi_count[index] < base.MJ_CHI_COUNT then
@@ -530,10 +533,10 @@ function dymj:analyze(card, index)
             local respond = v.respond
             respond[base.MJ_OP_CHI], respond[base.MJ_OP_PENG], respond[base.MJ_OP_GANG] = chi, peng, gang
             if chi or peng or gang then
-                v.out_pass = false
+                v.pass = false
                 has_respond = true
             else
-                v.out_pass = true
+                v.pass = true
             end
             local op = v.op
             op[base.MJ_OP_CHI], op[base.MJ_OP_PENG], op[base.MJ_OP_GANG] = 0, 0, 0
@@ -550,11 +553,13 @@ function dymj:is_out_magic(index)
             return true
         end
     end
+    return false
 end
 
 function dymj:out_card(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
-    if not info.out then
+    local index = info.index
+    if index ~= self._can_out then
         error{code = error_code.ERROR_OUT_INDEX}
     end
     local type_card = info.type_card
@@ -565,12 +570,10 @@ function dymj:out_card(id, msg)
     if type_card[card] == 0 then
         error{code = error_code.NO_OUT_CARD}
     end
-    local index = info.index
     if self:is_out_magic(index) and card ~= self._deal_card then
         error{code = error_code.OUT_CARD_LIMIT}
     end
-    info.out = false
-    info.hu = false
+    self._can_out = 0
     type_card[card] = type_card[card] - 1
     if card == self._magic_card then
         info.out_magic = info.out_magic + 1
@@ -777,10 +780,16 @@ function dymj:hu(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     local index = info.index
     if self._deal_index ~= index then
-        error{code = error_code.ERROR_DEAL_INDEX}
+        error{code = error_code.ERROR_OPERATION}
     end
-    if not info.hu then
-        error{code = error_code.CAN_NOT_HU}
+    if self._pass_status ~= base.PASS_STATUS_DEAL then
+        error{code = error_code.ERROR_OPERATION}
+    end
+    if info.pass then
+        error{code = error_code.ALREADY_PASS}
+    end
+    if self._can_out ~= index then
+        error{code = error_code.ERROR_OPERATION}
     end
     local type_card = info.type_card
     local magic_card = self._magic_card
@@ -797,7 +806,7 @@ function dymj:hu(id, msg)
     local hu, four_count, mc = is_qidui(tc, magic_count)
     local hu_type
     if hu then
-        hu_type = base.HU_7DUI
+        hu_type = base.HU_DUIZI
         mul = 2^(four_count+1)
         if (deal_card ~= magic_card and tc[deal_card]%2 == 1)
             or (deal_card == magic_card and mc > 0) then
@@ -915,7 +924,7 @@ function dymj:check_prior(index, op)
             front = false
         else
             local other = role[n]
-            if not other.out_pass then
+            if not other.pass then
                 for k, v in ipairs(other.respond) do
                     if v and (k>op or (k==op and front)) then
                         return true
@@ -958,6 +967,12 @@ end
 
 function dymj:chi(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
+    if self._pass_status ~= base.PASS_STATUS_OUT then
+        error{code = error_code.ERROR_OPERATION}
+    end
+    if info.pass then
+        error{code = error_code.ALREADY_PASS}
+    end
     local out_index = self._out_index
     if info.chi_count[out_index] >= base.MJ_CHI_COUNT then
         error{code = error_code.CHI_COUNT_LIMIT}
@@ -1005,11 +1020,10 @@ function dymj:chi(id, msg)
             out_card = out_card,
         }
         info.weave_card[#info.weave_card+1] = weave
-        info.out = true
+        self._can_out = index
         if info.android then
             self:android_out(info)
         end
-        info.hu = false
         info.chi_count[out_index] = info.chi_count[out_index] + 1
         local role_out = self._role[out_index].out_card
         role_out[#role_out] = nil
@@ -1023,7 +1037,14 @@ end
 
 function dymj:peng(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
+    if self._pass_status ~= base.PASS_STATUS_OUT then
+        error{code = error_code.ERROR_OPERATION}
+    end
+    if info.pass then
+        error{code = error_code.ALREADY_PASS}
+    end
     local out_index = self._out_index
+    local index = info.index
     if info.chi_count[out_index] >= base.MJ_CHI_COUNT then
         error{code = error_code.CHI_COUNT_LIMIT}
     end
@@ -1044,16 +1065,15 @@ function dymj:peng(id, msg)
         out_card = out_card,
     }
     info.weave_card[#info.weave_card+1] = weave
-    info.out = true
+    self._can_out = index
     if info.android then
         self:android_out(info)
     end
-    info.hu = false
     info.chi_count[out_index] = info.chi_count[out_index] + 1
     local role_out = self._role[out_index].out_card
     role_out[#role_out] = nil
     local cu = {
-        {index=info.index, weave_card={weave}},
+        {index=index, weave_card={weave}},
     }
     broadcast(cu, nil, self._role, id)
     return session_msg(info, cu)
@@ -1061,6 +1081,12 @@ end
 
 function dymj:gang(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
+    if self._pass_status ~= base.PASS_STATUS_OUT then
+        error{code = error_code.ERROR_OPERATION}
+    end
+    if info.pass then
+        error{code = error_code.ALREADY_PASS}
+    end
     local index = info.index
     local out_index = self._out_index
     if info.chi_count[out_index] >= base.MJ_CHI_COUNT then
@@ -1098,13 +1124,10 @@ end
 
 function dymj:hide_gang(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
-    if not info.out then
+    local index = info.index
+    if index ~= self._can_out then
         error{code = error_code.ERROR_OPERATION}
     end
-    local index = info.index
-    -- if self._deal_index ~= index then
-    --     error{code = error_code.ERROR_DEAL_INDEX}
-    -- end
     if self:is_out_magic(index) then
         error{code = error_code.ERROR_OPERATION}
     end
@@ -1117,6 +1140,12 @@ function dymj:hide_gang(id, msg)
     local weave_card = info.weave_card
     local card_count = type_card[card]
     if card_count >= 4 then
+        if self._pass_status ~= base.PASS_STATUS_DEAL then
+            error{code = error_code.ERROR_OPERATION}
+        end
+        if info.pass then
+            error{code = error_code.ALREADY_PASS}
+        end
         type_card[card] = card_count - 4
         weave = {
             op = base.MJ_OP_HIDE_GANG,
@@ -1152,24 +1181,22 @@ function dymj:hide_gang(id, msg)
     }, chess)
 end
 
-local function in_respond(respond)
-    return respond[base.MJ_OP_CHI] or respond[base.MJ_OP_PENG] or respond[base.MJ_OP_GANG]
-end
-
 function dymj:pass(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
-    if in_respond(info.respond) then
-        if info.out_pass then
+    local index = info.index
+    local pass_status = self._pass_status
+    if pass_status == base.PASS_STATUS_OUT then
+        if info.pass then
             error{code = error_code.ALREADY_PASS}
         end
-        info.out_pass = true
+        info.pass = true
         local chess
         local user = {index=info.index, action=base.MJ_OP_PASS}
         local all_pass = true
         local role = self._role
         local out_index = self._out_index
         for k, v in ipairs(role) do
-            if not v.out_pass then
+            if not v.pass then
                 all_pass = false
                 -- NOTICE: only check MJ_OP_CHI
                 local card = v.op[base.MJ_OP_CHI]
@@ -1188,11 +1215,10 @@ function dymj:pass(id, msg)
                         out_card = self._out_card,
                     }
                     v.weave_card[#v.weave_card+1] = weave
-                    v.out = true
+                    self._can_out = k
                     if v.android then
                         self:android_out(v)
                     end
-                    v.hu = false
                     v.chi_count[out_index] = v.chi_count[out_index] + 1
                     local role_out = role[out_index].out_card
                     role_out[#role_out] = nil
@@ -1222,19 +1248,22 @@ function dymj:pass(id, msg)
             broadcast(nil, chess, role, id, r.id)
         end
         return session_msg(info, {user}, chess)
-    else
-        if info.deal_pass then
+    elseif pass_status == base.PASS_STATUS_DEAL then
+        if info.pass then
             error{code = error_code.ALREADY_PASS}
         end
-        info.deal_pass = true
-        local user = {index=info.index, action=base.MJ_OP_PASS}
+        info.pass = true
+        local user = {index=index, action=base.MJ_OP_PASS}
         return session_msg(info, {user})
+    else
+        error{code = error_code.ERROR_OPERATION}
     end
 end
 
 function dymj:conclude(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
-    if self._deal_index ~= info.index then
+    local index = info.index
+    if self._deal_index ~= index then
         error{code = error_code.ERROR_DEAL_INDEX}
     end
     if self._left > 20 then
@@ -1338,11 +1367,13 @@ function dymj:deal(info)
     self._left = self._left - 1
     info.type_card[c] = info.type_card[c] + 1
     info.last_deal = c
-    info.out = true
-    info.hu = true
-    self._deal_index = info.index
+    local index = info.index
+    self._deal_index = index
+    self._can_out = index
     self._deal_card = c
     self:clear_all_op()
+    self._pass_status = base.PASS_STATUS_DEAL
+    info.pass = false
     if self._status == base.CHESS_STATUS_START and info.android then
         self:android_deal(info)
     end
@@ -1352,13 +1383,13 @@ end
 function dymj:clear_op(info)
     local respond = info.respond
     respond[base.MJ_OP_CHI], respond[base.MJ_OP_PENG], respond[base.MJ_OP_GANG] = false, false, false
-    info.out_pass = true
     local op = info.op
     op[base.MJ_OP_CHI], op[base.MJ_OP_PENG], op[base.MJ_OP_GANG] = 0, 0, 0
-    info.deal_pass = false
+    info.pass = true
 end
 
 function dymj:clear_all_op()
+    self._pass_status = 0
     for k, v in ipairs(self._role) do
         self:clear_op(v)
     end
@@ -1414,8 +1445,6 @@ function dymj:start()
         v.respond = {}
         v.op = {}
         v.out_card = {}
-        v.out = false
-        v.hu = false
         local chi_count = {}
         for i = 1, base.MJ_FOUR do
             chi_count[i] = 0
