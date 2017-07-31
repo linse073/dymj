@@ -228,7 +228,8 @@ function jdmj:pack(id, ip, agent)
                 out_index = self._out_index,
                 close_index = self._close_index,
                 close_time = self._close_time,
-                hu_pass = self:is_all_hu_pass(),
+                pass_status = self._pass_status,
+                can_out = self._can_out,
             }
             local user = {}
             for i = 1, base.MJ_FOUR do
@@ -245,7 +246,6 @@ function jdmj:pack(id, ip, agent)
                     ready = info.ready,
                     deal_end = info.deal_end,
                     agree = info.agree,
-                    out = info.out,
                     out_magic = info.out_magic>0,
                     top_score = info.top_score,
                     hu_count = info.hu_count,
@@ -273,8 +273,7 @@ function jdmj:pack(id, ip, agent)
                     u.own_count = #own_card
                     u.last_deal = info.last_deal
                     u.chi_count = info.chi_count
-                    u.hu = info.hu
-                    u.hu_pass = info.hu_pass
+                    u.pass = info.pass
                 else
                     local count = 0
                     for k, v in pairs(info.type_card) do
@@ -330,7 +329,7 @@ function jdmj:join(name, info, room_card, agent)
         error{code = error_code.ERROR_CHESS_NAME}
     end
     if self._status ~= base.CHESS_STATUS_READY then
-        error{code = error_code.ERROR_CHESS_STATUS}
+        error{code = error_code.ERROR_OPERATION}
     end
     if self._rule.aa_pay and room_card < self._rule.total_count/8 then
         error{code = error_code.ROOM_CARD_LIMIT}
@@ -487,7 +486,7 @@ end
 
 function jdmj:op_check(id, status)
     if self._status ~= status then
-        error{code = error_code.ERROR_CHESS_STATUS}
+        error{code = error_code.ERROR_OPERATION}
     end
     local info = self._id[id]
     if not info then
@@ -502,7 +501,8 @@ function jdmj:ready(id, msg)
         error{code = error_code.ALREADY_READY}
     end
     info.ready = true
-    local user = {index=info.index, ready=true}
+    local index = info.index
+    local user = {index=index, ready=true}
     local chess = {}
     if self:is_all_ready() then
         self:start()
@@ -514,7 +514,7 @@ function jdmj:ready(id, msg)
         chess.rand = now
         self._detail.info.rand = now
         user.own_card = info.deal_card
-        if info.index == self._banker then
+        if index == self._banker then
             user.last_deal = info.last_deal
         end
         -- other
@@ -525,7 +525,7 @@ function jdmj:ready(id, msg)
                     last_deal = v.last_deal
                 end
                 send(v, {
-                    {index=info.index, ready=true}, 
+                    {index=index, ready=true}, 
                     {index=k, own_card=v.deal_card, last_deal=last_deal},
                 }, chess)
             end
@@ -569,6 +569,7 @@ local CHI_RULE = {
     {1, 2, 0},
 }
 function jdmj:analyze(card, index)
+    self._pass_status = base.PASS_STATUS_OUT
     local has_respond = false
     for k, v in ipairs(self._role) do
         if k ~= index and not self:is_out_magic(k) then
@@ -595,10 +596,10 @@ function jdmj:analyze(card, index)
             local respond = v.respond
             respond[base.MJ_OP_CHI], respond[base.MJ_OP_PENG], respond[base.MJ_OP_GANG] = chi, peng, gang
             if chi or peng or gang then
-                v.out_pass = false
+                v.pass = false
                 has_respond = true
             else
-                v.out_pass = true
+                v.pass = true
             end
             local op = v.op
             op[base.MJ_OP_CHI], op[base.MJ_OP_PENG], op[base.MJ_OP_GANG] = 0, 0, 0
@@ -615,12 +616,14 @@ function jdmj:is_out_magic(index)
             return true
         end
     end
+    return false
 end
 
 function jdmj:out_card(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
-    if not info.out then
-        error{code = error_code.ERROR_OUT_INDEX}
+    local index = info.index
+    if index ~= self._can_out then
+        error{code = error_code.ERROR_OPERATION}
     end
     local type_card = info.type_card
     local card = msg.card
@@ -630,12 +633,10 @@ function jdmj:out_card(id, msg)
     if type_card[card] == 0 then
         error{code = error_code.NO_OUT_CARD}
     end
-    local index = info.index
     if self:is_out_magic(index) and card ~= self._deal_card then
         error{code = error_code.OUT_CARD_LIMIT}
     end
-    info.out = false
-    info.hu = false
+    self._can_out = 0
     type_card[card] = type_card[card] - 1
     if card == self._magic_card then
         info.out_magic = info.out_magic + 1
@@ -903,21 +904,21 @@ function jdmj:analyzeHu(info, card)
     end
     local hu, mc = is_badui(tc, magic_count)
     if hu then
-        hu_type = base.JDMJ_HU_8DUI
+        hu_type = base.HU_DUIZI
         if (deal_card ~= magic_card and tc[deal_card]%2 == 1)
             or (deal_card == magic_card and mc > 0) then
             mul = mul * 2^(info.out_magic+1)
             baotou = true
         end
         if is_qingyise(tc, magic_count, wc) then
-            hu_type = base.JDMJ_HU_QINGYISE
+            hu_type = base.HU_QINGYISE
             mul = mul * 20
         end
     elseif is_qingfengzi(tc, magic_count, wc) then
-        hu_type = base.JDMJ_HU_QINGFENGZI
+        hu_type = base.HU_QINGFENGZI
         mul = mul * 20
     elseif is_shisanbuda(tc, magic_count, magic_card) then
-        hu_type = base.JDMJ_HU_SHISANBUDA
+        hu_type = base.HU_SHISANBUDA
         mul = mul * 4
     else
         local weave_card = {}
@@ -926,9 +927,9 @@ function jdmj:analyzeHu(info, card)
             local head = weave_card[1]
             if head[1] == deal_card and head[2] == 0 then
                 if info.gang_count > 0 then
-                    hu_type = base.JDMJ_HU_GANGBAO
+                    hu_type = base.HU_GANGBAO
                 else
-                    hu_type = base.JDMJ_HU_BAOTOU
+                    hu_type = base.HU_BAOTOU
                 end
                 mul = 2^info.gang_count
                 mul = mul * 2^(info.out_magic+1)
@@ -938,13 +939,13 @@ function jdmj:analyzeHu(info, card)
                 local len = #out_card
                 if len == 0 or out_card[len] ~= magic_card then
                     if info.gang_count > 0 then
-                        hu_type = base.JDMJ_HU_GANGKAI
+                        hu_type = base.HU_GANGKAI
                     end
                     mul = 2^info.gang_count
                 end
             end
             if is_qingyise(tc, magic_count, wc) then
-                hu_type = base.JDMJ_HU_QINGYISE
+                hu_type = base.HU_QINGYISE
                 mul = mul * 10
             end
         end
@@ -953,6 +954,7 @@ function jdmj:analyzeHu(info, card)
 end
 
 function jdmj:analyzeGangHu(card, index)
+    self._pass_status = base.PASS_STATUS_GANG_HU
     local has_hu = false
     for k, v in ipairs(self._role) do
         if k ~= index then
@@ -960,9 +962,9 @@ function jdmj:analyzeGangHu(card, index)
             v.hu_type, v.hu_mul = hu_type, hu_mul
             if hu_type > 0 and not baotou then
                 has_hu = true
-                v.hu_pass = false
+                v.pass = false
             else
-                v.hu_pass = true
+                v.pass = true
             end
         else
             self:clear_op(v)
@@ -976,8 +978,14 @@ function jdmj:hu(id, msg)
     local index = info.index
     local hu_type, mul, scores
     if self._deal_index == index then
-        if not info.hu then
-            error{code = error_code.CAN_NOT_HU}
+        if self._pass_status ~= base.PASS_STATUS_DEAL then
+            error{code = error_code.ERROR_OPERATION}
+        end
+        if info.pass then
+            error{code = error_code.ALREADY_PASS}
+        end
+        if self._can_out ~= index then
+            error{code = error_code.ERROR_OPERATION}
         end
         hu_type, mul = self:analyzeHu(info)
         if hu_type == 0 then
@@ -986,7 +994,10 @@ function jdmj:hu(id, msg)
         scores = {-mul, -mul, -mul, -mul}
         scores[index] = mul * 3
     else
-        if info.hu_pass then
+        if self._pass_status ~= base.PASS_STATUS_GANG_HU then
+            error{code = error_code.ERROR_OPERATION}
+        end
+        if info.pass then
             error{code = error_code.ALREADY_PASS}
         end
         hu_type, mul = info.hu_type, info.hu_mul
@@ -1115,7 +1126,7 @@ function jdmj:check_prior(index, op)
             front = false
         else
             local other = role[n]
-            if not other.out_pass then
+            if not other.pass then
                 for k, v in ipairs(other.respond) do
                     if v and (k>op or (k==op and front)) then
                         return true
@@ -1129,6 +1140,12 @@ end
 
 function jdmj:chi(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
+    if self._pass_status ~= base.PASS_STATUS_OUT then
+        error{code = error_code.ERROR_OPERATION}
+    end
+    if info.pass then
+        error{code = error_code.ALREADY_PASS}
+    end
     local out_index = self._out_index
     if info.chi_count[out_index] >= base.MJ_CHI_COUNT then
         error{code = error_code.CHI_COUNT_LIMIT}
@@ -1182,8 +1199,7 @@ function jdmj:chi(id, msg)
             out_card = out_card,
         }
         info.weave_card[#info.weave_card+1] = weave
-        info.out = true
-        info.hu = false
+        self._can_out = index
         info.chi_count[out_index] = info.chi_count[out_index] + 1
         local role_out = self._role[out_index].out_card
         role_out[#role_out] = nil
@@ -1197,10 +1213,12 @@ end
 
 function jdmj:peng(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
-    local out_index = self._out_index
-    -- if info.chi_count[out_index] >= base.MJ_CHI_COUNT then
-    --     error{code = error_code.CHI_COUNT_LIMIT}
-    -- end
+    if self._pass_status ~= base.PASS_STATUS_OUT then
+        error{code = error_code.ERROR_OPERATION}
+    end
+    if info.pass then
+        error{code = error_code.ALREADY_PASS}
+    end
     if not info.respond[base.MJ_OP_PENG] then
         error{code = error_code.ERROR_OPERATION}
     end
@@ -1209,6 +1227,8 @@ function jdmj:peng(id, msg)
     if not (type_card[out_card] >= 2) then
         error{code = error_code.ERROR_OPERATION}
     end
+    local out_index = self._out_index
+    local index = info.index
     local record_action = self._detail.action
     record_action[#record_action+1] = {
         index = index,
@@ -1224,13 +1244,11 @@ function jdmj:peng(id, msg)
         out_card = out_card,
     }
     info.weave_card[#info.weave_card+1] = weave
-    info.out = true
-    info.hu = false
-    -- info.chi_count[out_index] = info.chi_count[out_index] + 1
+    self._can_out = index
     local role_out = self._role[out_index].out_card
     role_out[#role_out] = nil
     local cu = {
-        {index=info.index, weave_card={weave}},
+        {index=index, weave_card={weave}},
     }
     broadcast(cu, nil, self._role, id)
     return session_msg(info, cu)
@@ -1238,11 +1256,12 @@ end
 
 function jdmj:gang(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
-    local index = info.index
-    local out_index = self._out_index
-    -- if info.chi_count[out_index] >= base.MJ_CHI_COUNT then
-    --     error{code = error_code.CHI_COUNT_LIMIT}
-    -- end
+    if self._pass_status ~= base.PASS_STATUS_OUT then
+        error{code = error_code.ERROR_OPERATION}
+    end
+    if info.pass then
+        error{code = error_code.ALREADY_PASS}
+    end
     if not info.respond[base.MJ_OP_GANG] then
         error{code = error_code.ERROR_OPERATION}
     end
@@ -1251,6 +1270,8 @@ function jdmj:gang(id, msg)
     if not (type_card[out_card] >= 3) then
         error{code = error_code.ERROR_OPERATION}
     end
+    local index = info.index
+    local out_index = self._out_index
     local record_action = self._detail.action
     record_action[#record_action+1] = {
         index = index,
@@ -1266,7 +1287,6 @@ function jdmj:gang(id, msg)
     }
     info.weave_card[#info.weave_card+1] = weave
     info.gang_count = info.gang_count + 1
-    -- info.chi_count[out_index] = info.chi_count[out_index] + 1
     local role_out = self._role[out_index].out_card
     role_out[#role_out] = nil
     local c = self:deal(info)
@@ -1281,13 +1301,16 @@ end
 
 function jdmj:hide_gang(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
-    if not info.out then
+    if self._pass_status ~= base.PASS_STATUS_DEAL then
         error{code = error_code.ERROR_OPERATION}
     end
+    if info.pass then
+        error{code = error_code.ALREADY_PASS}
+    end
     local index = info.index
-    -- if self._deal_index ~= index then
-    --     error{code = error_code.ERROR_DEAL_INDEX}
-    -- end
+    if index == self._can_out then
+        error{code = error_code.ERROR_OPERATION}
+    end
     if self:is_out_magic(index) then
         error{code = error_code.ERROR_OPERATION}
     end
@@ -1346,13 +1369,9 @@ function jdmj:hide_gang(id, msg)
     }, chess)
 end
 
-local function in_respond(respond)
-    return respond[base.MJ_OP_CHI] or respond[base.MJ_OP_PENG] or respond[base.MJ_OP_GANG]
-end
-
-function jdmj:is_all_hu_pass()
+function jdmj:is_all_pass()
     for k, v in ipairs(self._role) do
-        if not v.hu_pass then
+        if not v.pass then
             return false
         end
     end
@@ -1360,27 +1379,28 @@ function jdmj:is_all_hu_pass()
 end
 
 function jdmj:pass(id, msg)
-    local deal_index = self._deal_index
     local info = self:op_check(id, base.CHESS_STATUS_START)
-    if in_respond(info.respond) then
-        if info.out_pass then
+    local index = info.index
+    local pass_status = self._pass_status
+    if pass_status == base.PASS_STATUS_OUT then
+        if info.pass then
             error{code = error_code.ALREADY_PASS}
         end
-        info.out_pass = true
+        info.pass = true
         local chess
-        local user = {index=info.index, action=base.MJ_OP_PASS}
+        local user = {index=index, action=base.MJ_OP_PASS}
         local all_pass = true
         local role = self._role
         local out_index = self._out_index
         for k, v in ipairs(role) do
-            if not v.out_pass then
+            if not v.pass then
                 all_pass = false
                 -- NOTICE: only check MJ_OP_CHI
                 local card = v.op[base.MJ_OP_CHI]
                 if card > 0 and not self:check_prior(k, base.MJ_OP_CHI) then
                     local record_action = self._detail.action
                     record_action[#record_action+1] = {
-                        index = index,
+                        index = k,
                         op = base.MJ_OP_CHI,
                         card = card,
                     }
@@ -1398,8 +1418,7 @@ function jdmj:pass(id, msg)
                         out_card = self._out_card,
                     }
                     v.weave_card[#v.weave_card+1] = weave
-                    v.out = true
-                    v.hu = false
+                    self._can_out = k
                     v.chi_count[out_index] = v.chi_count[out_index] + 1
                     local role_out = role[out_index].out_card
                     role_out[#role_out] = nil
@@ -1429,20 +1448,21 @@ function jdmj:pass(id, msg)
             broadcast(nil, chess, role, id, r.id)
         end
         return session_msg(info, {user}, chess)
-    elseif deal_index == info.index then
-        if info.deal_pass then
+    elseif pass_status == base.PASS_STATUS_DEAL then
+        if info.pass then
             error{code = error_code.ALREADY_PASS}
         end
-        info.deal_pass = true
-        local user = {index=info.index, action=base.MJ_OP_PASS}
+        info.pass = true
+        local user = {index=index, action=base.MJ_OP_PASS}
         return session_msg(info, {user})
-    else
-        if info.hu_pass then
+    elseif pass_status == base.PASS_STATUS_GANG_HU then
+        if info.pass then
             error{code = error_code.ALREADY_PASS}
         end
-        info.hu_pass = true
+        info.pass = true
         local chess
-        if self:is_all_hu_pass() then
+        if self:is_all_pass() then
+            local deal_index = self._deal_index
             local role = self._role
             local r = role[deal_index]
             local c = self:deal(r)
@@ -1452,15 +1472,18 @@ function jdmj:pass(id, msg)
             }, chess)
             broadcast(nil, chess, role, id, r.id)
         end
-        local user = {index=info.index, action=base.MJ_OP_PASS}
+        local user = {index=index, action=base.MJ_OP_PASS}
         return session_msg(info, {user}, chess)
+    else
+        error{code = error_code.ERROR_OPERATION}
     end
 end
 
 function jdmj:conclude(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
-    if self._deal_index ~= info.index then
-        error{code = error_code.ERROR_DEAL_INDEX}
+    local index = info.index
+    if self._deal_index ~= index then
+        error{code = error_code.ERROR_OPERATION}
     end
     if self._left > 18 then
         error{code = error_code.CONCLUDE_CARD_LIMIT}
@@ -1540,14 +1563,16 @@ function jdmj:deal(info)
     self._left = self._left - 1
     info.type_card[c] = info.type_card[c] + 1
     info.last_deal = c
-    info.out = true
-    info.hu = true
-    self._deal_index = info.index
+    local index = info.index
+    self._can_out = index
+    self._deal_index = index
     self._deal_card = c
     self:clear_all_op()
+    self._pass_status = base.PASS_STATUS_DEAL
+    info.pass = false
     local record_action = self._detail.action
     record_action[#record_action+1] = {
-        index = info.index,
+        index = index,
         deal_card = c,
     }
     return c
@@ -1556,16 +1581,15 @@ end
 function jdmj:clear_op(info)
     local respond = info.respond
     respond[base.MJ_OP_CHI], respond[base.MJ_OP_PENG], respond[base.MJ_OP_GANG] = false, false, false
-    info.out_pass = true
     local op = info.op
     op[base.MJ_OP_CHI], op[base.MJ_OP_PENG], op[base.MJ_OP_GANG] = 0, 0, 0
-    info.deal_pass = false
-    info.hu_pass = true
+    info.pass = true
     info.hu_type = 0
     info.hu_mul = 1
 end
 
 function jdmj:clear_all_op()
+    self._pass_status = 0
     for k, v in ipairs(self._role) do
         self:clear_op(v)
     end
@@ -1622,8 +1646,6 @@ function jdmj:start()
         v.respond = {}
         v.op = {}
         v.out_card = {}
-        v.out = false
-        v.hu = false
         local chi_count = {}
         for i = 1, base.MJ_FOUR do
             chi_count[i] = 0

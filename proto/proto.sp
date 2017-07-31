@@ -49,17 +49,15 @@
     agree 15 : boolean
     show_card 16 : show_card
     own_count 17 : integer
-    out 18 : boolean
-    out_magic 19 : boolean
-    chi_count 20 : *integer
-    hu 21 : boolean
-    top_score 22 : integer
-    hu_count 23 : integer
-    status 24 : integer
-    chat_text 25 : string
-    chat_audio 26 : binary
-    deal_end 27 : boolean
-    hu_pass 28 : boolean
+    out_magic 18 : boolean
+    chi_count 19 : *integer
+    top_score 20 : integer
+    hu_count 21 : integer
+    status 22 : integer
+    chat_text 23 : string
+    chat_audio 24 : binary
+    deal_end 25 : boolean
+    pass 26 : boolean
 }
 
 .chess_info {
@@ -79,7 +77,8 @@
     close_index 13 : integer
     close_time 14 : integer
     record_id 15 : integer
-    hu_pass 16 : boolean
+    pass_status 16 : integer
+    can_out 17 : integer
 }
 
 .chess_all {

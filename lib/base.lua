@@ -9,6 +9,7 @@ local base = {
     MJ_ROLE_CARD = 13,
     MJ_CARD_INDEX = 45,
     MJ_CHI_COUNT = 2,
+    JDMJ_ROLE_CARD = 16,
 
     MJ_OP_CHI = 1,
     MJ_OP_PENG = 2,
@@ -29,21 +30,17 @@ local base = {
     USER_STATUS_LOGOUT = 2,
     
     HU_NONE = 1,
-    HU_7DUI = 2,
+    HU_DUIZI = 2,
     HU_BAOTOU = 3,
     HU_GANGBAO = 4,
     HU_GANGKAI = 5,
-
-    JDMJ_ROLE_CARD = 16,
+    HU_QINGFENGZI = 6,
+    HU_SHISANBUDA = 7,
+    HU_QINGYISE = 8,
     
-    JDMJ_HU_NONE = 1,
-    JDMJ_HU_8DUI = 2,
-    JDMJ_HU_QINGFENGZI = 3,
-    JDMJ_HU_SHISANBUDA = 4,
-    JDMJ_HU_GANGBAO = 5,
-    JDMJ_HU_BAOTOU = 6,
-    JDMJ_HU_GANGKAI = 7,
-    JDMJ_HU_QINGYISE = 8,
+    PASS_STATUS_DEAL = 1,
+    PASS_STATUS_OUT = 2,
+    PASS_STATUS_GANG_HU 3,
 }
 
 return base
