@@ -1301,14 +1301,8 @@ end
 
 function jdmj:hide_gang(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
-    if self._pass_status ~= base.PASS_STATUS_DEAL then
-        error{code = error_code.ERROR_OPERATION}
-    end
-    if info.pass then
-        error{code = error_code.ALREADY_PASS}
-    end
     local index = info.index
-    if index == self._can_out then
+    if index ~= self._can_out then
         error{code = error_code.ERROR_OPERATION}
     end
     if self:is_out_magic(index) then
@@ -1318,18 +1312,18 @@ function jdmj:hide_gang(id, msg)
     if card == self._magic_card then
         error{code = error_code.ERROR_OPERATION}
     end
-    local record_action = self._detail.action
-    record_action[#record_action+1] = {
-        index = index,
-        op = base.MJ_OP_HIDE_GANG,
-        card = card,
-    }
     local type_card = info.type_card
     local weave
     local weave_card = info.weave_card
     local card_count = type_card[card]
     local has_hu = false
     if card_count >= 4 then
+        if self._pass_status ~= base.PASS_STATUS_DEAL then
+            error{code = error_code.ERROR_OPERATION}
+        end
+        if info.pass then
+            error{code = error_code.ALREADY_PASS}
+        end
         type_card[card] = card_count - 4
         weave = {
             op = base.MJ_OP_HIDE_GANG,
@@ -1355,6 +1349,12 @@ function jdmj:hide_gang(id, msg)
     else
         error{code = error_code.ERROR_OPERATION}
     end
+    local record_action = self._detail.action
+    record_action[#record_action+1] = {
+        index = index,
+        op = base.MJ_OP_HIDE_GANG,
+        card = card,
+    }
     info.gang_count = info.gang_count + 1
     local c, chess
     if not has_hu then
