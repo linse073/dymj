@@ -1318,12 +1318,6 @@ function jdmj:hide_gang(id, msg)
     local card_count = type_card[card]
     local has_hu = false
     if card_count >= 4 then
-        if self._pass_status ~= base.PASS_STATUS_DEAL then
-            error{code = error_code.ERROR_OPERATION}
-        end
-        if info.pass then
-            error{code = error_code.ALREADY_PASS}
-        end
         type_card[card] = card_count - 4
         weave = {
             op = base.MJ_OP_HIDE_GANG,
