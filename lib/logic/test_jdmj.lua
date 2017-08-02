@@ -574,7 +574,7 @@ function jdmj:out_card(id, msg)
     if self:is_out_magic(index) and card ~= self._deal_card then
         error{code = error_code.OUT_CARD_LIMIT}
     end
-    self._can_out = 0
+    self._can_out = nil
     type_card[card] = type_card[card] - 1
     if card == self._magic_card then
         info.out_magic = info.out_magic + 1
@@ -1667,8 +1667,8 @@ function jdmj:start()
     end
     self._card = card
     self._status = base.CHESS_STATUS_DEAL
-    self._out_card = 0
-    self._out_index = 0
+    self._out_card = nil
+    self._out_index = nil
     self._old_banker = nil
     local left = #card
     local role = self._role
