@@ -142,6 +142,7 @@ function jdmj:destroy()
     timer.del_once_routine("dymj_android_chi")
     timer.del_once_routine("dymj_android_peng")
     timer.del_once_routine("dymj_android_gang")
+    timer.del_once_routine("dymj_android_gang_hu")
 end
 
 local function finish()
@@ -924,13 +925,13 @@ end
 
 function jdmj:analyzeGangHu(card, index)
     self._pass_status = base.PASS_STATUS_GANG_HU
-    local has_hu = false
+    local hu_index
     for k, v in ipairs(self._role) do
         if k ~= index then
             local hu_type, hu_mul, baotou = self:analyzeHu(v, card)
             v.hu_type, v.hu_mul = hu_type, hu_mul
             if hu_type > 0 and not baotou then
-                has_hu = true
+                hu_index = k
                 v.pass = false
             else
                 v.pass = true
@@ -939,7 +940,7 @@ function jdmj:analyzeGangHu(card, index)
             self:clear_op(v)
         end
     end
-    return has_hu
+    return hu_index
 end
 
 function jdmj:contract()
@@ -1354,7 +1355,8 @@ function jdmj:hide_gang(id, msg)
     local weave
     local weave_card = info.weave_card
     local card_count = type_card[card]
-    local has_hu = false
+    local hu_index
+    local role = self._role
     if card_count >= 4 then
         type_card[card] = card_count - 4
         weave = {
@@ -1377,19 +1379,24 @@ function jdmj:hide_gang(id, msg)
         end
         type_card[card] = card_count - 1
         weave.op = base.MJ_OP_GANG
-        has_hu = self:analyzeGangHu(card, index)
+        hu_index = self:analyzeGangHu(card, index)
+        if hu_index then
+            self:next_action("dymj_android_gang_hu", function()
+                self:hu(role[hu_index].id)
+            end)
+        end
     else
         error{code = error_code.ERROR_OPERATION}
     end
     info.gang_count = info.gang_count + 1
     local c, chess
-    if not has_hu then
+    if not hu_index then
         c = self:deal(info)
         chess = {deal_index=index, left=self._left}
     end
     broadcast({
         {index=index, weave_card={weave}},
-    }, chess, self._role, id)
+    }, chess, role, id)
     return session_msg(info, {
         {index=index, weave_card={weave}, last_deal=c},
     }, chess)
@@ -1559,30 +1566,12 @@ function jdmj:conclude(id, msg)
 end
 
 function jdmj:android_deal(info)
-    local type_card = info.type_card
-    local magic_card = self._magic_card
-    local tc = {}
-    for k, v in pairs(type_card) do
-        if v > 0 then
-            tc[k] = v
-        end
-    end
-    local magic_count = tc[magic_card] or 0
-    tc[magic_card] = nil
-    local hu = is_qidui(tc, magic_count)
-    if hu then
+    local hu_type = self:analyzeHu(info)
+    if hu_type ~= 0 then
         self:next_action("dymj_android_deal", function()
             self:hu(info.id)
         end)
         return
-    else
-        local weave_card = {}
-        if self:check_hu(tc, weave_card, magic_count) then
-            self:next_action("dymj_android_deal", function()
-                self:hu(info.id)
-            end)
-            return
-        end
     end
     if not self:is_out_magic(info.index) then
         for k1, v1 in pairs(type_card) do
