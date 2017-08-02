@@ -509,10 +509,10 @@ function jdmj:analyze(card, index)
     self._pass_status = base.PASS_STATUS_OUT
     local has_respond = false
     for k, v in ipairs(self._role) do
-        if k ~= index and not self:is_out_magic(k) and v.chi_count[index] < base.MJ_CHI_COUNT then
+        if k ~= index and not self:is_out_magic(k) then
             local type_card = v.type_card
             local chi = false
-            if k == index%base.MJ_FOUR+1 then
+            if k == index%base.MJ_FOUR+1 and v.chi_count[index] < base.MJ_CHI_COUNT then
                 for k1, v1 in ipairs(CHI_RULE) do
                     local c1, c2 = card+v1[1], card+v1[2]
                     if valid_card(c1) and type_card[c1]>=1 
@@ -560,7 +560,7 @@ function jdmj:out_card(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     local index = info.index
     if index ~= self._can_out then
-        error{code = error_code.ERROR_OUT_INDEX}
+        error{code = error_code.ERROR_OPERATION}
     end
     local type_card = info.type_card
     local card = msg.card
@@ -577,14 +577,16 @@ function jdmj:out_card(id, msg)
     type_card[card] = type_card[card] - 1
     if card == self._magic_card then
         info.out_magic = info.out_magic + 1
+        info.magic_index[info.out_magic] = info.last_weave
     else
         info.out_magic = 0
         info.gang_count = 0
     end
+    info.last_weave = nil
     self._out_card = card
     self._out_index = index
     info.out_card[#info.out_card+1] = card
-    if self._left <= 20 then
+    if self._left <= 18 then
         return self:conclude(id)
     else
         local chess
@@ -746,21 +748,96 @@ function jdmj:check_hu(type_card, weave_card, magic_count)
     return false
 end
 
-local function is_qidui(type_card, magic_count)
-    local four_count = 0
+local function is_badui(type_card, magic_count)
+    local single_count = 0
     local count = 0
     for k, v in pairs(type_card) do
         count = count + v
         if v == 1 or v == 3 then
             if magic_count <= 0 then
-                return false
+                single_count = single_count + 1
             end
             magic_count = magic_count - 1
-        elseif v == 4 then
-            four_count = four_count + 1
         end
     end
-    return count==14, four_count, magic_count
+    return count==17 and single_count<=1, magic_count
+end
+
+local function is_qingyise(type_card, weave_card)
+    local has_color = {false, false, false, false, false}
+    for k, v in pairs(type_card) do
+        has_color[k//10+1] = true
+    end
+    for k, v in ipairs(weave_card) do
+        has_color[v.card//10+1] = true
+    end
+    local index
+    local color_none = 0
+    for k, v in ipairs(has_color) do
+        if v then
+            index = k
+        else
+            color_none = color_none + 1
+        end
+    end
+    return color_none>=4 and index<=3
+end
+
+local function is_qingfengzi(type_card, weave_card)
+    local has_color = {false, false, false, false, false}
+    for k, v in pairs(type_card) do
+        has_color[k//10+1] = true
+    end
+    for k, v in ipairs(weave_card) do
+        has_color[v.card//10+1] = true
+    end
+    for i = 1, 3 do
+        if has_color[i] then
+            return false
+        end
+    end
+    return true
+end
+
+local match_count = {3, 3, 3, 4, 3}
+local function is_shisanbuda(type_card, magic_count, magic_card)
+    local color_card = {{}, {}, {}, {}, {}}
+    if magic_count > 0 then
+        local temp = color_card[magic_card//10+1]
+        temp[#temp+1] = magic_card
+        magic_count = magic_count - 1
+    else
+        return false
+    end
+    for k, v in pairs(type_card) do
+        local temp = color_card[k//10+1]
+        temp[#temp+1] = k
+    end
+    for k, v in ipairs(color_card) do
+        local d = match_count[k] - #v
+        if d > 0 then
+            if magic_count > d then
+                magic_count = magic_count - d
+            else
+                return false
+            end
+        elseif d < 0 then
+            return false
+        end
+    end
+    for i = 1, 3 do
+        local temp = color_card[i]
+        table.sort(temp)
+        local len = #temp
+        if len > 1 then
+            for j = 2, len do
+                if temp[j] - temp[j-1] < 2 then
+                    return false
+                end
+            end
+        end
+    end
+    return true
 end
 
 function jdmj:consume_card()
@@ -776,25 +853,12 @@ function jdmj:consume_card()
     end
 end
 
-function jdmj:hu(id, msg)
-    local info = self:op_check(id, base.CHESS_STATUS_START)
-    local index = info.index
-    if self._deal_index ~= index then
-        error{code = error_code.ERROR_OPERATION}
-    end
-    if self._pass_status ~= base.PASS_STATUS_DEAL then
-        error{code = error_code.ERROR_OPERATION}
-    end
-    if info.pass then
-        error{code = error_code.ALREADY_PASS}
-    end
-    if self._can_out ~= index then
-        error{code = error_code.ERROR_OPERATION}
-    end
+function jdmj:analyzeHu(info, card)
     local type_card = info.type_card
     local magic_card = self._magic_card
     local deal_card = self._deal_card
-    local mul = 1
+    local wc = info.weave_card
+    local mul, hu_type, baotou = 1, 0, false
     local tc = {}
     for k, v in pairs(type_card) do
         if v > 0 then
@@ -803,53 +867,213 @@ function jdmj:hu(id, msg)
     end
     local magic_count = tc[magic_card] or 0
     tc[magic_card] = nil
-    local hu, four_count, mc = is_qidui(tc, magic_count)
-    local hu_type
+    if card then
+        tc[card] = tc[card] + 1
+    end
+    local hu, mc = is_badui(tc, magic_count)
     if hu then
         hu_type = base.HU_DUIZI
-        mul = 2^(four_count+1)
+        mul = mul * 2
         if (deal_card ~= magic_card and tc[deal_card]%2 == 1)
             or (deal_card == magic_card and mc > 0) then
             mul = mul * 2^(info.out_magic+1)
-        elseif tc[magic_card] == 0 then
-            mul = mul * 2
+            baotou = true
         end
+        if is_qingyise(tc, wc) then
+            hu_type = base.HU_QINGYISE
+            mul = mul * 10
+        end
+    elseif is_qingfengzi(tc, wc) then
+        hu_type = base.HU_QINGFENGZI
+        mul = mul * 20
+    elseif is_shisanbuda(tc, magic_count, magic_card) then
+        hu_type = base.HU_SHISANBUDA
+        mul = mul * 4
     else
         local weave_card = {}
-        if not self:check_hu(tc, weave_card, magic_count) then
-            error{code = error_code.ERROR_OPERATION}
-        end
-        hu_type = base.HU_NONE
-        local head = weave_card[1]
-        if head[1] == deal_card and head[2] == 0 then
-            if info.gang_count > 0 then
-                hu_type = base.HU_GANGBAO
-            else
-                hu_type = base.HU_BAOTOU
-            end
-            mul = 2^info.gang_count
-            mul = mul * 2^(info.out_magic+1)
-        else
-            local out_card = info.out_card
-            local len = #out_card
-            if len == 0 or out_card[len] ~= magic_card then
+        if self:check_hu(tc, weave_card, magic_count) then
+            hu_type = base.HU_NONE
+            local head = weave_card[1]
+            if head[1] == deal_card and head[2] == 0 then
                 if info.gang_count > 0 then
-                    hu_type = base.HU_GANGKAI
+                    hu_type = base.HU_GANGBAO
+                else
+                    hu_type = base.HU_BAOTOU
                 end
                 mul = 2^info.gang_count
+                mul = mul * 2^(info.out_magic+1)
+                baotou = true
+            else
+                local out_card = info.out_card
+                local len = #out_card
+                if len == 0 or out_card[len] ~= magic_card then
+                    if info.gang_count > 0 then
+                        hu_type = base.HU_GANGKAI
+                    end
+                    mul = 2^info.gang_count
+                end
+            end
+            if is_qingyise(tc, wc) then
+                hu_type = base.HU_QINGYISE
+                mul = mul * 10
             end
         end
     end
-    local banker = self._banker
-    local scores
-    if index == banker then
-        local ts = -mul * 8
-        scores = {ts, ts, ts, ts}
-        scores[index] = mul * 24
+    return hu_type, mul, baotou
+end
+
+function jdmj:analyzeGangHu(card, index)
+    self._pass_status = base.PASS_STATUS_GANG_HU
+    local has_hu = false
+    for k, v in ipairs(self._role) do
+        if k ~= index then
+            local hu_type, hu_mul, baotou = self:analyzeHu(v, card)
+            v.hu_type, v.hu_mul = hu_type, hu_mul
+            if hu_type > 0 and not baotou then
+                has_hu = true
+                v.pass = false
+            else
+                v.pass = true
+            end
+        else
+            self:clear_op(v)
+        end
+    end
+    return has_hu
+end
+
+function jdmj:contract()
+    local c = {0, 0, 0, 0}
+    for k, v in ipairs(self._role) do
+        local weave = v.weave_card
+        local len = #weave
+        if len > 0 then
+            local w = weave[1]
+            local color = w.card//10+1
+            if color <= 3 then
+                local count, last_index, last_count = 0, 0, 0
+                if w.op ~= base.MJ_OP_HIDE_GANG then
+                    count = count + 1
+                    last_index = w.out_index
+                    last_count = last_count + 1
+                end
+                local s = true
+                for i = 2, len do
+                    local tw = weave[i]
+                    local tc = tw.card//10+1
+                    if tc == color then
+                        if tw.op ~= base.MJ_OP_HIDE_GANG then
+                            count = count + 1
+                            local ti = tw.out_index
+                            if ti == last_index then
+                                last_count = last_count + 1
+                            else
+                                last_index = ti
+                                last_count = 1
+                            end
+                        end
+                    else
+                        s = false
+                        break
+                    end
+                end
+                if s then
+                    local magic_card = self._magic_card
+                    for k1, v1 in pairs(v.type_card) do
+                        if v1 > 0 and k1 ~= magic_card then
+                            local tc = k1//10+1
+                            if tc ~= color then
+                                s = false
+                                break
+                            end
+                        end
+                    end
+                    if s and (last_count >= 3 or count >= 4) then
+                        c[k] = last_index
+                    end
+                end
+            end
+        end
+    end
+    return c
+end
+
+function jdmj:hu(id, msg)
+    local info = self:op_check(id, base.CHESS_STATUS_START)
+    local index = info.index
+    local hu_type, mul, baotou, scores
+    if self._deal_index == index then
+        if self._pass_status ~= base.PASS_STATUS_DEAL then
+            error{code = error_code.ERROR_OPERATION}
+        end
+        if info.pass then
+            error{code = error_code.ALREADY_PASS}
+        end
+        if self._can_out ~= index then
+            error{code = error_code.ERROR_OPERATION}
+        end
+        hu_type, mul, baotou = self:analyzeHu(info)
+        if hu_type == 0 then
+            error{code = error_code.ERROR_OPERATION}
+        end
+        local contract = self:contract()
+        local cindex = contract[index]
+        if cindex > 0 and contract[cindex] == index then
+            contract[cindex] = 0
+        end
+        local cmul
+        if hu_type == base.HU_QINGYISE then
+            cmul = mul // 10 * 30
+        else
+            cmul = mul * 30
+        end
+        scores = {0, 0, 0, 0}
+        local smul = 0
+        for k, v in ipairs(contract) do
+            if v == index then
+                scores[k] = -cmul
+                smul = smul + cmul
+            elseif k == index and v > 0 then
+                scores[v] = -cmul
+                smul = smul + cmul
+            end
+        end
+        if smul > 0 then
+            scores[index] = smul
+        else
+            scores = {-mul, -mul, -mul, -mul}
+            scores[index] = mul * 3
+            if baotou then
+                local magic_index = info.magic_index
+                local base_mul = mul / 2^(info.out_magic-1)
+                for i = 2, info.out_magic do
+                    local mi = magic_index[i]
+                    if mi then
+                        local dm = base_mul * 2^(i-2)
+                        scores[mi] = scores[mi] - dm*2
+                        for j = 1, base.MJ_FOUR do
+                            if j ~= mi and j ~= index then
+                                scores[j] = scores[j] + dm
+                            end
+                        end
+                    end
+                end
+            end
+        end
     else
-        scores = {-mul, -mul, -mul, -mul}
-        scores[banker] = -mul * 8
-        scores[index] = mul * 10
+        if self._pass_status ~= base.PASS_STATUS_GANG_HU then
+            error{code = error_code.ERROR_OPERATION}
+        end
+        if info.pass then
+            error{code = error_code.ALREADY_PASS}
+        end
+        hu_type, mul = info.hu_type, info.hu_mul
+        if mul < 4 then
+            mul = 4
+        end
+        scores = {0, 0, 0, 0}
+        scores[index] = mul * 3
+        scores[self._deal_index] = mul * -3
     end
     self:clear_all_op()
     info.hu_count = info.hu_count + 1
@@ -1020,6 +1244,7 @@ function jdmj:chi(id, msg)
             out_card = out_card,
         }
         info.weave_card[#info.weave_card+1] = weave
+        info.last_weave = out_index
         self._can_out = index
         if info.android then
             self:android_out(info)
@@ -1043,11 +1268,6 @@ function jdmj:peng(id, msg)
     if info.pass then
         error{code = error_code.ALREADY_PASS}
     end
-    local out_index = self._out_index
-    local index = info.index
-    if info.chi_count[out_index] >= base.MJ_CHI_COUNT then
-        error{code = error_code.CHI_COUNT_LIMIT}
-    end
     if not info.respond[base.MJ_OP_PENG] then
         error{code = error_code.ERROR_OPERATION}
     end
@@ -1065,6 +1285,7 @@ function jdmj:peng(id, msg)
         out_card = out_card,
     }
     info.weave_card[#info.weave_card+1] = weave
+    info.last_weave = out_index
     self._can_out = index
     if info.android then
         self:android_out(info)
@@ -1087,11 +1308,6 @@ function jdmj:gang(id, msg)
     if info.pass then
         error{code = error_code.ALREADY_PASS}
     end
-    local index = info.index
-    local out_index = self._out_index
-    if info.chi_count[out_index] >= base.MJ_CHI_COUNT then
-        error{code = error_code.CHI_COUNT_LIMIT}
-    end
     if not info.respond[base.MJ_OP_GANG] then
         error{code = error_code.ERROR_OPERATION}
     end
@@ -1109,7 +1325,6 @@ function jdmj:gang(id, msg)
     }
     info.weave_card[#info.weave_card+1] = weave
     info.gang_count = info.gang_count + 1
-    info.chi_count[out_index] = info.chi_count[out_index] + 1
     local role_out = self._role[out_index].out_card
     role_out[#role_out] = nil
     local c = self:deal(info)
@@ -1139,6 +1354,7 @@ function jdmj:hide_gang(id, msg)
     local weave
     local weave_card = info.weave_card
     local card_count = type_card[card]
+    local has_hu = false
     if card_count >= 4 then
         type_card[card] = card_count - 4
         weave = {
@@ -1161,12 +1377,16 @@ function jdmj:hide_gang(id, msg)
         end
         type_card[card] = card_count - 1
         weave.op = base.MJ_OP_GANG
+        has_hu = self:analyzeGangHu(card, index)
     else
         error{code = error_code.ERROR_OPERATION}
     end
     info.gang_count = info.gang_count + 1
-    local c = self:deal(info)
-    local chess = {deal_index=index, left=self._left}
+    local c, chess
+    if not has_hu then
+        c = self:deal(info)
+        chess = {deal_index=index, left=self._left}
+    end
     broadcast({
         {index=index, weave_card={weave}},
     }, chess, self._role, id)
@@ -1175,7 +1395,16 @@ function jdmj:hide_gang(id, msg)
     }, chess)
 end
 
-function dymj:pass(id, msg)
+function jdmj:is_all_pass()
+    for k, v in ipairs(self._role) do
+        if not v.pass then
+            return false
+        end
+    end
+    return true
+end
+
+function jdmj:pass(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     local index = info.index
     local pass_status = self._pass_status
@@ -1185,7 +1414,7 @@ function dymj:pass(id, msg)
         end
         info.pass = true
         local chess
-        local user = {index=info.index, action=base.MJ_OP_PASS}
+        local user = {index=index, action=base.MJ_OP_PASS}
         local all_pass = true
         local role = self._role
         local out_index = self._out_index
@@ -1209,6 +1438,7 @@ function dymj:pass(id, msg)
                         out_card = self._out_card,
                     }
                     v.weave_card[#v.weave_card+1] = weave
+                    v.last_weave = out_index
                     self._can_out = k
                     if v.android then
                         self:android_out(v)
@@ -1249,6 +1479,25 @@ function dymj:pass(id, msg)
         info.pass = true
         local user = {index=index, action=base.MJ_OP_PASS}
         return session_msg(info, {user})
+    elseif pass_status == base.PASS_STATUS_GANG_HU then
+        if info.pass then
+            error{code = error_code.ALREADY_PASS}
+        end
+        info.pass = true
+        local chess
+        if self:is_all_pass() then
+            local deal_index = self._deal_index
+            local role = self._role
+            local r = role[deal_index]
+            local c = self:deal(r)
+            chess = {deal_index=deal_index, left=self._left}
+            send(r, {
+                {index=deal_index, last_deal=c},
+            }, chess)
+            broadcast(nil, chess, role, id, r.id)
+        end
+        local user = {index=index, action=base.MJ_OP_PASS}
+        return session_msg(info, {user}, chess)
     else
         error{code = error_code.ERROR_OPERATION}
     end
@@ -1258,9 +1507,9 @@ function jdmj:conclude(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     local index = info.index
     if self._deal_index ~= index then
-        error{code = error_code.ERROR_DEAL_INDEX}
+        error{code = error_code.ERROR_OPERATION}
     end
-    if self._left > 20 then
+    if self._left > 18 then
         error{code = error_code.CONCLUDE_CARD_LIMIT}
     end
     self._count = self._count + 1
@@ -1362,8 +1611,8 @@ function jdmj:deal(info)
     info.type_card[c] = info.type_card[c] + 1
     info.last_deal = c
     local index = info.index
-    self._deal_index = index
     self._can_out = index
+    self._deal_index = index
     self._deal_card = c
     self:clear_all_op()
     self._pass_status = base.PASS_STATUS_DEAL
@@ -1380,6 +1629,8 @@ function jdmj:clear_op(info)
     local op = info.op
     op[base.MJ_OP_CHI], op[base.MJ_OP_PENG], op[base.MJ_OP_GANG] = 0, 0, 0
     info.pass = true
+    info.hu_type = 0
+    info.hu_mul = 1
 end
 
 function jdmj:clear_all_op()
@@ -1446,6 +1697,7 @@ function jdmj:start()
         v.chi_count = chi_count
         v.gang_count = 0
         v.out_magic = 0
+        v.magic_index = {}
         local deal_card = {}
         for i = 1, base.JDMJ_ROLE_CARD do
             local c = card[left]

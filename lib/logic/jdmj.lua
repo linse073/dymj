@@ -891,13 +891,13 @@ end
 
 function jdmj:consume_card()
     if self._rule.aa_pay then
-        local count = -self._rule.total_count/8
+        local count = -self._rule.total_count//8
         for k, v in ipairs(self._role) do
             skynet.call(offline_mgr, "lua", "add", v.id, "role", "add_room_card", count)
         end
     else
         local id = self._role[1].id
-        local count = -self._rule.total_count/2
+        local count = -self._rule.total_count//2
         skynet.call(offline_mgr, "lua", "add", id, "role", "add_room_card", count)
     end
 end

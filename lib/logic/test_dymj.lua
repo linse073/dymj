@@ -1185,7 +1185,7 @@ function dymj:pass(id, msg)
         end
         info.pass = true
         local chess
-        local user = {index=info.index, action=base.MJ_OP_PASS}
+        local user = {index=index, action=base.MJ_OP_PASS}
         local all_pass = true
         local role = self._role
         local out_index = self._out_index
