@@ -640,10 +640,12 @@ function jdmj:out_card(id, msg)
     type_card[card] = type_card[card] - 1
     if card == self._magic_card then
         info.out_magic = info.out_magic + 1
+        info.magic_index[info.out_magic] = info.last_weave
     else
         info.out_magic = 0
         info.gang_count = 0
     end
+    info.last_weave = nil
     self._out_card = card
     self._out_index = index
     info.out_card[#info.out_card+1] = card
@@ -1048,7 +1050,7 @@ end
 function jdmj:hu(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     local index = info.index
-    local hu_type, mul, scores
+    local hu_type, mul, baotou, scores
     if self._deal_index == index then
         if self._pass_status ~= base.PASS_STATUS_DEAL then
             error{code = error_code.ERROR_OPERATION}
@@ -1059,7 +1061,7 @@ function jdmj:hu(id, msg)
         if self._can_out ~= index then
             error{code = error_code.ERROR_OPERATION}
         end
-        hu_type, mul = self:analyzeHu(info)
+        hu_type, mul, baotou = self:analyzeHu(info)
         if hu_type == 0 then
             error{code = error_code.ERROR_OPERATION}
         end
@@ -1090,6 +1092,22 @@ function jdmj:hu(id, msg)
         else
             scores = {-mul, -mul, -mul, -mul}
             scores[index] = mul * 3
+            if baotou then
+                local magic_index = info.magic_index
+                local base_mul = mul / 2^(info.out_magic-1)
+                for i = 2, info.out_magic do
+                    local mi = magic_index[i]
+                    if mi then
+                        local dm = base_mul * 2^(i-2)
+                        scores[mi] = scores[mi] - dm*2
+                        for j = 1, base.MJ_FOUR do
+                            if j ~= mi and j ~= index then
+                                scores[j] = scores[j] - dm
+                            end
+                        end
+                    end
+                end
+            end
         end
     else
         if self._pass_status ~= base.PASS_STATUS_GANG_HU then
@@ -1297,6 +1315,7 @@ function jdmj:chi(id, msg)
             out_card = out_card,
         }
         info.weave_card[#info.weave_card+1] = weave
+        info.last_weave = out_index
         self._can_out = index
         info.chi_count[out_index] = info.chi_count[out_index] + 1
         local role_out = self._role[out_index].out_card
@@ -1342,6 +1361,7 @@ function jdmj:peng(id, msg)
         out_card = out_card,
     }
     info.weave_card[#info.weave_card+1] = weave
+    info.last_weave = out_index
     self._can_out = index
     local role_out = self._role[out_index].out_card
     role_out[#role_out] = nil
@@ -1510,6 +1530,7 @@ function jdmj:pass(id, msg)
                         out_card = self._out_card,
                     }
                     v.weave_card[#v.weave_card+1] = weave
+                    v.last_weave = out_index
                     self._can_out = k
                     v.chi_count[out_index] = v.chi_count[out_index] + 1
                     local role_out = role[out_index].out_card
@@ -1745,6 +1766,7 @@ function jdmj:start()
         v.chi_count = chi_count
         v.gang_count = 0
         v.out_magic = 0
+        v.magic_index = {}
         local deal_card = {}
         for i = 1, base.JDMJ_ROLE_CARD do
             local c = card[left]
