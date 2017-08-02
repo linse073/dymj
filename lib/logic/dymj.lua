@@ -1487,6 +1487,7 @@ function dymj:start()
     self._out_card = nil
     self._out_index = nil
     self._old_banker = nil
+    self._can_out = nil
     local left = #card
     local role = self._role
     local record_user = {}
