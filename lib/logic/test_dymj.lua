@@ -851,6 +851,7 @@ function dymj:hu(id, msg)
         scores[banker] = -mul * 8
         scores[index] = mul * 10
     end
+    self:destroy()
     self:clear_all_op()
     info.hu_count = info.hu_count + 1
     self._count = self._count + 1
@@ -1263,6 +1264,7 @@ function dymj:conclude(id, msg)
     if self._left > 20 then
         error{code = error_code.CONCLUDE_CARD_LIMIT}
     end
+    self:destroy()
     self._count = self._count + 1
     if self._count == self._rule.total_count then
         self._status = base.CHESS_STATUS_FINISH

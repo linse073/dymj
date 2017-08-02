@@ -925,13 +925,13 @@ end
 
 function jdmj:analyzeGangHu(card, index)
     self._pass_status = base.PASS_STATUS_GANG_HU
-    local hu_index
+    local has_hu
     for k, v in ipairs(self._role) do
         if k ~= index then
             local hu_type, hu_mul, baotou = self:analyzeHu(v, card)
             v.hu_type, v.hu_mul = hu_type, hu_mul
             if hu_type > 0 and not baotou then
-                hu_index = k
+                has_hu = true
                 v.pass = false
             else
                 v.pass = true
@@ -940,7 +940,7 @@ function jdmj:analyzeGangHu(card, index)
             self:clear_op(v)
         end
     end
-    return hu_index
+    return has_hu
 end
 
 function jdmj:contract()
@@ -1076,6 +1076,7 @@ function jdmj:hu(id, msg)
         scores[index] = mul * 3
         scores[self._deal_index] = mul * -3
     end
+    self:destroy()
     self:clear_all_op()
     info.hu_count = info.hu_count + 1
     self._count = self._count + 1
@@ -1355,7 +1356,7 @@ function jdmj:hide_gang(id, msg)
     local weave
     local weave_card = info.weave_card
     local card_count = type_card[card]
-    local hu_index
+    local has_hu
     local role = self._role
     if card_count >= 4 then
         type_card[card] = card_count - 4
@@ -1379,18 +1380,23 @@ function jdmj:hide_gang(id, msg)
         end
         type_card[card] = card_count - 1
         weave.op = base.MJ_OP_GANG
-        hu_index = self:analyzeGangHu(card, index)
-        if hu_index then
-            self:next_action("dymj_android_gang_hu", function()
-                self:hu(role[hu_index].id)
-            end)
+        has_hu = self:analyzeGangHu(card, index)
+        if has_hu then
+            for k, v in ipairs(role) do
+                if v.android and not v.pass then
+                    self:next_action("dymj_android_gang_hu", function()
+                        self:hu(v.id)
+                    end)
+                    break
+                end
+            end
         end
     else
         error{code = error_code.ERROR_OPERATION}
     end
     info.gang_count = info.gang_count + 1
     local c, chess
-    if not hu_index then
+    if not has_hu then
         c = self:deal(info)
         chess = {deal_index=index, left=self._left}
     end
@@ -1519,6 +1525,7 @@ function jdmj:conclude(id, msg)
     if self._left > 18 then
         error{code = error_code.CONCLUDE_CARD_LIMIT}
     end
+    self:destroy()
     self._count = self._count + 1
     if self._count == self._rule.total_count then
         self._status = base.CHESS_STATUS_FINISH
