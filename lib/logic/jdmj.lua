@@ -1102,7 +1102,7 @@ function jdmj:hu(id, msg)
                         scores[mi] = scores[mi] - dm*2
                         for j = 1, base.MJ_FOUR do
                             if j ~= mi and j ~= index then
-                                scores[j] = scores[j] - dm
+                                scores[j] = scores[j] + dm
                             end
                         end
                     end
