@@ -258,6 +258,8 @@ function jdmj:pack(id, ip, agent)
                 close_time = self._close_time,
                 pass_status = self._pass_status,
                 can_out = self._can_out,
+                gang_card = self._gang_card,
+                gang_index = self._gang_index,
             }
             local user = {}
             for i = 1, base.MJ_FOUR do
@@ -303,7 +305,6 @@ function jdmj:pack(id, ip, agent)
                     u.own_count = #own_card
                     u.last_deal = info.last_deal
                     u.chi_count = info.chi_count
-                    u.pass = info.pass
                 else
                     local count = 0
                     for k, v in pairs(info.type_card) do
@@ -588,47 +589,46 @@ function jdmj:out_card(id, msg)
     info.out_card[#info.out_card+1] = card
     if self._left <= 18 then
         return self:conclude(id)
+    end
+    local chess
+    local deal_id
+    local role = self._role
+    if not self:analyze(card, index) then
+        local deal_index = index%base.MJ_FOUR+1
+        local r = role[deal_index]
+        deal_id = r.id
+        local c = self:deal(r)
+        chess = {deal_index=deal_index, left=self._left}
+        send(r, {
+            {index=index, out_card={card}, out_index=msg.index},
+            {index=deal_index, last_deal=c},
+        }, chess)
     else
-        local chess
-        local deal_id
-        local role = self._role
-        if not self:analyze(card, index) then
-            local deal_index = index%base.MJ_FOUR+1
-            local r = role[deal_index]
-            deal_id = r.id
-            local c = self:deal(r)
-            chess = {deal_index=deal_index, left=self._left}
-            send(r, {
-                {index=index, out_card={card}, out_index=msg.index},
-                {index=deal_index, last_deal=c},
-            }, chess)
-        else
-            for k, v in ipairs(role) do
-                if v.android then
-                    local respond = v.respond
-                    local chi, peng, gang = respond[base.MJ_OP_CHI], respond[base.MJ_OP_PENG], respond[base.MJ_OP_GANG]
-                    if gang then
-                        self:next_action("dymj_android_gang", function()
-                            self:gang(v.id)
-                        end)
-                    elseif peng then
-                        self:next_action("dymj_android_peng", function()
-                            self:peng(v.id)
-                        end)
-                    elseif chi then
-                        self:next_action("dymj_android_chi", function()
-                            self:chi(v.id, {card=chi})
-                        end)
-                    end
+        for k, v in ipairs(role) do
+            if v.android then
+                local respond = v.respond
+                local chi, peng, gang = respond[base.MJ_OP_CHI], respond[base.MJ_OP_PENG], respond[base.MJ_OP_GANG]
+                if gang then
+                    self:next_action("dymj_android_gang", function()
+                        self:gang(v.id)
+                    end)
+                elseif peng then
+                    self:next_action("dymj_android_peng", function()
+                        self:peng(v.id)
+                    end)
+                elseif chi then
+                    self:next_action("dymj_android_chi", function()
+                        self:chi(v.id, {card=chi})
+                    end)
                 end
             end
         end
-        local cu = {
-            {index=index, out_card={card}, out_index=msg.index},
-        }
-        broadcast(cu, chess, role, id, deal_id)
-        return session_msg(info, cu, chess)
     end
+    local cu = {
+        {index=index, out_card={card}, out_index=msg.index},
+    }
+    broadcast(cu, chess, role, id, deal_id)
+    return session_msg(info, cu, chess)
 end
 
 local function dec(t, k, d)
@@ -924,6 +924,8 @@ end
 
 function jdmj:analyzeGangHu(card, index)
     self._pass_status = base.PASS_STATUS_GANG_HU
+    self._gang_card = card
+    self._gang_index = index
     local has_hu
     for k, v in ipairs(self._role) do
         if k ~= index then
@@ -935,8 +937,6 @@ function jdmj:analyzeGangHu(card, index)
                 v.op[base.MJ_OP_HU] = {
                     hu = hu_type,
                     mul = hu_mul,
-                    card = card,
-                    index = index,
                 }
             end
         end
@@ -1081,8 +1081,8 @@ function jdmj:hu(id, msg)
         scores = {0, 0, 0, 0}
         scores[index] = mul * 3
         scores[self._deal_index] = -mul * 3
-        last_deal = op.card
-        last_index = op.index
+        last_deal = self._gang_card
+        last_index = self._gang_index
     end
     self:destroy()
     self:clear_all_op()
@@ -1404,10 +1404,16 @@ function jdmj:hide_gang(id, msg)
                     break
                 end
             end
+            local chess = {
+                pass_status = self._pass_status,
+                gang_card = card,
+                gang_index = index,
+            }
+            broadcast(nil, chess, role, id)
             info.op[base.MJ_OP_HIDE_GANG] = weave
             return session_msg(info, {
                 {index=index, action=base.MJ_OP_HIDE_GANG},
-            })
+            }, chess)
         end
         type_card[card] = card_count - 1
         weave.op = base.MJ_OP_GANG
@@ -1700,6 +1706,8 @@ function jdmj:start()
     self._out_index = nil
     self._old_banker = nil
     self._can_out = nil
+    self._gang_card = nil
+    self._gang_index = nil
     local left = #card
     local role = self._role
     for j = 1, base.MJ_FOUR do

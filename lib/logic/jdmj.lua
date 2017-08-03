@@ -1475,15 +1475,16 @@ function jdmj:hide_gang(id, msg)
             error{code = error_code.WAIT_FOR_OTHER}
         end
         if self:analyzeGangHu(card, index) then
-            broadcast(nil, {
+            local chess = {
                 pass_status = self._pass_status,
                 gang_card = card,
                 gang_index = index,
-            }, role, id)
+            }
+            broadcast(nil, chess, role, id)
             info.op[base.MJ_OP_HIDE_GANG] = weave
             return session_msg(info, {
                 {index=index, action=base.MJ_OP_HIDE_GANG},
-            })
+            }, chess)
         end
         type_card[card] = card_count - 1
         weave.op = base.MJ_OP_GANG
@@ -1781,6 +1782,8 @@ function jdmj:start()
     self._out_index = nil
     self._old_banker = nil
     self._can_out = nil
+    self._gang_card = nil
+    self._gang_index = nil
     local left = #card
     local role = self._role
     local record_user = {}
