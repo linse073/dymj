@@ -1439,6 +1439,7 @@ function jdmj:hide_gang(id, msg)
     local type_card = info.type_card
     local weave_card = info.weave_card
     local card_count = type_card[card]
+    local role = self._role
     local weave
     if card_count >= 4 then
         type_card[card] = card_count - 4
@@ -1464,6 +1465,14 @@ function jdmj:hide_gang(id, msg)
             error{code = error_code.WAIT_FOR_OTHER}
         end
         if self:analyzeGangHu(card, index) then
+            local chess = {pass_status=self._pass_status}
+            for k, v in ipairs(role) do
+                if k ~= index then
+                    send(v, {
+                        {index=k, pass=v.pass},
+                    }, chess)
+                end
+            end
             info.op[base.MJ_OP_HIDE_GANG] = weave
             return session_msg(info, {
                 {index=index, action=base.MJ_OP_HIDE_GANG},
@@ -1485,7 +1494,7 @@ function jdmj:hide_gang(id, msg)
     local chess = {deal_index=index, left=self._left}
     broadcast({
         {index=index, weave_card={weave}},
-    }, chess, self._role, id)
+    }, chess, role, id)
     return session_msg(info, {
         {index=index, weave_card={weave}, last_deal=c},
     }, chess)
