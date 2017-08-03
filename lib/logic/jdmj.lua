@@ -204,7 +204,10 @@ function jdmj:pack(id, ip, agent)
                             score = info.last_score,
                         }
                         if info.last_score > 0 then
-                            show_card.last_deal = info.last_deal
+                            local last_hu = info.last_hu
+                            show_card.last_deal = last_hu.last_deal
+                            show_card.last_index = last_hu.last_index
+                            show_card.hu = last_hu.hu
                         end
                         u.weave_card = info.weave_card
                         u.show_card = show_card
@@ -1220,6 +1223,11 @@ function jdmj:hu(id, msg)
         sr.record = {record_detail}
         skynet.call(record_info_db, "lua", "safe_insert", sr)
     end
+    info.last_hu = {
+        hu = hu_type,
+        last_deal = last_deal,
+        last_index = last_index,
+    }
     local win = user[index]
     win.hu_count = info.hu_count
     win.action = base.MJ_OP_HU
