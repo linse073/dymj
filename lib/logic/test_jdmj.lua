@@ -1074,7 +1074,7 @@ function jdmj:hu(id, msg)
         end
         scores = {0, 0, 0, 0}
         scores[index] = mul * 3
-        scores[self._deal_index] = mul * -3
+        scores[self._deal_index] = -mul * 3
     end
     self:destroy()
     self:clear_all_op()
