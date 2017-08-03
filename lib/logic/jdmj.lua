@@ -266,8 +266,6 @@ function jdmj:pack(id, ip, agent)
                 end
                 if info.op[base.MJ_OP_CHI] then
                     u.action = base.MJ_OP_CHI
-                elseif info.op[base.MJ_OP_HIDE_GANG] then
-                    u.action = base.MJ_OP_HIDE_GANG
                 end
                 if info.id == id then
                     local own_card = {}
