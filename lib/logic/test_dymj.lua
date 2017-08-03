@@ -283,7 +283,7 @@ function dymj:pack(id, ip, agent)
                 if weave_card and #weave_card > 0 then
                     u.weave_card = weave_card
                 end
-                if info.op[base.MJ_OP_CHI] > 0 then
+                if info.op[base.MJ_OP_CHI] then
                     u.action = base.MJ_OP_CHI
                 end
                 if info.id == id then
@@ -535,13 +535,7 @@ function dymj:analyze(card, index)
             if chi or peng or gang then
                 v.pass = false
                 has_respond = true
-            else
-                v.pass = true
             end
-            local op = v.op
-            op[base.MJ_OP_CHI], op[base.MJ_OP_PENG], op[base.MJ_OP_GANG] = 0, 0, 0
-        else
-            self:clear_op(v)
         end
     end
     return has_respond
@@ -978,11 +972,11 @@ function dymj:chi(id, msg)
     if info.chi_count[out_index] >= base.MJ_CHI_COUNT then
         error{code = error_code.CHI_COUNT_LIMIT}
     end
-    if info.op[base.MJ_OP_CHI] > 0 then
-        error{code = error_code.WAIT_FOR_OTHER}
-    end
     if not info.respond[base.MJ_OP_CHI] then
         error{code = error_code.ERROR_OPERATION}
+    end
+    if info.op[base.MJ_OP_CHI] then
+        error{code = error_code.WAIT_FOR_OTHER}
     end
     local index = info.index
     if index ~= out_index%base.MJ_FOUR+1 then
@@ -1136,9 +1130,9 @@ function dymj:hide_gang(id, msg)
         error{code = error_code.ERROR_OPERATION}
     end
     local type_card = info.type_card
-    local weave
     local weave_card = info.weave_card
     local card_count = type_card[card]
+    local weave
     if card_count >= 4 then
         type_card[card] = card_count - 4
         weave = {
@@ -1194,7 +1188,7 @@ function dymj:pass(id, msg)
                 all_pass = false
                 -- NOTICE: only check MJ_OP_CHI
                 local card = v.op[base.MJ_OP_CHI]
-                if card > 0 and not self:check_prior(k, base.MJ_OP_CHI) then
+                if card and not self:check_prior(k, base.MJ_OP_CHI) then
                     self:clear_all_op()
                     local type_card = v.type_card
                     for i = card, card+2 do
@@ -1227,7 +1221,6 @@ function dymj:pass(id, msg)
             end
         end
         if all_pass then
-            self:clear_all_op()
             local deal_index = out_index%base.MJ_FOUR+1
             local r = role[deal_index]
             local c = self:deal(r)
@@ -1377,9 +1370,11 @@ end
 
 function dymj:clear_op(info)
     local respond = info.respond
-    respond[base.MJ_OP_CHI], respond[base.MJ_OP_PENG], respond[base.MJ_OP_GANG] = false, false, false
     local op = info.op
-    op[base.MJ_OP_CHI], op[base.MJ_OP_PENG], op[base.MJ_OP_GANG] = 0, 0, 0
+    for i = 1, base.MJ_OP_COUNT do
+        respond[i] = false
+        op[i] = nil
+    end
     info.pass = true
 end
 
