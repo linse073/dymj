@@ -28,6 +28,7 @@
     score 1 : integer
     last_deal 2 : integer
     hu 3 : integer
+    last_index 4 : integer
 }
 
 .chess_user {

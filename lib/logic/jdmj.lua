@@ -981,6 +981,8 @@ function jdmj:analyzeGangHu(card, index)
                 v.op[base.MJ_OP_HU] = {
                     hu = hu_type,
                     mul = hu_mul,
+                    card = card,
+                    index = index,
                 }
             end
         end
@@ -1047,7 +1049,7 @@ end
 function jdmj:hu(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     local index = info.index
-    local hu_type, mul, baotou, scores
+    local hu_type, mul, baotou, scores, last_deal, last_index
     if self._deal_index == index then
         if self._pass_status ~= base.PASS_STATUS_DEAL then
             error{code = error_code.ERROR_OPERATION}
@@ -1106,6 +1108,7 @@ function jdmj:hu(id, msg)
                 end
             end
         end
+        last_deal = info.last_deal
     else
         if self._pass_status ~= base.PASS_STATUS_GANG_HU then
             error{code = error_code.ERROR_OPERATION}
@@ -1124,6 +1127,8 @@ function jdmj:hu(id, msg)
         scores = {0, 0, 0, 0}
         scores[index] = mul * 3
         scores[self._deal_index] = -mul * 3
+        last_deal = op.card
+        last_index = op.index
     end
     self:clear_all_op()
     info.hu_count = info.hu_count + 1
@@ -1220,7 +1225,8 @@ function jdmj:hu(id, msg)
     win.hu_count = info.hu_count
     win.action = base.MJ_OP_HU
     local ws = win.show_card
-    ws.last_deal = info.last_deal
+    ws.last_deal = last_deal
+    ws.last_index = last_index
     ws.hu = hu_type
     self._old_banker = banker
     self._banker = index
