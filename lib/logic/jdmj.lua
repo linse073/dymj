@@ -280,6 +280,7 @@ function jdmj:pack(id, ip, agent)
                     u.own_count = #own_card
                     u.last_deal = info.last_deal
                     u.chi_count = info.chi_count
+                    u.pass = info.pass
                 else
                     local count = 0
                     for k, v in pairs(info.type_card) do

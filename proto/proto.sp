@@ -58,6 +58,7 @@
     chat_text 23 : string
     chat_audio 24 : binary
     deal_end 25 : boolean
+    pass 26 : boolean
 }
 
 .chess_info {
