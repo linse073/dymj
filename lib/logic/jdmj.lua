@@ -973,7 +973,6 @@ function jdmj:analyzeGangHu(card, index)
     for k, v in ipairs(self._role) do
         if k ~= index then
             local hu_type, hu_mul, baotou = self:analyzeHu(v, card)
-            v.hu_type, v.hu_mul = hu_type, hu_mul
             if hu_type > 0 and not baotou then
                 has_hu = true
                 v.pass = false
