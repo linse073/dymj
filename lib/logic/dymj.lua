@@ -1205,9 +1205,9 @@ function dymj:hide_gang(id, msg)
         error{code = error_code.ERROR_OPERATION}
     end
     local type_card = info.type_card
-    local weave
     local weave_card = info.weave_card
     local card_count = type_card[card]
+    local weave
     if card_count >= 4 then
         type_card[card] = card_count - 4
         weave = {
