@@ -1248,6 +1248,7 @@ function jdmj:chi(id, msg)
     info.weave_card[#info.weave_card+1] = weave
     info.last_weave = out_index
     self._can_out = index
+    self._pass_status = base.PASS_STATUS_WEAVE
     if info.android then
         self:android_out(info)
     end
@@ -1288,6 +1289,7 @@ function jdmj:peng(id, msg)
     info.weave_card[#info.weave_card+1] = weave
     info.last_weave = out_index
     self._can_out = index
+    self._pass_status = base.PASS_STATUS_WEAVE
     if info.android then
         self:android_out(info)
     end
@@ -1485,7 +1487,7 @@ function jdmj:pass(id, msg)
             broadcast(nil, chess, role, id, r.id)
         end
         return session_msg(info, {user}, chess)
-    elseif pass_status == base.PASS_STATUS_DEAL then
+    elseif pass_status == base.PASS_STATUS_DEAL or pass_status == base.PASS_STATUS_WEAVE then
         if info.pass then
             error{code = error_code.ALREADY_PASS}
         end

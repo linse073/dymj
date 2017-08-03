@@ -42,6 +42,7 @@ local base = {
     PASS_STATUS_DEAL = 1,
     PASS_STATUS_OUT = 2,
     PASS_STATUS_GANG_HU = 3,
+    PASS_STATUS_WEAVE = 4,
 }
 
 return base
