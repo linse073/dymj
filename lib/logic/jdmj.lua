@@ -259,8 +259,10 @@ function jdmj:pack(id, ip, agent)
                 if weave_card and #weave_card > 0 then
                     u.weave_card = weave_card
                 end
-                if info.op[base.MJ_OP_CHI] > 0 then
+                if info.op[base.MJ_OP_CHI] then
                     u.action = base.MJ_OP_CHI
+                elseif info.op[base.MJ_OP_HIDE_GANG] then
+                    u.action = base.MJ_OP_HIDE_GANG
                 end
                 if info.id == id then
                     local own_card = {}
@@ -598,13 +600,7 @@ function jdmj:analyze(card, index)
             if chi or peng or gang then
                 v.pass = false
                 has_respond = true
-            else
-                v.pass = true
             end
-            local op = v.op
-            op[base.MJ_OP_CHI], op[base.MJ_OP_PENG], op[base.MJ_OP_GANG] = 0, 0, 0
-        else
-            self:clear_op(v)
         end
     end
     return has_respond
@@ -981,11 +977,12 @@ function jdmj:analyzeGangHu(card, index)
             if hu_type > 0 and not baotou then
                 has_hu = true
                 v.pass = false
-            else
-                v.pass = true
+                v.respond[base.MJ_OP_HU] = true
+                v.op[base.MJ_OP_HU] = {
+                    hu = hu_type,
+                    mul = hu_mul,
+                }
             end
-        else
-            self:clear_op(v)
         end
     end
     return has_hu
@@ -1116,7 +1113,11 @@ function jdmj:hu(id, msg)
         if info.pass then
             error{code = error_code.ALREADY_PASS}
         end
-        hu_type, mul = info.hu_type, info.hu_mul
+        if not info.respond[base.MJ_OP_HU] then
+            error{code = error_code.ERROR_OPERATION}
+        end
+        local op = info.op[base.MJ_OP_HU]
+        hu_type, mul = op.hu, op.mul
         if mul < 4 then
             mul = 4
         end
@@ -1266,11 +1267,11 @@ function jdmj:chi(id, msg)
     if info.chi_count[out_index] >= base.MJ_CHI_COUNT then
         error{code = error_code.CHI_COUNT_LIMIT}
     end
-    if info.op[base.MJ_OP_CHI] > 0 then
-        error{code = error_code.WAIT_FOR_OTHER}
-    end
     if not info.respond[base.MJ_OP_CHI] then
         error{code = error_code.ERROR_OPERATION}
+    end
+    if info.op[base.MJ_OP_CHI] then
+        error{code = error_code.WAIT_FOR_OTHER}
     end
     local index = info.index
     if index ~= out_index%base.MJ_FOUR+1 then
@@ -1295,37 +1296,36 @@ function jdmj:chi(id, msg)
         return session_msg(info, {
             {index=index, action=base.MJ_OP_CHI},
         })
-    else
-        local record_action = self._detail.action
-        record_action[#record_action+1] = {
-            index = index,
-            op = base.MJ_OP_CHI,
-            card = card,
-        }
-        self:clear_all_op()
-        for i = card, card+2 do
-            if i ~= out_card then
-                type_card[i] = type_card[i] - 1
-            end
-        end
-        local weave = {
-            op = base.MJ_OP_CHI,
-            card = card,
-            index = out_index,
-            out_card = out_card,
-        }
-        info.weave_card[#info.weave_card+1] = weave
-        info.last_weave = out_index
-        self._can_out = index
-        info.chi_count[out_index] = info.chi_count[out_index] + 1
-        local role_out = self._role[out_index].out_card
-        role_out[#role_out] = nil
-        local cu = {
-            {index=index, weave_card={weave}},
-        }
-        broadcast(cu, nil, self._role, id)
-        return session_msg(info, cu)
     end
+    local record_action = self._detail.action
+    record_action[#record_action+1] = {
+        index = index,
+        op = base.MJ_OP_CHI,
+        card = card,
+    }
+    self:clear_all_op()
+    for i = card, card+2 do
+        if i ~= out_card then
+            type_card[i] = type_card[i] - 1
+        end
+    end
+    local weave = {
+        op = base.MJ_OP_CHI,
+        card = card,
+        index = out_index,
+        out_card = out_card,
+    }
+    info.weave_card[#info.weave_card+1] = weave
+    info.last_weave = out_index
+    self._can_out = index
+    info.chi_count[out_index] = info.chi_count[out_index] + 1
+    local role_out = self._role[out_index].out_card
+    role_out[#role_out] = nil
+    local cu = {
+        {index=index, weave_card={weave}},
+    }
+    broadcast(cu, nil, self._role, id)
+    return session_msg(info, cu)
 end
 
 function jdmj:peng(id, msg)
@@ -1431,10 +1431,9 @@ function jdmj:hide_gang(id, msg)
         error{code = error_code.ERROR_OPERATION}
     end
     local type_card = info.type_card
-    local weave
     local weave_card = info.weave_card
     local card_count = type_card[card]
-    local has_hu = false
+    local weave
     if card_count >= 4 then
         type_card[card] = card_count - 4
         weave = {
@@ -1455,9 +1454,17 @@ function jdmj:hide_gang(id, msg)
         if not weave then
             error{code = error_code.ERROR_OPERATION}
         end
+        if info.op[base.MJ_OP_HIDE_GANG] then
+            error{code = error_code.WAIT_FOR_OTHER}
+        end
+        if self:analyzeGangHu(card, index) then
+            info.op[base.MJ_OP_HIDE_GANG] = weave
+            return session_msg(info, {
+                {index=index, action=base.MJ_OP_HIDE_GANG},
+            })
+        end
         type_card[card] = card_count - 1
         weave.op = base.MJ_OP_GANG
-        has_hu = self:analyzeGangHu(card, index)
     else
         error{code = error_code.ERROR_OPERATION}
     end
@@ -1468,11 +1475,8 @@ function jdmj:hide_gang(id, msg)
         card = card,
     }
     info.gang_count = info.gang_count + 1
-    local c, chess
-    if not has_hu then
-        c = self:deal(info)
-        chess = {deal_index=index, left=self._left}
-    end
+    local c = self:deal(info)
+    local chess = {deal_index=index, left=self._left}
     broadcast({
         {index=index, weave_card={weave}},
     }, chess, self._role, id)
@@ -1509,7 +1513,7 @@ function jdmj:pass(id, msg)
                 all_pass = false
                 -- NOTICE: only check MJ_OP_CHI
                 local card = v.op[base.MJ_OP_CHI]
-                if card > 0 and not self:check_prior(k, base.MJ_OP_CHI) then
+                if card and not self:check_prior(k, base.MJ_OP_CHI) then
                     local record_action = self._detail.action
                     record_action[#record_action+1] = {
                         index = k,
@@ -1546,7 +1550,6 @@ function jdmj:pass(id, msg)
             end
         end
         if all_pass then
-            self:clear_all_op()
             local deal_index = out_index%base.MJ_FOUR+1
             local r = role[deal_index]
             local c = self:deal(r)
@@ -1578,12 +1581,25 @@ function jdmj:pass(id, msg)
             local deal_index = self._deal_index
             local role = self._role
             local r = role[deal_index]
+            local weave = r.op[base.MJ_OP_HIDE_GANG]
+            local card = weave.card
+            r.type_card[card] = r.type_card[card] - 1
+            weave.op = base.MJ_OP_GANG
+            local record_action = self._detail.action
+            record_action[#record_action+1] = {
+                index = deal_index,
+                op = base.MJ_OP_HIDE_GANG,
+                card = card,
+            }
+            r.gang_count = r.gang_count + 1
             local c = self:deal(r)
             chess = {deal_index=deal_index, left=self._left}
             send(r, {
-                {index=deal_index, last_deal=c},
+                {index=deal_index, weave_card={weave}, last_deal=c},
             }, chess)
-            broadcast(nil, chess, role, id, r.id)
+            broadcast({
+                {index=index, weave_card={weave}},
+            }, chess, role, id, r.id)
         end
         local user = {index=index, action=base.MJ_OP_PASS}
         return session_msg(info, {user}, chess)
@@ -1693,12 +1709,12 @@ end
 
 function jdmj:clear_op(info)
     local respond = info.respond
-    respond[base.MJ_OP_CHI], respond[base.MJ_OP_PENG], respond[base.MJ_OP_GANG] = false, false, false
     local op = info.op
-    op[base.MJ_OP_CHI], op[base.MJ_OP_PENG], op[base.MJ_OP_GANG] = 0, 0, 0
+    for i = 1, base.MJ_OP_COUNT do
+        respond[i] = false
+        op[i] = nil
+    end
     info.pass = true
-    info.hu_type = 0
-    info.hu_mul = 1
 end
 
 function jdmj:clear_all_op()

@@ -18,6 +18,7 @@ local base = {
     MJ_OP_HIDE_GANG = 5,
     MJ_OP_HU = 6,
     MJ_OP_LEAVE = 7,
+    MJ_OP_COUNT = 7,
 
     CHESS_STATUS_READY = 1,
     CHESS_STATUS_DEAL = 2,

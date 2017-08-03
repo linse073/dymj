@@ -1070,36 +1070,35 @@ function dymj:chi(id, msg)
         return session_msg(info, {
             {index=index, action=base.MJ_OP_CHI},
         })
-    else
-        local record_action = self._detail.action
-        record_action[#record_action+1] = {
-            index = index,
-            op = base.MJ_OP_CHI,
-            card = card,
-        }
-        self:clear_all_op()
-        for i = card, card+2 do
-            if i ~= out_card then
-                type_card[i] = type_card[i] - 1
-            end
-        end
-        local weave = {
-            op = base.MJ_OP_CHI,
-            card = card,
-            index = out_index,
-            out_card = out_card,
-        }
-        info.weave_card[#info.weave_card+1] = weave
-        self._can_out = index
-        info.chi_count[out_index] = info.chi_count[out_index] + 1
-        local role_out = self._role[out_index].out_card
-        role_out[#role_out] = nil
-        local cu = {
-            {index=index, weave_card={weave}},
-        }
-        broadcast(cu, nil, self._role, id)
-        return session_msg(info, cu)
     end
+    local record_action = self._detail.action
+    record_action[#record_action+1] = {
+        index = index,
+        op = base.MJ_OP_CHI,
+        card = card,
+    }
+    self:clear_all_op()
+    for i = card, card+2 do
+        if i ~= out_card then
+            type_card[i] = type_card[i] - 1
+        end
+    end
+    local weave = {
+        op = base.MJ_OP_CHI,
+        card = card,
+        index = out_index,
+        out_card = out_card,
+    }
+    info.weave_card[#info.weave_card+1] = weave
+    self._can_out = index
+    info.chi_count[out_index] = info.chi_count[out_index] + 1
+    local role_out = self._role[out_index].out_card
+    role_out[#role_out] = nil
+    local cu = {
+        {index=index, weave_card={weave}},
+    }
+    broadcast(cu, nil, self._role, id)
+    return session_msg(info, cu)
 end
 
 function dymj:peng(id, msg)
