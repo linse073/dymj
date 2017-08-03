@@ -657,27 +657,26 @@ function jdmj:out_card(id, msg)
     }
     if self._left <= 18 then
         return self:conclude(id)
-    else
-        local chess
-        local deal_id
-        local role = self._role
-        if not self:analyze(card, index) then
-            local deal_index = index%base.MJ_FOUR+1
-            local r = role[deal_index]
-            deal_id = r.id
-            local c = self:deal(r)
-            chess = {deal_index=deal_index, left=self._left}
-            send(r, {
-                {index=index, out_card={card}, out_index=msg.index},
-                {index=deal_index, last_deal=c},
-            }, chess)
-        end
-        local cu = {
-            {index=index, out_card={card}, out_index=msg.index},
-        }
-        broadcast(cu, chess, role, id, deal_id)
-        return session_msg(info, cu, chess)
     end
+    local chess
+    local deal_id
+    local role = self._role
+    if not self:analyze(card, index) then
+        local deal_index = index%base.MJ_FOUR+1
+        local r = role[deal_index]
+        deal_id = r.id
+        local c = self:deal(r)
+        chess = {deal_index=deal_index, left=self._left}
+        send(r, {
+            {index=index, out_card={card}, out_index=msg.index},
+            {index=deal_index, last_deal=c},
+        }, chess)
+    end
+    local cu = {
+        {index=index, out_card={card}, out_index=msg.index},
+    }
+    broadcast(cu, chess, role, id, deal_id)
+    return session_msg(info, cu, chess)
 end
 
 local function dec(t, k, d)

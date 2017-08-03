@@ -582,47 +582,46 @@ function dymj:out_card(id, msg)
     info.out_card[#info.out_card+1] = card
     if self._left <= 20 then
         return self:conclude(id)
+    end
+    local chess
+    local deal_id
+    local role = self._role
+    if not self:analyze(card, index) then
+        local deal_index = index%base.MJ_FOUR+1
+        local r = role[deal_index]
+        deal_id = r.id
+        local c = self:deal(r)
+        chess = {deal_index=deal_index, left=self._left}
+        send(r, {
+            {index=index, out_card={card}, out_index=msg.index},
+            {index=deal_index, last_deal=c},
+        }, chess)
     else
-        local chess
-        local deal_id
-        local role = self._role
-        if not self:analyze(card, index) then
-            local deal_index = index%base.MJ_FOUR+1
-            local r = role[deal_index]
-            deal_id = r.id
-            local c = self:deal(r)
-            chess = {deal_index=deal_index, left=self._left}
-            send(r, {
-                {index=index, out_card={card}, out_index=msg.index},
-                {index=deal_index, last_deal=c},
-            }, chess)
-        else
-            for k, v in ipairs(role) do
-                if v.android then
-                    local respond = v.respond
-                    local chi, peng, gang = respond[base.MJ_OP_CHI], respond[base.MJ_OP_PENG], respond[base.MJ_OP_GANG]
-                    if gang then
-                        self:next_action("dymj_android_gang", function()
-                            self:gang(v.id)
-                        end)
-                    elseif peng then
-                        self:next_action("dymj_android_peng", function()
-                            self:peng(v.id)
-                        end)
-                    elseif chi then
-                        self:next_action("dymj_android_chi", function()
-                            self:chi(v.id, {card=chi})
-                        end)
-                    end
+        for k, v in ipairs(role) do
+            if v.android then
+                local respond = v.respond
+                local chi, peng, gang = respond[base.MJ_OP_CHI], respond[base.MJ_OP_PENG], respond[base.MJ_OP_GANG]
+                if gang then
+                    self:next_action("dymj_android_gang", function()
+                        self:gang(v.id)
+                    end)
+                elseif peng then
+                    self:next_action("dymj_android_peng", function()
+                        self:peng(v.id)
+                    end)
+                elseif chi then
+                    self:next_action("dymj_android_chi", function()
+                        self:chi(v.id, {card=chi})
+                    end)
                 end
             end
         end
-        local cu = {
-            {index=index, out_card={card}, out_index=msg.index},
-        }
-        broadcast(cu, chess, role, id, deal_id)
-        return session_msg(info, cu, chess)
     end
+    local cu = {
+        {index=index, out_card={card}, out_index=msg.index},
+    }
+    broadcast(cu, chess, role, id, deal_id)
+    return session_msg(info, cu, chess)
 end
 
 local function dec(t, k, d)
