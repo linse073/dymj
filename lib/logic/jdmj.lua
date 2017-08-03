@@ -233,6 +233,8 @@ function jdmj:pack(id, ip, agent)
                 close_time = self._close_time,
                 pass_status = self._pass_status,
                 can_out = self._can_out,
+                gang_card = self._gang_card,
+                gang_index = self._gang_index,
             }
             local user = {}
             for i = 1, base.MJ_FOUR do
@@ -278,7 +280,6 @@ function jdmj:pack(id, ip, agent)
                     u.own_count = #own_card
                     u.last_deal = info.last_deal
                     u.chi_count = info.chi_count
-                    u.pass = info.pass
                 else
                     local count = 0
                     for k, v in pairs(info.type_card) do
@@ -972,6 +973,8 @@ end
 
 function jdmj:analyzeGangHu(card, index)
     self._pass_status = base.PASS_STATUS_GANG_HU
+    self._gang_card = card
+    self._gang_index = index
     local has_hu = false
     for k, v in ipairs(self._role) do
         if k ~= index then
@@ -983,8 +986,6 @@ function jdmj:analyzeGangHu(card, index)
                 v.op[base.MJ_OP_HU] = {
                     hu = hu_type,
                     mul = hu_mul,
-                    card = card,
-                    index = index,
                 }
             end
         end
@@ -1129,8 +1130,8 @@ function jdmj:hu(id, msg)
         scores = {0, 0, 0, 0}
         scores[index] = mul * 3
         scores[self._deal_index] = -mul * 3
-        last_deal = op.card
-        last_index = op.index
+        last_deal = self._gang_card
+        last_index = self._gang_index
     end
     self:clear_all_op()
     info.hu_count = info.hu_count + 1
@@ -1474,14 +1475,11 @@ function jdmj:hide_gang(id, msg)
             error{code = error_code.WAIT_FOR_OTHER}
         end
         if self:analyzeGangHu(card, index) then
-            local chess = {pass_status=self._pass_status}
-            for k, v in ipairs(role) do
-                if k ~= index then
-                    send(v, {
-                        {index=k, pass=v.pass},
-                    }, chess)
-                end
-            end
+            broadcast(nil, {
+                pass_status = self._pass_status,
+                gang_card = card,
+                gang_index = index,
+            }, role, id)
             info.op[base.MJ_OP_HIDE_GANG] = weave
             return session_msg(info, {
                 {index=index, action=base.MJ_OP_HIDE_GANG},

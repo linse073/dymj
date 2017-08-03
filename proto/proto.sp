@@ -58,7 +58,6 @@
     chat_text 23 : string
     chat_audio 24 : binary
     deal_end 25 : boolean
-    pass 26 : boolean
 }
 
 .chess_info {
@@ -80,6 +79,8 @@
     record_id 15 : integer
     pass_status 16 : integer
     can_out 17 : integer
+    gang_card 18 : integer
+    gang_index 19 : integer
 }
 
 .chess_all {
