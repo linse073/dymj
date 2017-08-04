@@ -1071,7 +1071,9 @@ function jdmj:hu(id, msg)
             error{code = error_code.ERROR_OPERATION}
         end
         local contract = self:contract()
+        util.dump(contract)
         local cindex = contract[index]
+        print("ssssssssssssssssssssss", index, cindex, contract[cindex])
         if cindex > 0 and contract[cindex] == index then
             contract[cindex] = 0
         end
