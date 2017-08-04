@@ -1291,6 +1291,8 @@ function jdmj:peng(id, msg)
     if not (type_card[out_card] >= 2) then
         error{code = error_code.ERROR_OPERATION}
     end
+    local out_index = self._out_index
+    local index = info.index
     self:clear_all_op()
     type_card[out_card] = type_card[out_card] - 2
     local weave = {
