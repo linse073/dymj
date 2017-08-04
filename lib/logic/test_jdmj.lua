@@ -864,11 +864,11 @@ function jdmj:analyzeHu(info, card)
             tc[k] = v
         end
     end
+    if card then
+        tc[card] = type_card[card] + 1
+    end
     local magic_count = tc[magic_card] or 0
     tc[magic_card] = nil
-    if card then
-        tc[card] = tc[card] + 1
-    end
     local hu, mc = is_badui(tc, magic_count)
     if hu then
         hu_type = base.HU_DUIZI
