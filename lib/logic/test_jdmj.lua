@@ -1334,6 +1334,8 @@ function jdmj:gang(id, msg)
     if not (type_card[out_card] >= 3) then
         error{code = error_code.ERROR_OPERATION}
     end
+    local index = info.index
+    local out_index = self._out_index
     type_card[out_card] = type_card[out_card] - 3
     local weave = {
         op = base.MJ_OP_GANG,
