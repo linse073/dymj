@@ -512,6 +512,7 @@ local CHI_RULE = {
     {1, 2, 0},
 }
 function jdmj:analyze(card, index)
+    self:clear_all_op()
     self._pass_status = base.PASS_STATUS_OUT
     local has_respond = false
     for k, v in ipairs(self._role) do
@@ -922,6 +923,7 @@ function jdmj:analyzeHu(info, card)
 end
 
 function jdmj:analyzeGangHu(card, index)
+    self:clear_all_op()
     self._pass_status = base.PASS_STATUS_GANG_HU
     self._gang_card = card
     self._gang_index = index

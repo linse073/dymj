@@ -571,6 +571,7 @@ local CHI_RULE = {
     {1, 2, 0},
 }
 function dymj:analyze(card, index)
+    self:clear_all_op()
     self._pass_status = base.PASS_STATUS_OUT
     local has_respond = false
     for k, v in ipairs(self._role) do
