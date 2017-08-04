@@ -702,6 +702,7 @@ end
 local function find_weave(type_card, weave_card, magic_count)
     for k, v in pairs(type_card) do
         if v+magic_count >= 3 then
+            print("44444444444444444444", k)
             local n = dec(type_card, k, 3)
             local weave = {k, k, k}
             for i = n+1, 3 do
@@ -728,6 +729,7 @@ local function find_weave(type_card, weave_card, magic_count)
                 if mc <= 1 and magic_count >= mc then
                     for i = 1, 3 do
                         if i ~= mi then
+                            print("55555555555555555555", k)
                             dec(type_card, weave[i], 1)
                         end
                     end
@@ -756,6 +758,7 @@ function jdmj:check_hu(type_card, weave_card, magic_count)
         local deal_card = self._deal_card
         if deal_card ~= self._magic_card then
             local n = clone[deal_card]
+            print("111111111111111111", deal_card)
             dec(clone, deal_card, 1)
             weave_card[#weave_card+1] = {deal_card, 0}
             if find_weave(clone, weave_card, magic_count-1) then
@@ -772,6 +775,7 @@ function jdmj:check_hu(type_card, weave_card, magic_count)
         end
         for k, v in pairs(type_card) do
             if k ~= deal_card then
+                print("2222222222222222222222", k)
                 dec(clone, k, 1)
                 weave_card[#weave_card+1] = {k, 0}
                 if find_weave(clone, weave_card, magic_count-1) then
@@ -784,6 +788,7 @@ function jdmj:check_hu(type_card, weave_card, magic_count)
     end
     for k, v in pairs(type_card) do
         if v >= 2 then
+            print("3333333333333333", k)
             dec(clone, k, 2)
             weave_card[#weave_card+1] = {k, k}
             if find_weave(clone, weave_card, magic_count) then
@@ -918,6 +923,7 @@ function jdmj:analyzeHu(info, card)
     end
     local magic_count = tc[magic_card] or 0
     tc[magic_card] = nil
+    util.dump(tc)
     local hu, mc = is_badui(tc, magic_count)
     if hu then
         hu_type = base.HU_DUIZI
