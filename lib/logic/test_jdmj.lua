@@ -1615,6 +1615,7 @@ function jdmj:android_deal(info)
         return
     end
     if not self:is_out_magic(info.index) then
+        local type_card = info.type_card
         for k1, v1 in pairs(type_card) do
             if k1 ~= magic_card and v1 >= 4 then
                 self:next_action("dymj_android_deal", function()
