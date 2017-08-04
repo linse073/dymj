@@ -938,7 +938,7 @@ function jdmj:analyzeGangHu(card, index)
                 v.pass = false
                 v.respond[base.MJ_OP_HU] = true
                 v.op[base.MJ_OP_HU] = {
-                    hu = hu_type,
+                    hu = base.HU_QIANGGANG,
                     mul = hu_mul,
                 }
             end
@@ -1007,6 +1007,7 @@ function jdmj:hu(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     local index = info.index
     local hu_type, mul, baotou, scores, last_deal, last_index
+    local role = self._role
     if self._deal_index == index then
         if self._pass_status ~= base.PASS_STATUS_DEAL then
             error{code = error_code.ERROR_OPERATION}
@@ -1086,6 +1087,8 @@ function jdmj:hu(id, msg)
         scores[self._deal_index] = -mul * 3
         last_deal = self._gang_card
         last_index = self._gang_index
+        local u = role[last_index]
+        u.type_card[last_deal] = u.type_card[last_deal] - 1
     end
     self:destroy()
     self:clear_all_op()
@@ -1100,7 +1103,6 @@ function jdmj:hu(id, msg)
         self:consume_card()
     end
     local user = {}
-    local role = self._role
     for k, v in ipairs(role) do
         if v.android then
             v.ready = true

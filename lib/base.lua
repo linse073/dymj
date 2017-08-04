@@ -38,6 +38,7 @@ local base = {
     HU_QINGFENGZI = 6,
     HU_SHISANBUDA = 7,
     HU_QINGYISE = 8,
+    HU_QIANGGANG = 9,
     
     PASS_STATUS_DEAL = 1,
     PASS_STATUS_OUT = 2,
