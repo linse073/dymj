@@ -702,7 +702,6 @@ end
 local function find_weave(type_card, weave_card, magic_count)
     for k, v in pairs(type_card) do
         if v+magic_count >= 3 then
-            print("44444444444444444444", k)
             local n = dec(type_card, k, 3)
             local weave = {k, k, k}
             for i = n+1, 3 do
@@ -729,7 +728,6 @@ local function find_weave(type_card, weave_card, magic_count)
                 if mc <= 1 and magic_count >= mc then
                     for i = 1, 3 do
                         if i ~= mi then
-                            print("55555555555555555555", k)
                             dec(type_card, weave[i], 1)
                         end
                     end
@@ -752,13 +750,11 @@ local function find_weave(type_card, weave_card, magic_count)
     return true
 end
 
-function jdmj:check_hu(type_card, weave_card, magic_count)
+function jdmj:check_hu(type_card, weave_card, magic_count, deal_card)
     local clone = util.clone(type_card)
     if magic_count > 0 then
-        local deal_card = self._deal_card
         if deal_card ~= self._magic_card then
             local n = clone[deal_card]
-            print("111111111111111111", deal_card)
             dec(clone, deal_card, 1)
             weave_card[#weave_card+1] = {deal_card, 0}
             if find_weave(clone, weave_card, magic_count-1) then
@@ -775,7 +771,6 @@ function jdmj:check_hu(type_card, weave_card, magic_count)
         end
         for k, v in pairs(type_card) do
             if k ~= deal_card then
-                print("2222222222222222222222", k)
                 dec(clone, k, 1)
                 weave_card[#weave_card+1] = {k, 0}
                 if find_weave(clone, weave_card, magic_count-1) then
@@ -788,7 +783,6 @@ function jdmj:check_hu(type_card, weave_card, magic_count)
     end
     for k, v in pairs(type_card) do
         if v >= 2 then
-            print("3333333333333333", k)
             dec(clone, k, 2)
             weave_card[#weave_card+1] = {k, k}
             if find_weave(clone, weave_card, magic_count) then
@@ -909,9 +903,9 @@ end
 function jdmj:analyzeHu(info, card)
     local type_card = info.type_card
     local magic_card = self._magic_card
-    local deal_card = self._deal_card
     local wc = info.weave_card
     local mul, hu_type, baotou = 1, 0, false
+    local deal_card
     local tc = {}
     for k, v in pairs(type_card) do
         if v > 0 then
@@ -920,10 +914,12 @@ function jdmj:analyzeHu(info, card)
     end
     if card then
         tc[card] = type_card[card] + 1
+        deal_card = card
+    else
+        deal_card = self._deal_card
     end
     local magic_count = tc[magic_card] or 0
     tc[magic_card] = nil
-    util.dump(tc)
     local hu, mc = is_badui(tc, magic_count)
     if hu then
         hu_type = base.HU_DUIZI
@@ -945,7 +941,7 @@ function jdmj:analyzeHu(info, card)
         mul = mul * 4
     else
         local weave_card = {}
-        if self:check_hu(tc, weave_card, magic_count) then
+        if self:check_hu(tc, weave_card, magic_count, deal_card) then
             hu_type = base.HU_NONE
             local head = weave_card[1]
             if head[1] == deal_card and head[2] == 0 then
