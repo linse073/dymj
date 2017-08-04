@@ -959,7 +959,7 @@ function jdmj:contract()
                 local count, last_index, last_count = 0, 0, 0
                 if w.op ~= base.MJ_OP_HIDE_GANG then
                     count = count + 1
-                    last_index = w.out_index
+                    last_index = w.index
                     last_count = last_count + 1
                 end
                 local s = true
@@ -969,7 +969,7 @@ function jdmj:contract()
                     if tc == color then
                         if tw.op ~= base.MJ_OP_HIDE_GANG then
                             count = count + 1
-                            local ti = tw.out_index
+                            local ti = tw.index
                             if ti == last_index then
                                 last_count = last_count + 1
                             else
