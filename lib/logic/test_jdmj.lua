@@ -1314,7 +1314,6 @@ function jdmj:peng(id, msg)
     if info.android then
         self:android_out(info)
     end
-    info.chi_count[out_index] = info.chi_count[out_index] + 1
     local role_out = self._role[out_index].out_card
     role_out[#role_out] = nil
     local cu = {
