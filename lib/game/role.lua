@@ -72,11 +72,15 @@ local function get_user()
 	cz.start()
 	local data = game.data
     if not data.user then
+        if not data.sex or data.sex == 0 then
+            data.sex = rand.randi(1, 2)
+        end
 		local user = skynet.call(user_db, "lua", "findOne", {id=data.id})
 		if user then
 			user.nick_name = data.nick_name
 			user.head_img = data.head_img
 			user.ip = data.ip
+            user.sex = data.sex
 			data.user = user
 			data.info = {
 				account = user.account,
@@ -91,7 +95,7 @@ local function get_user()
 			local user = {
 				account = data.uid,
 				id = data.id,
-				sex = data.sex or rand.randi(1, 2),
+				sex = data.sex,
 				login_time = 0,
 				last_login_time = 0,
 				logout_time = 0,
