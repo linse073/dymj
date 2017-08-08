@@ -9,6 +9,7 @@
     ip 7 : string
     day_card 8 : boolean
     last_login_time 9 : integer
+    login_time 10 : integer
 }
 
 .other_all {
