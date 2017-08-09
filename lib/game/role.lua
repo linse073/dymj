@@ -470,7 +470,7 @@ function proc.iap(msg)
         if has then
             return "update_user", {iap_index=msg.index}
         else
-            local num = string.match(receipt.product_id, "com.moyi.dymj.store_(%d+)")
+            local num = string.match(receipt.product_id, "store_(%d+)")
             local p = update_user()
             role.add_room_card(p, false, tonumber(num))
             return "update_user", {update=p, iap_index=msg.index}
