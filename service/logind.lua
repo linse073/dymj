@@ -53,9 +53,6 @@ local auth_proc = {
 			head_img = content.headimgurl,
 		}
     end,
-    function(user, data) -- qq login
-        return {}
-    end,
 }
 
 skynet.init(function()
