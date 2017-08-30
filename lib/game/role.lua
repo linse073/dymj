@@ -291,6 +291,7 @@ function proc.enter_game(msg)
         ret[v[1]] = v[2]
     end
     local chess_table = skynet.call(chess_mgr, "lua", "get", user.id)
+    local code
     if chess_table then
         data.chess_table = chess_table
         ret.chess = skynet.call(chess_table, "lua", "pack", user.id, user.ip, skynet.self())
@@ -301,7 +302,11 @@ function proc.enter_game(msg)
             if rmsg == "update_user" then
                 data.chess_table = chess_table
                 ret.chess = info.update.chess
+            elseif rmsg == "error_code" then
+                code = info.code
             end
+        else
+            code = error_code.ROOM_CLOSE
         end
     end
     timer.add_routine("save_role", role.save_routine, 300)
@@ -309,7 +314,7 @@ function proc.enter_game(msg)
     skynet.call(role_mgr, "lua", "enter", data.info, skynet.self())
     data.enter = true
     cz.finish()
-    return "info_all", {user=ret, start_time=start_utc_time}
+    return "info_all", {user=ret, start_time=start_utc_time, code=code}
 end
 
 function proc.get_offline(msg)

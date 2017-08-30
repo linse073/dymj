@@ -47,6 +47,7 @@ local type_code = {
         ROOM_CARD_LIMIT="房卡数量不足，请联系群主购买",
         NO_RECORD="战绩已删除",
         ALREADY_DEAL_END="已经发完牌",
+        ROOM_CLOSE="房间已解散",
     },
 }
 

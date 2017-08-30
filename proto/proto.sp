@@ -135,6 +135,7 @@
 .info_all {
     user 0 : user_all
     start_time 1 : integer
+    code 2 : integer
 }
 
 .update_user {
