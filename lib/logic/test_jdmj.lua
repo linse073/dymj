@@ -1406,6 +1406,9 @@ function jdmj:hide_gang(id, msg)
         if not weave then
             error{code = error_code.ERROR_OPERATION}
         end
+        if self._out_card == card then
+            error{code = error_code.ERROR_OPERATION}
+        end
         if info.op[base.MJ_OP_HIDE_GANG] then
             error{code = error_code.WAIT_FOR_OTHER}
         end
