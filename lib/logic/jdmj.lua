@@ -1443,9 +1443,9 @@ function jdmj:hide_gang(id, msg)
     if index ~= self._can_out then
         error{code = error_code.ERROR_OPERATION}
     end
-    if self:is_out_magic(index) then
-        error{code = error_code.ERROR_OPERATION}
-    end
+    -- if self:is_out_magic(index) then
+    --     error{code = error_code.ERROR_OPERATION}
+    -- end
     local card = msg.card
     if card == self._magic_card then
         error{code = error_code.ERROR_OPERATION}
