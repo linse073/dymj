@@ -1149,7 +1149,7 @@ function jdmj:hu(id, msg)
         end
         local op = info.op[base.MJ_OP_HU]
         if self:check_hu_prior(self._gang_index, index) then
-            op.hu = true
+            op.hu_action = true
             return session_msg(info, {
                 {index=index, action=base.MJ_OP_HU},
             })
@@ -1621,7 +1621,7 @@ function jdmj:pass(id, msg)
             if not v.pass then
                 all_pass = false
                 local op = v.op[base.MJ_OP_HU]
-                if op and op.hu and not self:check_hu_prior(self._gang_index, k) then
+                if op and op.hu_action and not self:check_hu_prior(self._gang_index, k) then
                     local hu_type, mul = op.hu, op.mul
                     if mul < 4 then
                         mul = 4
