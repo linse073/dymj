@@ -1406,13 +1406,10 @@ function jdmj:hide_gang(id, msg)
         if not weave then
             error{code = error_code.ERROR_OPERATION}
         end
-        if self._out_card == card then
-            error{code = error_code.ERROR_OPERATION}
-        end
         if info.op[base.MJ_OP_HIDE_GANG] then
             error{code = error_code.WAIT_FOR_OTHER}
         end
-        if self:analyzeGangHu(card, index) then
+        if self._out_card ~= card and self:analyzeGangHu(card, index) then
             for k, v in ipairs(role) do
                 if v.android and not v.pass then
                     self:next_action("dymj_android_gang_hu", function()
