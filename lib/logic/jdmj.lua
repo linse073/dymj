@@ -1633,7 +1633,7 @@ function jdmj:pass(id, msg)
                     last_index = self._gang_index
                     local u = role[last_index]
                     u.type_card[last_deal] = u.type_card[last_deal] - 1
-                    local record_id, user = self:hu_action(info, hu_type, scores, last_deal, last_index)
+                    local record_id, user = self:hu_action(v, hu_type, scores, last_deal, last_index)
                     local ci = {
                         status=self._status, count=self._count, banker=self._banker, record_id=record_id
                     }
