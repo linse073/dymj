@@ -932,6 +932,9 @@ function jdmj:analyzeHu(info, card)
         if is_qingyise(tc, wc) then
             hu_type = base.HU_QINGYISE
             mul = mul * 10
+        elseif is_qingfengzi(tc, wc) then
+            hu_type = base.HU_QINGFENGZI
+            mul = mul * 20
         end
     elseif is_qingfengzi(tc, wc) then
         hu_type = base.HU_QINGFENGZI
@@ -966,6 +969,9 @@ function jdmj:analyzeHu(info, card)
             if is_qingyise(tc, wc) then
                 hu_type = base.HU_QINGYISE
                 mul = mul * 10
+            elseif is_qingfengzi(tc, wc) then
+                hu_type = base.HU_QINGFENGZI
+                mul = mul * 20
             end
         end
     end
