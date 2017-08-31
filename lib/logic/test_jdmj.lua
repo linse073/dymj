@@ -876,7 +876,7 @@ function jdmj:analyzeHu(info, card)
     if hu then
         hu_type = base.HU_DUIZI
         mul = mul * 2
-        if (deal_card ~= magic_card and tc[deal_card]%2 == 1)
+        if (deal_card ~= magic_card and (tc[deal_card]%2 == 1 or mc > 0))
             or (deal_card == magic_card and mc > 0) then
             mul = mul * 2^(info.out_magic+1)
             baotou = true
