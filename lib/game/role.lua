@@ -344,7 +344,8 @@ function proc.get_role(msg)
 end
 
 function proc.new_chess(msg)
-    if not valid_chess[msg.name] then
+    local config = valid_chess[msg.name]
+    if not config then
         error{code = error_code.NO_CHESS}
     end
     local data = game.data
@@ -359,18 +360,20 @@ function proc.new_chess(msg)
     else
         rule.aa_pay = false
     end
+    local r
     if c == 1 then
-        rule.total_count = 8
+        r = config.rule[1]
     else
-        rule.total_count = 16
+        r = config.rule[2]
     end
+    rule.total_count, rule.total_card, rule.single_card = r[1], r[2], r[3]
     local user = data.user
     if rule.aa_pay then
-        if user.room_card < rule.total_count/8 then
+        if user.room_card < rule.single_card then
             error{code = error_code.ROOM_CARD_LIMIT}
         end
     else
-        if user.room_card < rule.total_count/2 then
+        if user.room_card < rule.total_card then
             error{code = error_code.ROOM_CARD_LIMIT}
         end
     end
