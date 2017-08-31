@@ -797,7 +797,7 @@ end
 
 local function is_badui(type_card, magic_count)
     local single_count = 0
-    local count = 0
+    local count = magic_count
     for k, v in pairs(type_card) do
         count = count + v
         if v == 1 or v == 3 then
@@ -807,7 +807,7 @@ local function is_badui(type_card, magic_count)
             magic_count = magic_count - 1
         end
     end
-    return count+magic_count==17 and single_count<=1, magic_count
+    return count==17 and single_count<=1, magic_count
 end
 
 local function is_qingyise(type_card, weave_card)
