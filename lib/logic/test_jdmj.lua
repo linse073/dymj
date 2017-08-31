@@ -891,6 +891,7 @@ function jdmj:analyzeHu(info, card)
     elseif is_qingfengzi(tc, wc) then
         hu_type = base.HU_QINGFENGZI
         mul = mul * 20
+        mul = 2^info.gang_count
     elseif is_shisanbuda(tc, magic_count, magic_card) then
         hu_type = base.HU_SHISANBUDA
         mul = mul * 4
