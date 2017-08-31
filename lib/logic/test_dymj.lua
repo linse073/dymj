@@ -1008,6 +1008,19 @@ function dymj:chi(id, msg)
             {index=index, action=base.MJ_OP_CHI},
         })
     end
+    local weave = self:chi_action(info, card)
+    local cu = {
+        {index=index, weave_card={weave}},
+    }
+    broadcast(cu, nil, self._role, id)
+    return session_msg(info, cu)
+end
+
+function dymj:chi_action(info, card)
+    local index = info.index
+    local out_card = self._out_card
+    local out_index = self._out_index
+    local type_card = info.type_card
     self:clear_all_op()
     for i = card, card+2 do
         if i ~= out_card then
@@ -1029,11 +1042,7 @@ function dymj:chi(id, msg)
     info.chi_count[out_index] = info.chi_count[out_index] + 1
     local role_out = self._role[out_index].out_card
     role_out[#role_out] = nil
-    local cu = {
-        {index=index, weave_card={weave}},
-    }
-    broadcast(cu, nil, self._role, id)
-    return session_msg(info, cu)
+    return weave
 end
 
 function dymj:peng(id, msg)
@@ -1197,27 +1206,7 @@ function dymj:pass(id, msg)
                 -- NOTICE: only check MJ_OP_CHI
                 local card = v.op[base.MJ_OP_CHI]
                 if card and not self:check_prior(k, base.MJ_OP_CHI) then
-                    self:clear_all_op()
-                    local type_card = v.type_card
-                    for i = card, card+2 do
-                        if i ~= self._out_card then
-                            type_card[i] = type_card[i] - 1
-                        end
-                    end
-                    local weave = {
-                        op = base.MJ_OP_CHI,
-                        card = card,
-                        index = out_index,
-                        out_card = self._out_card,
-                    }
-                    v.weave_card[#v.weave_card+1] = weave
-                    self._can_out = k
-                    if v.android then
-                        self:android_out(v)
-                    end
-                    v.chi_count[out_index] = v.chi_count[out_index] + 1
-                    local role_out = role[out_index].out_card
-                    role_out[#role_out] = nil
+                    local weave = self:chi_action(v, card)
                     broadcast({
                         {index=k, weave_card={weave}},
                     }, nil, role, id)
