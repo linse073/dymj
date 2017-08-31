@@ -807,7 +807,7 @@ local function is_badui(type_card, magic_count)
             magic_count = magic_count - 1
         end
     end
-    return count==17 and single_count<=1, magic_count
+    return count+magic_count==17 and single_count<=1, magic_count
 end
 
 local function is_qingyise(type_card, weave_card)
