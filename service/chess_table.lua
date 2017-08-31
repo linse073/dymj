@@ -42,7 +42,7 @@ skynet.start(function()
     cz = share.cz
     rand = share.rand
     for k, v in pairs(share.valid_chess) do
-        chess[v] = require("logic." .. v)
+        chess[k] = require("logic." .. k)
     end
 
 	skynet.dispatch("lua", function(session, source, command, ...)
