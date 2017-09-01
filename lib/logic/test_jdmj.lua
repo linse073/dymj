@@ -852,23 +852,17 @@ function jdmj:consume_card()
     end
 end
 
-function jdmj:analyzeHu(info, card)
+function jdmj:analyzeHu(info)
     local type_card = info.type_card
     local magic_card = self._magic_card
     local wc = info.weave_card
     local mul, hu_type, baotou = 1, 0, false
-    local deal_card
+    local deal_card = self._deal_card
     local tc = {}
     for k, v in pairs(type_card) do
         if v > 0 then
             tc[k] = v
         end
-    end
-    if card then
-        tc[card] = type_card[card] + 1
-        deal_card = card
-    else
-        deal_card = self._deal_card
     end
     local magic_count = tc[magic_card] or 0
     tc[magic_card] = nil
@@ -876,8 +870,7 @@ function jdmj:analyzeHu(info, card)
     if hu then
         hu_type = base.HU_DUIZI
         mul = mul * 2
-        if (deal_card ~= magic_card and (tc[deal_card]%2 == 1 or mc > 0))
-            or (deal_card == magic_card and mc > 0) then
+        if not (tc[deal_card]%2 == 0 and magic_count == 0) then
             mul = mul * 2^(info.out_magic+1)
             baotou = true
         end
@@ -931,6 +924,66 @@ function jdmj:analyzeHu(info, card)
     return hu_type, mul, baotou
 end
 
+function jdmj:gangHu(info, card)
+    local type_card = info.type_card
+    local magic_card = self._magic_card
+    local wc = info.weave_card
+    local mul, hu_type = 1, 0
+    local deal_card = card
+    local tc = {}
+    for k, v in pairs(type_card) do
+        if v > 0 then
+            tc[k] = v
+        end
+    end
+    tc[card] = type_card[card] + 1
+    local magic_count = tc[magic_card] or 0
+    tc[magic_card] = nil
+    local hu, mc = is_badui(tc, magic_count)
+    if hu and not (tc[deal_card]%2 == 1 and magic_count == 0) then
+        hu_type = base.HU_DUIZI
+        mul = mul * 2
+        if is_qingyise(tc, wc) then
+            hu_type = base.HU_QINGYISE
+            mul = mul * 10
+        elseif is_qingfengzi(tc, wc) then
+            hu_type = base.HU_QINGFENGZI
+            mul = mul * 20
+        end
+    elseif is_qingfengzi(tc, wc) then
+        hu_type = base.HU_QINGFENGZI
+        mul = mul * 20
+        mul = mul * 2^info.gang_count
+    elseif is_shisanbuda(tc, magic_count, magic_card) then
+        hu_type = base.HU_SHISANBUDA
+        mul = mul * 4
+    else
+        local weave_card = {}
+        if self:check_hu(tc, weave_card, magic_count, deal_card) then
+            hu_type = base.HU_NONE
+            local head = weave_card[1]
+            if not (head[1] == deal_card and head[2] == 0) then
+                local out_card = info.out_card
+                local len = #out_card
+                if len == 0 or out_card[len] ~= magic_card then
+                    if info.gang_count > 0 then
+                        hu_type = base.HU_GANGKAI
+                    end
+                    mul = 2^info.gang_count
+                end
+                if is_qingyise(tc, wc) then
+                    hu_type = base.HU_QINGYISE
+                    mul = mul * 10
+                elseif is_qingfengzi(tc, wc) then
+                    hu_type = base.HU_QINGFENGZI
+                    mul = mul * 20
+                end
+            end
+        end
+    end
+    return hu_type, mul
+end
+
 function jdmj:analyzeGangHu(card, index)
     self:clear_all_op()
     self._pass_status = base.PASS_STATUS_GANG_HU
@@ -939,8 +992,8 @@ function jdmj:analyzeGangHu(card, index)
     local has_hu
     for k, v in ipairs(self._role) do
         if k ~= index then
-            local hu_type, hu_mul, baotou = self:analyzeHu(v, card)
-            if hu_type > 0 and not baotou then
+            local hu_type, hu_mul = self:gangHu(v, card)
+            if hu_type > 0 then
                 has_hu = true
                 v.pass = false
                 v.respond[base.MJ_OP_HU] = true
@@ -1045,50 +1098,6 @@ function jdmj:hu(id, msg)
         if hu_type == 0 then
             error{code = error_code.ERROR_OPERATION}
         end
-        local contract = self:contract()
-        local cindex = contract[index]
-        if cindex > 0 and contract[cindex] == index then
-            contract[cindex] = 0
-        end
-        local cmul
-        if hu_type == base.HU_QINGYISE then
-            cmul = mul // 10 * 30
-        else
-            cmul = mul * 30
-        end
-        scores = {0, 0, 0, 0}
-        local smul = 0
-        for k, v in ipairs(contract) do
-            if v == index then
-                scores[k] = -cmul
-                smul = smul + cmul
-            elseif k == index and v > 0 then
-                scores[v] = -cmul
-                smul = smul + cmul
-            end
-        end
-        if smul > 0 then
-            scores[index] = smul
-        else
-            scores = {-mul, -mul, -mul, -mul}
-            scores[index] = mul * 3
-            if baotou then
-                local magic_index = info.magic_index
-                local base_mul = mul / 2^(info.out_magic-1)
-                for i = 2, info.out_magic do
-                    local mi = magic_index[i]
-                    if mi then
-                        local dm = base_mul * 2^(i-2)
-                        scores[mi] = scores[mi] - dm*2
-                        for j = 1, base.MJ_FOUR do
-                            if j ~= mi and j ~= index then
-                                scores[j] = scores[j] + dm
-                            end
-                        end
-                    end
-                end
-            end
-        end
         last_deal = info.last_deal
     else
         if self._pass_status ~= base.PASS_STATUS_GANG_HU then
@@ -1107,19 +1116,16 @@ function jdmj:hu(id, msg)
                 {index=index, action=base.MJ_OP_HU},
             })
         end
-        hu_type, mul = op.hu, op.mul
+        hu_type, mul, baotou = op.hu, op.mul, false
         if mul < 4 then
             mul = 4
         end
-        scores = {0, 0, 0, 0}
-        scores[index] = mul * 3
-        scores[self._deal_index] = -mul * 3
         last_deal = self._gang_card
         last_index = self._gang_index
         local u = role[last_index]
         u.type_card[last_deal] = u.type_card[last_deal] - 1
     end
-    local user = self:hu_action(info, hu_type, scores, last_deal, last_index)
+    local user = self:hu_action(info, hu_type, mul, baotou, last_deal, last_index)
     local ci = {
         status=self._status, count=self._count, banker=self._banker,
     }
@@ -1130,9 +1136,53 @@ function jdmj:hu(id, msg)
     return session_msg(info, user, ci)
 end
 
-function jdmj:hu_action(info, hu_type, scores, last_deal, last_index)
+function jdmj:hu_action(info, hu_type, mul, baotou, last_deal, last_index)
     local index = info.index
     local role = self._role
+    local contract = self:contract()
+    local cindex = contract[index]
+    if cindex > 0 and contract[cindex] == index then
+        contract[cindex] = 0
+    end
+    local cmul
+    if hu_type == base.HU_QINGYISE then
+        cmul = mul // 10 * 30
+    else
+        cmul = mul * 30
+    end
+    local scores = {0, 0, 0, 0}
+    local smul = 0
+    for k, v in ipairs(contract) do
+        if v == index then
+            scores[k] = -cmul
+            smul = smul + cmul
+        elseif k == index and v > 0 then
+            scores[v] = -cmul
+            smul = smul + cmul
+        end
+    end
+    if smul > 0 then
+        scores[index] = smul
+    else
+        scores = {-mul, -mul, -mul, -mul}
+        scores[index] = mul * 3
+        if baotou then
+            local magic_index = info.magic_index
+            local base_mul = mul / 2^(info.out_magic-1)
+            for i = 2, info.out_magic do
+                local mi = magic_index[i]
+                if mi then
+                    local dm = base_mul * 2^(i-2)
+                    scores[mi] = scores[mi] - dm*2
+                    for j = 1, base.MJ_FOUR do
+                        if j ~= mi and j ~= index then
+                            scores[j] = scores[j] + dm
+                        end
+                    end
+                end
+            end
+        end
+    end
     self:destroy()
     self:clear_all_op()
     info.hu_count = info.hu_count + 1
@@ -1550,18 +1600,15 @@ function jdmj:pass(id, msg)
                 all_pass = false
                 local op = v.op[base.MJ_OP_HU]
                 if op and op.hu_action and not self:check_hu_prior(self._gang_index, k) then
-                    local hu_type, mul = op.hu, op.mul
+                    local hu_type, mul, baotou = op.hu, op.mul, false
                     if mul < 4 then
                         mul = 4
                     end
-                    local scores = {0, 0, 0, 0}
-                    scores[k] = mul * 3
-                    scores[self._deal_index] = -mul * 3
                     last_deal = self._gang_card
                     last_index = self._gang_index
                     local u = role[last_index]
                     u.type_card[last_deal] = u.type_card[last_deal] - 1
-                    local user = self:hu_action(v, hu_type, scores, last_deal, last_index)
+                    local user = self:hu_action(v, hu_type, mul, baotou, last_deal, last_index)
                     local ci = {
                         status=self._status, count=self._count, banker=self._banker,
                     }
