@@ -1010,6 +1010,22 @@ function jdmj:contract()
     return c
 end
 
+function jdmj:check_hu_prior(gang_index, index)
+    local role = self._role
+    for i = 1, base.MJ_FOUR-1 do
+        local n = (gang_index+i-1)%base.MJ_FOUR+1
+        if n == index then
+            return false
+        else
+            local other = role[n]
+            if not other.pass and other.respond[base.MJ_OP_HU] then
+                return true
+            end
+        end
+    end
+    return false
+end
+
 function jdmj:hu(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     local index = info.index
@@ -1085,6 +1101,12 @@ function jdmj:hu(id, msg)
             error{code = error_code.ERROR_OPERATION}
         end
         local op = info.op[base.MJ_OP_HU]
+        if self:check_hu_prior(self._gang_index, index) then
+            op.hu_action = true
+            return session_msg(info, {
+                {index=index, action=base.MJ_OP_HU},
+            })
+        end
         hu_type, mul = op.hu, op.mul
         if mul < 4 then
             mul = 4
@@ -1097,6 +1119,20 @@ function jdmj:hu(id, msg)
         local u = role[last_index]
         u.type_card[last_deal] = u.type_card[last_deal] - 1
     end
+    local user = self:hu_action(info, hu_type, scores, last_deal, last_index)
+    local ci = {
+        status=self._status, count=self._count, banker=self._banker,
+    }
+    broadcast(user, ci, role, id)
+    if self._status == base.CHESS_STATUS_FINISH then
+        self:finish()
+    end
+    return session_msg(info, user, ci)
+end
+
+function jdmj:hu_action(info, hu_type, scores, last_deal, last_index)
+    local index = info.index
+    local role = self._role
     self:destroy()
     self:clear_all_op()
     info.hu_count = info.hu_count + 1
@@ -1157,14 +1193,7 @@ function jdmj:hu(id, msg)
     ws.hu = hu_type
     self._old_banker = banker
     self._banker = index
-    local ci = {
-        status=self._status, count=self._count, banker=self._banker,
-    }
-    broadcast(user, ci, role, id)
-    if self._status == base.CHESS_STATUS_FINISH then
-        self:finish()
-    end
-    return session_msg(info, user, ci)
+    return user
 end
 
 function jdmj:check_prior(index, op)
@@ -1384,9 +1413,9 @@ function jdmj:hide_gang(id, msg)
     if index ~= self._can_out then
         error{code = error_code.ERROR_OPERATION}
     end
-    if self:is_out_magic(index) then
-        error{code = error_code.ERROR_OPERATION}
-    end
+    -- if self:is_out_magic(index) then
+    --     error{code = error_code.ERROR_OPERATION}
+    -- end
     local card = msg.card
     if card == self._magic_card then
         error{code = error_code.ERROR_OPERATION}
@@ -1455,15 +1484,6 @@ function jdmj:hide_gang(id, msg)
     }, chess)
 end
 
-function jdmj:is_all_pass()
-    for k, v in ipairs(self._role) do
-        if not v.pass then
-            return false
-        end
-    end
-    return true
-end
-
 function jdmj:pass(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     local index = info.index
@@ -1523,20 +1543,44 @@ function jdmj:pass(id, msg)
         end
         info.pass = true
         local chess
-        if self:is_all_pass() then
+        local all_pass = true
+        local role = self._role
+        for k, v in ipairs(role) do
+            if not v.pass then
+                all_pass = false
+                local op = v.op[base.MJ_OP_HU]
+                if op and op.hu_action and not self:check_hu_prior(self._gang_index, k) then
+                    local hu_type, mul = op.hu, op.mul
+                    if mul < 4 then
+                        mul = 4
+                    end
+                    local scores = {0, 0, 0, 0}
+                    scores[k] = mul * 3
+                    scores[self._deal_index] = -mul * 3
+                    last_deal = self._gang_card
+                    last_index = self._gang_index
+                    local u = role[last_index]
+                    u.type_card[last_deal] = u.type_card[last_deal] - 1
+                    local user = self:hu_action(v, hu_type, scores, last_deal, last_index)
+                    local ci = {
+                        status=self._status, count=self._count, banker=self._banker,
+                    }
+                    broadcast(user, ci, role, id)
+                    if self._status == base.CHESS_STATUS_FINISH then
+                        self:finish()
+                    end
+                    user[index].action = base.MJ_OP_PASS
+                    return session_msg(info, user, ci)
+                end
+            end
+        end
+        if all_pass then
             local deal_index = self._deal_index
-            local role = self._role
             local r = role[deal_index]
             local weave = r.op[base.MJ_OP_HIDE_GANG]
             local card = weave.card
             r.type_card[card] = r.type_card[card] - 1
             weave.op = base.MJ_OP_GANG
-            local record_action = self._detail.action
-            record_action[#record_action+1] = {
-                index = deal_index,
-                op = base.MJ_OP_HIDE_GANG,
-                card = card,
-            }
             r.gang_count = r.gang_count + 1
             local c = self:deal(r)
             chess = {deal_index=deal_index, left=self._left}
