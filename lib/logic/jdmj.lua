@@ -1130,7 +1130,7 @@ end
 function jdmj:hu(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     local index = info.index
-    local hu_type, mul, baotou, last_deal, last_index
+    local hu_type, mul, baotou, last_deal, last_index, contract
     local role = self._role
     if self._deal_index == index then
         if self._pass_status ~= base.PASS_STATUS_DEAL then
@@ -1147,6 +1147,7 @@ function jdmj:hu(id, msg)
             error{code = error_code.ERROR_OPERATION}
         end
         last_deal = info.last_deal
+        contract = self:contract()
     else
         if self._pass_status ~= base.PASS_STATUS_GANG_HU then
             error{code = error_code.ERROR_OPERATION}
@@ -1172,8 +1173,10 @@ function jdmj:hu(id, msg)
         last_index = self._gang_index
         local u = role[last_index]
         u.type_card[last_deal] = u.type_card[last_deal] - 1
+        contract = {0, 0, 0, 0}
+        contract[index] = self._gang_index
     end
-    local record_id, user = self:hu_action(info, hu_type, mul, baotou, last_deal, last_index)
+    local record_id, user = self:hu_action(info, hu_type, mul, baotou, last_deal, last_index, contract)
     local ci = {
         status=self._status, count=self._count, banker=self._banker, record_id=record_id
     }
@@ -1184,10 +1187,9 @@ function jdmj:hu(id, msg)
     return session_msg(info, user, ci)
 end
 
-function jdmj:hu_action(info, hu_type, mul, baotou, last_deal, last_index)
+function jdmj:hu_action(info, hu_type, mul, baotou, last_deal, last_index, contract)
     local index = info.index
     local role = self._role
-    local contract = self:contract()
     local cindex = contract[index]
     if cindex > 0 and contract[cindex] == index then
         contract[cindex] = 0
@@ -1682,7 +1684,9 @@ function jdmj:pass(id, msg)
                     last_index = self._gang_index
                     local u = role[last_index]
                     u.type_card[last_deal] = u.type_card[last_deal] - 1
-                    local record_id, user = self:hu_action(v, hu_type, mul, baotou, last_deal, last_index)
+                    local contract = {0, 0, 0, 0}
+                    contract[k] = self._gang_index
+                    local record_id, user = self:hu_action(v, hu_type, mul, baotou, last_deal, last_index, contract)
                     local ci = {
                         status=self._status, count=self._count, banker=self._banker, record_id=record_id
                     }
