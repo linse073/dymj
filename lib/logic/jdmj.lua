@@ -1581,6 +1581,7 @@ function jdmj:hide_gang(id, msg)
             }
             broadcast(nil, chess, role, id)
             info.op[base.MJ_OP_HIDE_GANG] = weave
+            self._can_out = nil
             return session_msg(info, {
                 {index=index, action=base.MJ_OP_HIDE_GANG},
             }, chess)
