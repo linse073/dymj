@@ -1084,7 +1084,10 @@ function jdmj:hu(id, msg)
     local index = info.index
     local hu_type, mul, baotou, scores, last_deal, last_index, contract
     local role = self._role
-    if self._deal_index == index then
+    if self._pass_status ~= base.PASS_STATUS_GANG_HU then
+        if self._deal_index ~= inde then
+            error{code = error_code.ERROR_OPERATION}
+        end
         if self._pass_status ~= base.PASS_STATUS_DEAL then
             error{code = error_code.ERROR_OPERATION}
         end
@@ -1101,9 +1104,6 @@ function jdmj:hu(id, msg)
         last_deal = info.last_deal
         contract = self:contract()
     else
-        if self._pass_status ~= base.PASS_STATUS_GANG_HU then
-            error{code = error_code.ERROR_OPERATION}
-        end
         if info.pass then
             error{code = error_code.ALREADY_PASS}
         end
