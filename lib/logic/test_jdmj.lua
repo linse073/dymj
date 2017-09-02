@@ -852,17 +852,23 @@ function jdmj:consume_card()
     end
 end
 
-function jdmj:analyzeHu(info)
+function jdmj:analyzeHu(info, card)
     local type_card = info.type_card
     local magic_card = self._magic_card
     local wc = info.weave_card
     local mul, hu_type, baotou = 1, 0, false
-    local deal_card = self._deal_card
+    local deal_card
     local tc = {}
     for k, v in pairs(type_card) do
         if v > 0 then
             tc[k] = v
         end
+    end
+    if card then
+        tc[card] = type_card[card] + 1
+        deal_card = card
+    else
+        deal_card = self._deal_card
     end
     local magic_count = tc[magic_card] or 0
     tc[magic_card] = nil
@@ -1146,21 +1152,25 @@ function jdmj:hu_action(info, hu_type, mul, baotou, last_deal, last_index, contr
     if cindex > 0 and contract[cindex] == index then
         contract[cindex] = 0
     end
-    local cmul
-    if hu_type == base.HU_QINGYISE then
-        cmul = mul // 10 * 30
-    else
-        cmul = mul * 30
-    end
     local scores = {0, 0, 0, 0}
     local smul = 0
     for k, v in ipairs(contract) do
+        local i
         if v == index then
-            scores[k] = -cmul
-            smul = smul + cmul
+            i = k
         elseif k == index and v > 0 then
-            scores[v] = -cmul
-            smul = smul + cmul
+            i = v
+        end
+        if i then
+            local chu_type, cmul, cbaotou = self:analyzeHu(role[i], self._magic_card)
+            local fmul
+            if cmul > mul then
+                fmul = cmul * 3
+            else
+                fmul = mul * 3
+            end
+            scores[i] = -fmul
+            smul = smul + fmul
         end
     end
     if smul > 0 then
