@@ -1008,9 +1008,9 @@ function jdmj:gangHu(info, card)
     else
         local weave_card = {}
         if self:check_hu(tc, weave_card, magic_count, deal_card) then
-            hu_type = base.HU_NONE
             local head = weave_card[1]
             if not (head[1] == deal_card and head[2] == 0) then
+                hu_type = base.HU_NONE
                 local out_card = info.out_card
                 local len = #out_card
                 if len == 0 or out_card[len] ~= magic_card then
@@ -1694,6 +1694,7 @@ function jdmj:pass(id, msg)
                 end
             end
         end
+        local user = {{index=index, action=base.MJ_OP_PASS}}
         if all_pass then
             local deal_index = self._deal_index
             local r = role[deal_index]
@@ -1714,11 +1715,11 @@ function jdmj:pass(id, msg)
                 {index=deal_index, weave_card={weave}, last_deal=c},
             }, chess)
             broadcast({
-                {index=index, weave_card={weave}},
+                {index=deal_index, weave_card={weave}},
             }, chess, role, id, r.id)
+            user[#user+1] = {index=deal_index, weave_card={weave}}
         end
-        local user = {index=index, action=base.MJ_OP_PASS}
-        return session_msg(info, {user}, chess)
+        return session_msg(info, user, chess)
     else
         error{code = error_code.ERROR_OPERATION}
     end
