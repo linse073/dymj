@@ -1638,7 +1638,7 @@ function jdmj:pass(id, msg)
         end
         local user = {{index=index, action=base.MJ_OP_PASS}}
         if all_pass then
-            local deal_index = self._deal_index
+            local deal_index = self._gang_index
             local r = role[deal_index]
             local weave = r.op[base.MJ_OP_HIDE_GANG]
             local card = weave.card
@@ -1651,9 +1651,9 @@ function jdmj:pass(id, msg)
                 {index=deal_index, weave_card={weave}, last_deal=c},
             }, chess)
             broadcast({
-                {index=index, weave_card={weave}},
+                {index=deal_index, weave_card={weave}},
             }, chess, role, id, r.id)
-            user[#user+1] = {index=index, weave_card={weave}}
+            user[#user+1] = {index=deal_index, weave_card={weave}}
         end
         return session_msg(info, user, chess)
     else
