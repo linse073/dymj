@@ -876,7 +876,7 @@ function jdmj:analyzeHu(info, card)
     if hu then
         hu_type = base.HU_DUIZI
         mul = mul * 2
-        if not (tc[deal_card]%2 == 0 and magic_count == 0) then
+        if mc > 0 or tc[deal_card]%2 == 1 then
             mul = mul * 2^(info.out_magic+1)
             baotou = true
         end
@@ -946,7 +946,7 @@ function jdmj:gangHu(info, card)
     local magic_count = tc[magic_card] or 0
     tc[magic_card] = nil
     local hu, mc = is_badui(tc, magic_count)
-    if hu and not (tc[deal_card]%2 == 1 and magic_count == 0) then
+    if hu and not (mc > 0 or tc[deal_card]%2 == 1) then
         hu_type = base.HU_DUIZI
         mul = mul * 2
         if is_qingyise(tc, wc) then
