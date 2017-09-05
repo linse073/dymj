@@ -125,7 +125,7 @@ function jd13:finish()
     local role = self._role
     self._role = {}
     self._id = {}
-    for i = 1, base.MJ_FOUR do
+    for i = 1, base.P13_FOUR do
         local v = role[i]
         if v then
             skynet.call(chess_mgr, "lua", "del", v.id)
@@ -170,7 +170,7 @@ function jd13:pack(id, ip, agent)
                 close_time = self._close_time,
             }
             local user = {}
-            for i = 1, base.MJ_FOUR do
+            for i = 1, base.P13_FOUR do
                 local info = role[i]
                 if info then
                     local u = {
@@ -188,24 +188,11 @@ function jd13:pack(id, ip, agent)
                         hu_count = info.hu_count,
                         status = info.status,
                     }
-                    local type_card = info.type_card
-                    if type_card then
-                        local own_card = {}
-                        for k1, v1 in pairs(type_card) do
-                            for j = 1, v1 do
-                                own_card[#own_card+1] = k1
-                            end
-                        end
+                    if info.out_card then
                         local show_card = {
-                            own_card = own_card,
+                            own_card = info.out_card,
                             score = info.last_score,
                         }
-                        if info.last_score > 0 then
-                            local last_hu = info.last_hu
-                            show_card.last_deal = last_hu.last_deal
-                            show_card.hu = last_hu.hu
-                        end
-                        u.weave_card = info.weave_card
                         u.show_card = show_card
                     end
                     user[#user+1] = u
@@ -221,66 +208,36 @@ function jd13:pack(id, ip, agent)
                 status = status,
                 count = self._count,
                 pause = self._pause,
-                left = self._left,
-                deal_index = self._deal_index,
-                out_card = self._out_card,
-                out_index = self._out_index,
                 close_index = self._close_index,
                 close_time = self._close_time,
-                pass_status = self._pass_status,
-                can_out = self._can_out,
             }
             local user = {}
-            for i = 1, base.MJ_FOUR do
+            for i = 1, base.P13_FOUR do
                 local info = role[i]
-                local u = {
-                    account = info.account,
-                    id = info.id,
-                    sex = info.sex,
-                    nick_name = info.nick_name,
-                    head_img = info.head_img,
-                    ip = info.ip,
-                    index = info.index,
-                    score = info.score,
-                    ready = info.ready,
-                    deal_end = info.deal_end,
-                    agree = info.agree,
-                    out_magic = info.out_magic>0,
-                    top_score = info.top_score,
-                    hu_count = info.hu_count,
-                    status = info.status,
-                }
-                local out_card = info.out_card
-                if out_card and #out_card > 0 then
-                    u.out_card = out_card
-                end
-                local weave_card = info.weave_card
-                if weave_card and #weave_card > 0 then
-                    u.weave_card = weave_card
-                end
-                if info.op[base.MJ_OP_CHI] then
-                    u.action = base.MJ_OP_CHI
-                end
-                if info.id == id then
-                    local own_card = {}
-                    for k, v in pairs(info.type_card) do
-                        for i = 1, v do
-                            own_card[#own_card+1] = k
-                        end
+                if info then
+                    local u = {
+                        account = info.account,
+                        id = info.id,
+                        sex = info.sex,
+                        nick_name = info.nick_name,
+                        head_img = info.head_img,
+                        ip = info.ip,
+                        index = info.index,
+                        score = info.score,
+                        ready = info.ready,
+                        deal_end = info.deal_end,
+                        agree = info.agree,
+                        top_score = info.top_score,
+                        hu_count = info.hu_count,
+                        status = info.status,
+                        pass = info.pass,
+                    }
+                    if info.id == id then
+                        u.own_card = info.deal_card
+                        u.out_card = info.out_card
                     end
-                    u.own_card = own_card
-                    u.own_count = #own_card
-                    u.last_deal = info.last_deal
-                    u.chi_count = info.chi_count
-                    u.pass = info.pass
-                else
-                    local count = 0
-                    for k, v in pairs(info.type_card) do
-                        count = count + v
-                    end
-                    u.own_count = count
+                    user[#user+1] = u
                 end
-                user[#user+1] = u
             end
             return {info=chess, user=user, start_session=si.session}
         end
@@ -303,7 +260,7 @@ function jd13:enter(info, agent, index)
     self._id[info.id] = info
     skynet.call(chess_mgr, "lua", "add", info.id, skynet.self())
     local user = {}
-    for i = 1, base.MJ_FOUR do
+    for i = 1, base.P13_FOUR do
         user[#user+1] = role[i] -- role[i] can be nil
     end
     local chess = {
@@ -335,7 +292,7 @@ function jd13:join(name, info, room_card, agent)
     end
     local role = self._role
     local index
-    for i = 1, base.MJ_FOUR do
+    for i = 1, self._rule.user do
         if not role[i] then
             index = i
             break
@@ -474,7 +431,7 @@ end
 
 function jd13:is_all_ready()
     local role = self._role
-    for i = 1, base.MJ_FOUR do
+    for i = 1, base.P13_FOUR do
         local v = role[i]
         if not v or not v.ready then
             return false
@@ -537,7 +494,7 @@ end
 
 function jd13:is_all_deal()
     local role = self._role
-    for i = 1, base.MJ_FOUR do
+    for i = 1, base.P13_FOUR do
         local v = role[i]
         if not v.deal_end then
             return false
@@ -575,7 +532,7 @@ function jd13:analyze(card, index)
         if k ~= index and not self:is_out_magic(k) and v.chi_count[index] < base.MJ_CHI_COUNT then
             local type_card = v.type_card
             local chi = false
-            if k == index%base.MJ_FOUR+1 then
+            if k == index%base.P13_FOUR+1 then
                 for k1, v1 in ipairs(CHI_RULE) do
                     local c1, c2 = card+v1[1], card+v1[2]
                     if valid_card(c1) and type_card[c1]>=1 
@@ -654,7 +611,7 @@ function jd13:out_card(id, msg)
     local deal_id
     local role = self._role
     if not self:analyze(card, index) then
-        local deal_index = index%base.MJ_FOUR+1
+        local deal_index = index%base.P13_FOUR+1
         local r = role[deal_index]
         deal_id = r.id
         local c = self:deal(r)
@@ -1008,8 +965,8 @@ end
 function jd13:check_prior(index, op)
     local front = true
     local role = self._role
-    for i = 1, base.MJ_FOUR-1 do
-        local n = (self._out_index+i-1)%base.MJ_FOUR+1
+    for i = 1, base.P13_FOUR-1 do
+        local n = (self._out_index+i-1)%base.P13_FOUR+1
         if n == index then
             front = false
         else
@@ -1045,7 +1002,7 @@ function jd13:chi(id, msg)
         error{code = error_code.ERROR_OPERATION}
     end
     local index = info.index
-    if index ~= out_index%base.MJ_FOUR+1 then
+    if index ~= out_index%base.P13_FOUR+1 then
         error{code = error_code.ERROR_OPERATION}
     end
     local valid = false
@@ -1296,7 +1253,7 @@ function jd13:pass(id, msg)
             end
         end
         if all_pass then
-            local deal_index = out_index%base.MJ_FOUR+1
+            local deal_index = out_index%base.P13_FOUR+1
             local r = role[deal_index]
             local c = self:deal(r)
             chess = {deal_index=deal_index, left=self._left}
@@ -1476,8 +1433,8 @@ function jd13:start()
     local left = #card
     local role = self._role
     local record_user = {}
-    for j = 1, base.MJ_FOUR do
-        local index = (self._banker+j-2)%base.MJ_FOUR+1
+    for j = 1, base.P13_FOUR do
+        local index = (self._banker+j-2)%base.P13_FOUR+1
         local v = role[index]
         local type_card = {}
         for i = 1, base.MJ_CARD_INDEX do
@@ -1491,7 +1448,7 @@ function jd13:start()
         v.op = {}
         v.out_card = {}
         local chi_count = {}
-        for i = 1, base.MJ_FOUR do
+        for i = 1, base.P13_FOUR do
             chi_count[i] = 0
         end
         v.chi_count = chi_count

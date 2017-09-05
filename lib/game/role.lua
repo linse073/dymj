@@ -5,6 +5,7 @@ local notify = require "notify"
 local util = require "util"
 local cjson = require "cjson"
 local func = require "func"
+local option = require "logic.option"
 
 local pairs = pairs
 local ipairs = ipairs
@@ -27,7 +28,6 @@ local error_code
 local base
 local cz
 local rand
-local valid_chess
 local game_day
 local role_mgr
 local offline_mgr
@@ -48,7 +48,6 @@ skynet.init(function()
     base = share.base
     cz = share.cz
     rand = share.rand
-    valid_chess = share.valid_chess
     game_day = func.game_day
     role_mgr = skynet.queryservice("role_mgr")
     offline_mgr = skynet.queryservice("offline_mgr")
@@ -344,7 +343,7 @@ function proc.get_role(msg)
 end
 
 function proc.new_chess(msg)
-    local config = valid_chess[msg.name]
+    local config = option[msg.name]
     if not config then
         error{code = error_code.NO_CHESS}
     end
@@ -353,20 +352,7 @@ function proc.new_chess(msg)
     if data.chess_table then
         error{code = error_code.ALREAD_IN_CHESS}
     end
-    local rule = {pack=msg.rule}
-    local p, c = string.unpack("BB", msg.rule)
-    if p == 1 then
-        rule.aa_pay = true
-    else
-        rule.aa_pay = false
-    end
-    local r
-    if c == 1 then
-        r = config.rule[1]
-    else
-        r = config.rule[2]
-    end
-    rule.total_count, rule.total_card, rule.single_card = r[1], r[2], r[3]
+    local rule = config(msg.rule)
     local user = data.user
     if rule.aa_pay then
         if user.room_card < rule.single_card then

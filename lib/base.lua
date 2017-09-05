@@ -9,7 +9,8 @@ local base = {
     MJ_CARD_INDEX = 45,
     MJ_CHI_COUNT = 2,
     JDMJ_ROLE_CARD = 16,
-    POKER_CARD_INDEX = 13,
+    POKER_CARD_INDEX = 52,
+    P13_FOUR = 4,
 
     MJ_OP_CHI = 1,
     MJ_OP_PENG = 2,

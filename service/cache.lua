@@ -32,34 +32,6 @@ skynet.start(function()
     end
     sharedata.new("mj_invalid_card", mj_invalid_card)
 
-    local valid_chess = {
-        dymj = {
-            rule = {
-                {8, 4, 1},
-                {16, 8, 2},
-            },
-        },
-        test_dymj = {
-            rule = {
-                {8, 4, 1},
-                {16, 8, 2},
-            },
-        },
-        jdmj = {
-            rule = {
-                {10, 4, 1},
-                {20, 8, 2},
-            },
-        },
-        test_jdmj = {
-            rule = {
-                {10, 4, 1},
-                {20, 8, 2},
-            },
-        },
-    }
-    sharedata.new("valid_chess", valid_chess)
-
     -- protocol
     local file = skynet.getenv("root") .. "proto/proto.sp"
     sprotoloader.register(file, 1)
