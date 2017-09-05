@@ -11,6 +11,7 @@ local base = {
     JDMJ_ROLE_CARD = 16,
     POKER_CARD_INDEX = 52,
     P13_FOUR = 4,
+    P13_ROLE_CARD = 13,
 
     MJ_OP_CHI = 1,
     MJ_OP_PENG = 2,
@@ -45,6 +46,8 @@ local base = {
     PASS_STATUS_OUT = 2,
     PASS_STATUS_GANG_HU = 3,
     PASS_STATUS_WEAVE = 4,
+
+    P13_OP_LEAVE = 1,
 }
 
 return base

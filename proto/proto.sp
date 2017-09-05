@@ -226,3 +226,7 @@
     receipt 1 : string
     sandbox 2 : boolean
 }
+
+.thirteen_out {
+    card 0 : *integer
+}

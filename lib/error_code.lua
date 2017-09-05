@@ -49,6 +49,11 @@ local type_code = {
         ALREADY_DEAL_END="已经发完牌",
         ROOM_CLOSE="房间已解散",
     },
+
+    [4000] = {
+        ALREADY_OUT="已经摆牌",
+        CARD_MISMATCH="牌不匹配",
+    },
 }
 
 local code = {}
