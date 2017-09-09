@@ -1813,7 +1813,7 @@ function jdmj:start()
         util.shuffle(card, self._rand)
     end
     self._card = card
-    self._status = base.CHESS_STATUS_DEAL
+    self._status = base.CHESS_STATUS_START
     self._out_card = nil
     self._out_index = nil
     self._old_banker = nil
