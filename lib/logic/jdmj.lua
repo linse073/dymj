@@ -643,9 +643,9 @@ function jdmj:out_card(id, msg)
     if type_card[card] == 0 then
         error{code = error_code.NO_OUT_CARD}
     end
-    if self:is_out_magic(index) and card ~= self._deal_card then
-        error{code = error_code.OUT_CARD_LIMIT}
-    end
+    -- if self:is_out_magic(index) and card ~= self._deal_card then
+    --     error{code = error_code.OUT_CARD_LIMIT}
+    -- end
     self._can_out = nil
     type_card[card] = type_card[card] - 1
     if card == self._magic_card then
