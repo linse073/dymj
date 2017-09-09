@@ -863,10 +863,9 @@ function dymj:hu(id, msg)
     if hu then
         hu_type = base.HU_DUIZI
         mul = 2^(four_count+1)
-        if (deal_card ~= magic_card and tc[deal_card]%2 == 1)
-            or (deal_card == magic_card and mc > 0) then
+        if mc > 0 or (deal_card ~= magic_card and tc[deal_card]%2 == 1) then
             mul = mul * 2^(info.out_magic+1)
-        elseif tc[magic_card] == 0 then
+        elseif magic_count == 0 then
             mul = mul * 2
         end
     else
