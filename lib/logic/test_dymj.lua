@@ -129,9 +129,17 @@ function dymj:status(id, status, addr)
             if status == base.USER_STATUS_LOGOUT then
                 info.agent = nil
             end
-            broadcast({
-                {index=info.index, status=status, ip=addr},
-            }, nil, self._role)
+            local user = {index=info.index, status=status, ip=addr}
+            local chess
+            if self._status == base.CHESS_STATUS_DEAL and not info.deal_end then
+                info.deal_end = true
+                user.deal_end = true
+                if self:is_all_deal() then
+                    self._status = base.CHESS_STATUS_START
+                    chess = {status=self._status}
+                end
+            end
+            broadcast({user}, chess, self._role)
         end
     end
 end
@@ -439,15 +447,17 @@ function dymj:ready(id, msg)
     info.ready = true
     local index = info.index
     local user = {index=index, ready=true}
-    local chess = {}
+    local chess
     if self:is_all_ready() then
         self:start()
         -- self
-        chess.status = self._status
-        chess.left = self._left
-        chess.deal_index = self._deal_index
         local now = floor(skynet.time())
-        chess.rand = now
+        chess = {
+            status = self._status,
+            left = self._left,
+            deal_index = self._deal_index,
+            rand = now,
+        }
         user.own_card = info.deal_card
         if index == self._banker then
             user.last_deal = info.last_deal
@@ -489,10 +499,10 @@ function dymj:deal_end(id, msg)
     end
     info.deal_end = true
     local user = {index=info.index, deal_end=true}
-    local chess = {}
+    local chess
     if self:is_all_deal() then
         self._status = base.CHESS_STATUS_START
-        chess.status = self._status
+        chess = {status=self._status}
         local banker = self._role[self._banker]
         if banker.android then
             self:android_deal(banker)
