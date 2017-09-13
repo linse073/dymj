@@ -52,7 +52,6 @@ local type_code = {
 
     [4000] = {
         ALREADY_OUT="已经摆牌",
-        CARD_MISMATCH="牌不匹配",
     },
 }
 

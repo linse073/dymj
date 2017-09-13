@@ -745,7 +745,7 @@ function jd13:thirteen_out(id, msg)
     table.sort(temp_own)
     for i = 1, base.P13_ROLE_CARD do
         if temp_card[i] ~= temp_own[i] then
-            error{code = error_code.CARD_MISMATCH}
+            error{code = error_code.INVALID_CARD}
         end
     end
     -- TODO: check reverse
