@@ -33,7 +33,7 @@ skynet.init(function()
 end)
 
 local function valid_card(c)
-    return c>0 and c<=base.POKER_CARD_INDEX
+    return c>0 and c<=base.POKER_CARD
 end
 
 local function session_msg(user, chess_user, chess_info)
@@ -533,7 +533,186 @@ function jd13:consume_card()
     end
 end
 
+local function compare(l, r)
+    if l.p ~= r.p then
+        return l.p > r.p
+    end
+    return l.v > r.v
+end
+
+local function analyze(card, ib, ie)
+    local color = {}
+    local value = {}
+    local array = {}
+    local value_color = {}
+    for i = ib, ie do
+        local tc = card[i] - 1
+        local c, v = tc//base.POKER_VALUE+1, tc%base.POKER_VALUE+1
+        color[c] = (color[c] or 0) + 1
+        value[v] = (value[v] or 0) + 1
+        array[#array+1] = v
+        value_color[v] = c
+    end
+    local sc = false
+    for k, v in pairs(color) do
+        if v == 5 then
+            sc = true
+        end
+        break
+    end
+    local sv = {}
+    local comp = {}
+    for k, v in pairs(value) do
+        sv[v] = (sv[v] or 0) + 1
+        if v == 1 then
+            comp[#comp+1] = {v=value_color[k], p=k}
+        end
+        comp[#comp+1] = {v=k, p=20+v}
+    end
+    table.sort(comp, compare)
+    local shunzi = false
+    if sv[1] == 5 then
+        table.sort(array)
+        if array[5] - array[1] == 4 then
+            shunzi = true
+        elseif array[1] == 1 and array[4] == 4 and array[5] == 13 then
+            shunzi = true
+            comp[1].v = 14
+        end
+    end
+    local pt = base.P13_TYPE_NONE
+    if sc then
+        if shunzi then
+            pt = base.P13_TYPE_TONGHUASHUN
+        else
+            pt = base.P13_TYPE_TONGHUA
+        end
+    else
+        if shunzi then
+            pt = base.P13_TYPE_SHUNZI
+        elseif sv[4] then
+            pt = base.P13_TYPE_ZHADAN
+        elseif sv[3] then
+            if sv[2] then
+                pt = base.P13_TYPE_HULU
+            else
+                pt = base.P13_TYPE_SANZHANG
+            end
+        elseif sv[2] then
+            if sv[2] == 2 then
+                pt = base.P13_TYPE_LIANGDUI
+            else
+                pt = base.P13_TYPE_DUIZI
+            end
+        end
+    end
+    return {pt=pt, comp=comp, count=sv[1]}
+end
+
+local function comp_1(l, r)
+    if l.pt ~= r.pt then
+        return l.pt > r.pt
+    end
+    local lcomp = l.comp
+    local rcomp = r.comp
+    local rc = {}
+    for i = 1, #lcomp-l.count do
+        rc[i] = rcomp[i]
+    end
+    local b = #rcomp - r.count
+    for i = b+1, b+l.count do
+        rc[#rc+1] = rcomp[i]
+    end
+    for k, v in ipairs(lcomp) do
+        local lv, rv = v.v, rc[k].v
+        if lv ~= rv then
+            return lv > rv
+        end
+    end
+    return true
+end
+
+local function comp_2(l, r)
+    if l.pt ~= r.pt then
+        return l.pt > r.pt
+    end
+    local rcomp = r.comp
+    for k, v in ipairs(l.comp) do
+        local lv, rv = v.v, rcomp[k].v
+        if lv ~= rv then
+            return lv > rv
+        end
+    end
+    return true
+end
+
+local function comp_3(l, r)
+    if comp_2(l, r) then
+        return 1, l.pt
+    else
+        return -1, r.pt
+    end
+end
+
 function jd13:settle()
+    local count = self._rule.user
+    local role = self._role
+    local scores = {0, 0, 0, 0}
+    local shoot = {0, 0, 0, 0}
+    for i = 1, count do
+        for j = i+1, count do
+            local wc = 0
+            local score = 0
+            local lt, rt = role[i].type_card, role[j].type_card
+            local w1, wt1 = comp_3(lt[1], rt[1])
+            wc = wc + w1
+            if wt1 == base.P13_TYPE_SANZHANG then
+                score = score + w1 * 3
+            else
+                score = score + w1
+            end
+            local w2, wt2 = comp_3(lt[2], rt[2])
+            wc = wc + w2
+            if wt2 == base.P13_TYPE_TONGHUASHUN then
+                score = score + w2 * 10
+            elseif wt2 == base.P13_TYPE_ZHADAN then
+                score = score + w2 * 8
+            elseif wt2 == base.P13_TYPE_HULU then
+                score = score + w2 * 2
+            else
+                score = score + w2
+            end
+            local w3, wt3 = comp_3(lt[3], rt[3])
+            wc = wc + w3
+            if wt3 == base.P13_TYPE_TONGHUASHUN then
+                score = score + w3 * 5
+            elseif wt3 == base.P13_TYPE_ZHADAN then
+                score = score + w3 * 4
+            else
+                score = score + w3
+            end
+            if wc == 3 then
+                score = score + 3
+                shoot[i] = shoot[i] + 1
+            elseif wc == -3 then
+                score = score - 3
+                shoot[j] = shoot[j] + 1
+            end
+            scores[i] = scores[i] + score
+            scores[j] = scores[j] - score
+        end
+    end
+    local all_shoot = count - 1
+    for i = 1, count do
+        if shoot[i] == all_shoot then
+            scores[i] = scores[i] + 21
+            for j = 1, count do
+                if j ~= i then
+                    scores[j] = scores[j] - 7
+                end
+            end
+        end
+    end
 
     local info = self:op_check(id, base.CHESS_STATUS_START)
     local index = info.index
@@ -748,12 +927,21 @@ function jd13:thirteen_out(id, msg)
             error{code = error_code.INVALID_CARD}
         end
     end
-    -- TODO: check reverse
+    local type_card = {
+        analyze(card, 1, 3),
+        analyze(card, 4, 8),
+        analyze(card, 9, 13),
+    }
+    if comp_1(type_card[1], type_card[2]) or comp_2(type_card[2], type_card[3]) then
+        error{code = error_code.ERROR_OPERATION}
+    end
     info.out_card = card
+    info.type_card = type_card
     local record_action = self._detail.action
     record_action[#record_action+1] = {
         index = index,
         out_card = card,
+        type_card = type_card,
     }
     if self:is_all_out() then
         return self:settle()
@@ -770,7 +958,7 @@ function jd13:start()
         card = util.clone(self._custom_card)
     else
         card = {}
-        for i = 1, base.POKER_CARD_INDEX do
+        for i = 1, base.POKER_CARD do
             card[i] = i
         end
         util.shuffle(card, self._rand)
@@ -785,6 +973,7 @@ function jd13:start()
         local index = (self._banker+j-2)%base.P13_FOUR+1
         local v = role[index]
         v.out_card = nil
+        v.type_card = nil
         local deal_card = {}
         for i = 1, base.P13_ROLE_CARD do
             local c = card[left]

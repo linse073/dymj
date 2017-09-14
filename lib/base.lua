@@ -9,7 +9,9 @@ local base = {
     MJ_CARD_INDEX = 45,
     MJ_CHI_COUNT = 2,
     JDMJ_ROLE_CARD = 16,
-    POKER_CARD_INDEX = 52,
+    POKER_CARD = 52,
+    POKER_VALUE = 13,
+    POKER_COLOR = 4,
     P13_FOUR = 4,
     P13_ROLE_CARD = 13,
 
@@ -48,6 +50,16 @@ local base = {
     PASS_STATUS_WEAVE = 4,
 
     P13_OP_LEAVE = 1,
+
+    P13_TYPE_NONE = 0,
+    P13_TYPE_DUIZI = 1,
+    P13_TYPE_LIANGDUI = 2,
+    P13_TYPE_SANZHANG = 3,
+    P13_TYPE_SHUNZI = 4,
+    P13_TYPE_TONGHUA = 5,
+    P13_TYPE_HULU = 6,
+    P13_TYPE_ZHADAN = 7,
+    P13_TYPE_TONGHUASHUN = 8,
 }
 
 return base
