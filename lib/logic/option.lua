@@ -50,8 +50,10 @@ local function jd13(rule)
     end
     if c == 1 then
         r.total_count, r.total_card, r.single_card = 10, r.user, 1
-    else
+    elseif c == 2 then
         r.total_count, r.total_card, r.single_card = 20, 2*r.user, 2
+    else
+        r.total_count, r.total_card, r.single_card = 30, 3*r.user, 3
     end
     return r
 end

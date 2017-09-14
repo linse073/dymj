@@ -703,93 +703,18 @@ function jd13:settle()
         end
     end
     local all_shoot = count - 1
-    for i = 1, count do
-        if shoot[i] == all_shoot then
-            scores[i] = scores[i] + 21
-            for j = 1, count do
-                if j ~= i then
-                    scores[j] = scores[j] - 7
+    if all_shoot > 1 then
+        for i = 1, count do
+            if shoot[i] == all_shoot then
+                scores[i] = scores[i] + 7 * all_shoot
+                for j = 1, count do
+                    if j ~= i then
+                        scores[j] = scores[j] - 7
+                    end
                 end
             end
         end
     end
-
-    local info = self:op_check(id, base.CHESS_STATUS_START)
-    local index = info.index
-    if self._deal_index ~= index then
-        error{code = error_code.ERROR_OPERATION}
-    end
-    if self._pass_status ~= base.PASS_STATUS_DEAL then
-        error{code = error_code.ERROR_OPERATION}
-    end
-    if info.pass then
-        error{code = error_code.ALREADY_PASS}
-    end
-    if self._can_out ~= index then
-        error{code = error_code.ERROR_OPERATION}
-    end
-    local type_card = info.type_card
-    local magic_card = self._magic_card
-    local deal_card = self._deal_card
-    local mul = 1
-    local tc = {}
-    for k, v in pairs(type_card) do
-        if v > 0 then
-            tc[k] = v
-        end
-    end
-    local magic_count = tc[magic_card] or 0
-    tc[magic_card] = nil
-    local hu, four_count, mc = is_qidui(tc, magic_count)
-    local hu_type
-    if hu then
-        hu_type = base.HU_DUIZI
-        mul = 2^(four_count+1)
-        if (deal_card ~= magic_card and tc[deal_card]%2 == 1)
-            or (deal_card == magic_card and mc > 0) then
-            mul = mul * 2^(info.out_magic+1)
-        elseif tc[magic_card] == 0 then
-            mul = mul * 2
-        end
-    else
-        local weave_card = {}
-        if not self:check_hu(tc, weave_card, magic_count) then
-            error{code = error_code.ERROR_OPERATION}
-        end
-        hu_type = base.HU_NONE
-        local head = weave_card[1]
-        if head[1] == deal_card and head[2] == 0 then
-            if info.gang_count > 0 then
-                hu_type = base.HU_GANGBAO
-            else
-                hu_type = base.HU_BAOTOU
-            end
-            mul = 2^info.gang_count
-            mul = mul * 2^(info.out_magic+1)
-        else
-            local out_card = info.out_card
-            local len = #out_card
-            if len == 0 or out_card[len] ~= magic_card then
-                if info.gang_count > 0 then
-                    hu_type = base.HU_GANGKAI
-                end
-                mul = 2^info.gang_count
-            end
-        end
-    end
-    local banker = self._banker
-    local scores
-    if index == banker then
-        local ts = -mul * 8
-        scores = {ts, ts, ts, ts}
-        scores[index] = mul * 24
-    else
-        scores = {-mul, -mul, -mul, -mul}
-        scores[banker] = -mul * 8
-        scores[index] = mul * 10
-    end
-    self:clear_all_op()
-    info.hu_count = info.hu_count + 1
     self._count = self._count + 1
     if self._count == self._rule.total_count then
         self._status = base.CHESS_STATUS_FINISH
@@ -800,13 +725,7 @@ function jd13:settle()
         self:consume_card()
     end
     local user = {}
-    local role = self._role
     local detail = self._detail
-    local record_action = detail.action
-    record_action[#record_action+1] = {
-        index = index,
-        op = base.MJ_OP_HU,
-    }
     detail.id = skynet.call(self._server, "lua", "gen_record_detail")
     local record_score = {}
     detail.score = record_score
@@ -822,19 +741,13 @@ function jd13:settle()
         record_score[k] = score
         v.last_score = score
         v.score = v.score + score
-        local own_card = {}
-        for k1, v1 in pairs(v.type_card) do
-            for i = 1, v1 do
-                own_card[#own_card+1] = k1
-            end
-        end
         local u = {
             index = k,
             ready = v.ready,
             deal_end = v.deal_end,
             score = v.score,
             show_card = {
-                own_card = own_card,
+                own_card = v.out_card,
                 score = score,
             },
         }
@@ -878,16 +791,6 @@ function jd13:settle()
         sr.record = {record_detail}
         skynet.call(record_info_db, "lua", "safe_insert", sr)
     end
-    info.last_hu = {
-        last_deal = info.last_deal,
-        hu = hu_type,
-    }
-    local win = user[index]
-    win.hu_count = info.hu_count
-    win.action = base.MJ_OP_HU
-    local ws = win.show_card
-    ws.last_deal = info.last_deal
-    ws.hu = hu_type
     self._old_banker = banker
     self._banker = index
     local ci = {
