@@ -179,7 +179,6 @@
 
 .join {
     number 0 : integer
-    name 1 : string
 }
 
 .out_card {

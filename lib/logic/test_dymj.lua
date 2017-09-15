@@ -360,10 +360,7 @@ function dymj:enter(info, agent, index)
     }}}
 end
 
-function dymj:join(name, info, room_card, agent)
-    if name ~= "dymj" then
-        error{code = error_code.ERROR_CHESS_NAME}
-    end
+function dymj:join(info, room_card, agent)
     if self._status ~= base.CHESS_STATUS_READY then
         error{code = error_code.ERROR_OPERATION}
     end

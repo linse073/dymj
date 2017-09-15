@@ -337,10 +337,7 @@ function jdmj:enter(info, agent, index)
     }}}
 end
 
-function jdmj:join(name, info, room_card, agent)
-    if name ~= "jdmj" then
-        error{code = error_code.ERROR_CHESS_NAME}
-    end
+function jdmj:join(info, room_card, agent)
     if self._status ~= base.CHESS_STATUS_READY then
         error{code = error_code.ERROR_OPERATION}
     end
