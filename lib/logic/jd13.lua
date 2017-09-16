@@ -133,7 +133,7 @@ function jd13:finish()
     local role = self._role
     self._role = {}
     self._id = {}
-    for i = 1, base.P13_FOUR do
+    for i = 1, self._rule.user do
         local v = role[i]
         if v then
             skynet.call(chess_mgr, "lua", "del", v.id)
@@ -164,11 +164,12 @@ function jd13:pack(id, ip, agent)
             {index=si.index, status=si.status, ip=ip},
         }, nil, role, id)
         local status = self._status
+        local rule = self._rule
         if status == base.CHESS_STATUS_READY then
             local chess = {
                 name = "jd13",
                 number = self._number,
-                rule = self._rule.pack,
+                rule = rule.pack,
                 banker = self._banker,
                 status = status,
                 count = self._count,
@@ -178,7 +179,7 @@ function jd13:pack(id, ip, agent)
                 close_time = self._close_time,
             }
             local user = {}
-            for i = 1, base.P13_FOUR do
+            for i = 1, rule.user do
                 local info = role[i]
                 if info then
                     local u = {
@@ -211,7 +212,7 @@ function jd13:pack(id, ip, agent)
             local chess = {
                 name = "jd13",
                 number = self._number,
-                rule = self._rule.pack,
+                rule = rule.pack,
                 banker = self._banker,
                 status = status,
                 count = self._count,
@@ -220,7 +221,7 @@ function jd13:pack(id, ip, agent)
                 close_time = self._close_time,
             }
             local user = {}
-            for i = 1, base.P13_FOUR do
+            for i = 1, rule.user do
                 local info = role[i]
                 if info then
                     local u = {
@@ -268,13 +269,14 @@ function jd13:enter(info, agent, index)
     self._id[info.id] = info
     skynet.call(chess_mgr, "lua", "add", info.id, skynet.self())
     local user = {}
-    for i = 1, base.P13_FOUR do
+    local rule = self._rule
+    for i = 1, rule.user do
         user[#user+1] = role[i] -- role[i] can be nil
     end
     local chess = {
         name = "jd13",
         number = self._number,
-        rule = self._rule.pack,
+        rule = rule.pack,
         banker = self._banker,
         status = self._status,
         count = self._count,
@@ -292,12 +294,13 @@ function jd13:join(info, room_card, agent)
     if self._status ~= base.CHESS_STATUS_READY then
         error{code = error_code.ERROR_OPERATION}
     end
-    if self._rule.aa_pay and room_card < self._rule.single_card then
+    local rule = self._rule
+    if rule.aa_pay and room_card < rule.single_card then
         error{code = error_code.ROOM_CARD_LIMIT}
     end
     local role = self._role
     local index
-    for i = 1, self._rule.user do
+    for i = 1, rule.user do
         if not role[i] then
             index = i
             break
@@ -518,14 +521,15 @@ function jd13:deal_end(id, msg)
 end
 
 function jd13:consume_card()
-    if self._rule.aa_pay then
-        local count = -self._rule.single_card
+    local rule = self._rule
+    if rule.aa_pay then
+        local count = -rule.single_card
         for k, v in ipairs(self._role) do
             skynet.call(offline_mgr, "lua", "add", v.id, "role", "add_room_card", count)
         end
     else
         local id = self._role[1].id
-        local count = -self._rule.total_card
+        local count = -rule.total_card
         skynet.call(offline_mgr, "lua", "add", id, "role", "add_room_card", count)
     end
 end
@@ -869,7 +873,8 @@ function jd13:start()
     local left = #card
     local role = self._role
     local record_user = {}
-    for j = 1, self._rule.user do
+    local rule = self._rule
+    for j = 1, rule.user do
         local index = (self._banker+j-2)%base.P13_FOUR+1
         local v = role[index]
         v.out_card = nil
@@ -897,7 +902,7 @@ function jd13:start()
         info = {
             name = "jd13",
             number = self._number,
-            rule = self._rule.pack,
+            rule = rule.pack,
             banker = self._banker,
             count = self._count,
         },
