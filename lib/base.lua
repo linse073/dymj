@@ -14,6 +14,7 @@ local base = {
     POKER_COLOR = 4,
     P13_FOUR = 4,
     P13_ROLE_CARD = 13,
+    P13_COLOR = 4,
 
     MJ_OP_CHI = 1,
     MJ_OP_PENG = 2,
