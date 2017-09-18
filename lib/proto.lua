@@ -64,6 +64,7 @@ local type_msg = {
         "leave",
         "reply",
         "chat_info",
+        "thirteen_out",
     },
 }
 
