@@ -194,7 +194,6 @@ function jd13:pack(id, ip, agent)
                         ready = info.ready,
                         deal_end = info.deal_end,
                         top_score = info.top_score,
-                        hu_count = info.hu_count,
                         status = info.status,
                     }
                     if info.out_card then
@@ -237,7 +236,6 @@ function jd13:pack(id, ip, agent)
                         deal_end = info.deal_end,
                         agree = info.agree,
                         top_score = info.top_score,
-                        hu_count = info.hu_count,
                         status = info.status,
                         pass = info.pass,
                     }
@@ -261,7 +259,6 @@ function jd13:enter(info, agent, index)
     info.score = 0
     info.ready = false
     info.deal_end = false
-    info.hu_count = 0
     info.top_score = 0
     info.session = 1
     info.status = base.USER_STATUS_ONLINE
