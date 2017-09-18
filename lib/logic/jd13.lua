@@ -657,6 +657,7 @@ end
 
 function jd13:settle(info)
     local index = info.index
+    local id = info.id
     local count = self._rule.user
     local role = self._role
     local scores = {0, 0, 0, 0}
