@@ -655,7 +655,7 @@ local function comp_3(l, r)
     end
 end
 
-function jd13:settle()
+function jd13:settle(info)
     local count = self._rule.user
     local role = self._role
     local scores = {0, 0, 0, 0}
@@ -848,7 +848,7 @@ function jd13:thirteen_out(id, msg)
         type_card = type_card,
     }
     if self:is_all_out() then
-        return self:settle()
+        return self:settle(info)
     else
         local user = {index=index, pass=true}
         broadcast({user}, nil, self._role, id)
