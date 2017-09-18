@@ -656,6 +656,7 @@ local function comp_3(l, r)
 end
 
 function jd13:settle(info)
+    local index = info.index
     local count = self._rule.user
     local role = self._role
     local scores = {0, 0, 0, 0}
@@ -792,8 +793,9 @@ function jd13:settle(info)
         sr.record = {record_detail}
         skynet.call(record_info_db, "lua", "safe_insert", sr)
     end
-    self._old_banker = banker
+    self._old_banker = self._banker
     self._banker = index
+    user[index].pass = true
     local ci = {
         status=self._status, count=self._count, banker=self._banker, record_id=record_id
     }
