@@ -718,6 +718,9 @@ function jd13:settle(info)
             end
         end
     end
+    if scores[index] > 0 then
+        info.hu_count = info.hu_count + 1
+    end
     self._count = self._count + 1
     if self._count == self._rule.total_count then
         self._status = base.CHESS_STATUS_FINISH
