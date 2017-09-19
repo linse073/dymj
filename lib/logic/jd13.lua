@@ -239,7 +239,7 @@ function jd13:pack(id, ip, agent)
                         top_score = info.top_score,
                         hu_count = info.hu_count,
                         status = info.status,
-                        pass = info.pass,
+                        pass = info.out~=nil,
                     }
                     if info.id == id then
                         u.own_card = info.deal_card
@@ -878,7 +878,7 @@ function jd13:start()
     local record_user = {}
     local rule = self._rule
     for j = 1, rule.user do
-        local index = (self._banker+j-2)%base.P13_FOUR+1
+        local index = (self._banker+j-2)%rule.user+1
         local v = role[index]
         v.out_card = nil
         v.type_card = nil
