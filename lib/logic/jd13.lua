@@ -607,7 +607,7 @@ local function analyze(card, ib, ie)
             end
         end
     end
-    return {pt=pt, comp=comp, count=sv[1]}
+    return {pt=pt, comp=comp, count=sv[1] or 0}
 end
 
 local function comp_1(l, r)
@@ -718,9 +718,6 @@ function jd13:settle(info)
             end
         end
     end
-    if scores[index] > 0 then
-        info.hu_count = info.hu_count + 1
-    end
     self._count = self._count + 1
     if self._count == self._rule.total_count then
         self._status = base.CHESS_STATUS_FINISH
@@ -760,6 +757,10 @@ function jd13:settle(info)
         if score > v.top_score then
             v.top_score = score
             u.top_score = score
+        end
+        if score > 0 then
+            v.hu_count = v.hu_count + 1
+            u.hu_count = v.hu_count
         end
         user[k] = u
     end
