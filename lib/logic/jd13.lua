@@ -239,7 +239,7 @@ function jd13:pack(id, ip, agent)
                         top_score = info.top_score,
                         hu_count = info.hu_count,
                         status = info.status,
-                        pass = info.out~=nil,
+                        pass = info.out_card~=nil,
                     }
                     if info.id == id then
                         u.own_card = info.deal_card
