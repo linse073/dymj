@@ -393,7 +393,7 @@ function jd13:is_all_agree()
             count = count + 1
         end
     end
-    return count >= (self._rule.user+1)//2
+    return count > self._rule.user//2
 end
 
 function jd13:reply(id, msg)
