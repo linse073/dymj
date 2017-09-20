@@ -666,11 +666,13 @@ function jd13:settle(info)
         for j = i+1, count do
             local wc = 0
             local score = 0
+            local extra = 0
             local lt, rt = role[i].type_card, role[j].type_card
             local w1, wt1 = comp_3(lt[1], rt[1])
             wc = wc + w1
             if wt1 == base.P13_TYPE_SANZHANG then
                 score = score + w1 * 3
+                extra = extra + 1
             else
                 score = score + w1
             end
@@ -678,10 +680,13 @@ function jd13:settle(info)
             wc = wc + w2
             if wt2 == base.P13_TYPE_TONGHUASHUN then
                 score = score + w2 * 10
+                extra = extra + 1
             elseif wt2 == base.P13_TYPE_ZHADAN then
                 score = score + w2 * 8
+                extra = extra + 1
             elseif wt2 == base.P13_TYPE_HULU then
                 score = score + w2 * 2
+                extra = extra + 1
             else
                 score = score + w2
             end
@@ -689,16 +694,18 @@ function jd13:settle(info)
             wc = wc + w3
             if wt3 == base.P13_TYPE_TONGHUASHUN then
                 score = score + w3 * 5
+                extra = extra + 1
             elseif wt3 == base.P13_TYPE_ZHADAN then
                 score = score + w3 * 4
+                extra = extra + 1
             else
                 score = score + w3
             end
             if wc == 3 then
-                score = score + 3
+                score = score + 3 + extra
                 shoot[i] = shoot[i] + 1
             elseif wc == -3 then
-                score = score - 3
+                score = score - 3 - extra
                 shoot[j] = shoot[j] + 1
             end
             scores[i] = scores[i] + score
