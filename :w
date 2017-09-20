@@ -709,9 +709,6 @@ function jd13:settle(info)
                 score = score - 3 - extra
                 shoot[j] = shoot[j] + 1
             end
-            if lr.key or rr.key then
-                score = score * 2
-            end
             scores[i] = scores[i] + score
             scores[j] = scores[j] - score
         end
