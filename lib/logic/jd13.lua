@@ -741,16 +741,11 @@ function jd13:settle(info)
     local user = {}
     local detail = self._detail
     detail.id = skynet.call(self._server, "lua", "gen_record_detail")
-    local record_score = {}
     local show_card = {}
-    detail.score = record_score
-    detail.show_card = show_card
     local banker = self._banker
-    detail.banker = banker
     local record_detail = {
         id = detail.id,
         time = detail.time,
-        score = record_score,
         show_card = show_card,
         banker = banker,
     }
@@ -758,20 +753,21 @@ function jd13:settle(info)
         v.ready = false
         v.deal_end = false
         local score = scores[k]
-        record_score[k] = score
         v.last_score = score
         v.score = v.score + score
+        local sc = {
+            own_card = v.out_card,
+            score = score,
+        }
         local u = {
             index = k,
             ready = v.ready,
             deal_end = v.deal_end,
             score = v.score,
-            show_card = {
-                own_card = v.out_card,
-                score = score,
-            },
+            show_card = sc,
         }
-        show_card[k] = v.out_card
+        detail.user[k].show_card = sc
+        show_card[k] = sc
         if score > v.top_score then
             v.top_score = score
             u.top_score = score
