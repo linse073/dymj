@@ -1273,11 +1273,14 @@ function jdmj:hu_action(info, hu_type, mul, baotou, last_deal, last_index, contr
     }
     detail.id = skynet.call(self._server, "lua", "gen_record_detail")
     local record_score = {}
+    local show_card = {}
     detail.score = record_score
+    detail.show_card = show_card
     local record_detail = {
         id = detail.id,
         time = detail.time,
         score = record_score,
+        show_card = show_card,
     }
     for k, v in ipairs(role) do
         v.ready = false
@@ -1302,6 +1305,7 @@ function jdmj:hu_action(info, hu_type, mul, baotou, last_deal, last_index, contr
                 score = score,
             },
         }
+        show_card[k] = own_card
         if score > v.top_score then
             v.top_score = score
             u.top_score = score

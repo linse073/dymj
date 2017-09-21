@@ -114,6 +114,7 @@
         id 0 : integer
         time 1 : integer
         score 2 : *integer
+        show_card 3 : *integer
     }
 
     id 0 : integer
