@@ -35,7 +35,7 @@ end
 
 local function jd13(rule)
     local r = {pack=rule}
-    local p, c, n, k = string.unpack("BBBB", rule)
+    local p, c, n, kt, k = string.unpack("BBBBB", rule)
     if p == 1 then
         r.aa_pay = true
     else
@@ -55,6 +55,7 @@ local function jd13(rule)
     else
         r.total_count, r.total_card, r.single_card = 30, 3*r.user, 3
     end
+    r.key_type = kt
     r.key = k
     return r
 end
