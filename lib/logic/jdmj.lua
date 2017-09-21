@@ -1276,11 +1276,13 @@ function jdmj:hu_action(info, hu_type, mul, baotou, last_deal, last_index, contr
     local show_card = {}
     detail.score = record_score
     detail.show_card = show_card
+    detail.banker = banker
     local record_detail = {
         id = detail.id,
         time = detail.time,
         score = record_score,
         show_card = show_card,
+        banker = banker,
     }
     for k, v in ipairs(role) do
         v.ready = false

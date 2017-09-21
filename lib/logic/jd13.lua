@@ -745,11 +745,14 @@ function jd13:settle(info)
     local show_card = {}
     detail.score = record_score
     detail.show_card = show_card
+    local banker = self._banker
+    detail.banker = banker
     local record_detail = {
         id = detail.id,
         time = detail.time,
         score = record_score,
         show_card = show_card,
+        banker = banker,
     }
     for k, v in ipairs(role) do
         v.ready = false
@@ -813,7 +816,7 @@ function jd13:settle(info)
         sr.record = {record_detail}
         skynet.call(record_info_db, "lua", "safe_insert", sr)
     end
-    self._old_banker = self._banker
+    self._old_banker = banker
     self._banker = index
     user[index].pass = true
     local ci = {

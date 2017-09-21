@@ -107,6 +107,8 @@
     user 3 : *chess_user
     aciton 4 : *chess_action
     score 5 : *integer
+    show_card 6 : *integer
+    banker 7 : integer
 }
 
 .chess_record {
@@ -115,6 +117,7 @@
         time 1 : integer
         score 2 : *integer
         show_card 3 : *integer
+        banker 4 : integer
     }
 
     id 0 : integer
