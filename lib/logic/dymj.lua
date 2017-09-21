@@ -924,18 +924,17 @@ function dymj:hu(id, msg)
         op = base.MJ_OP_HU,
     }
     detail.id = skynet.call(self._server, "lua", "gen_record_detail")
-    local record_score = {}
-    detail.score = record_score
+    local show_card = {}
     local record_detail = {
         id = detail.id,
         time = detail.time,
-        score = record_score,
+        show_card = show_card,
+        banker = banker,
     }
     for k, v in ipairs(role) do
         v.ready = false
         v.deal_end = false
         local score = scores[k]
-        record_score[k] = score
         v.last_score = score
         v.score = v.score + score
         local own_card = {}
@@ -944,22 +943,32 @@ function dymj:hu(id, msg)
                 own_card[#own_card+1] = k1
             end
         end
+        local sc = {
+            own_card = own_card,
+            score = score,
+            weave_card = v.weave_card,
+        }
         local u = {
             index = k,
             ready = v.ready,
             deal_end = v.deal_end,
             score = v.score,
-            show_card = {
-                own_card = own_card,
-                score = score,
-            },
+            show_card = sc,
         }
+        detail.user[k].show_card = sc
+        show_card[k] = sc
         if score > v.top_score then
             v.top_score = score
             u.top_score = score
         end
         user[k] = u
     end
+    local win = user[index]
+    win.hu_count = info.hu_count
+    win.action = base.MJ_OP_HU
+    local ws = win.show_card
+    ws.last_deal = info.last_deal
+    ws.hu = hu_type
     local now = floor(skynet.time())
     local expire = bson.date(os.time())
     detail.time = now
@@ -998,12 +1007,6 @@ function dymj:hu(id, msg)
         last_deal = info.last_deal,
         hu = hu_type,
     }
-    local win = user[index]
-    win.hu_count = info.hu_count
-    win.action = base.MJ_OP_HU
-    local ws = win.show_card
-    ws.last_deal = info.last_deal
-    ws.hu = hu_type
     self._old_banker = banker
     self._banker = index
     local ci = {

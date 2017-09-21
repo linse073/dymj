@@ -30,6 +30,7 @@
     last_deal 2 : integer
     hu 3 : integer
     last_index 4 : integer
+    weave_card 5 : *weave_card
 }
 
 .chess_user {
@@ -106,14 +107,14 @@
     info 2 : chess_info
     user 3 : *chess_user
     aciton 4 : *chess_action
-    score 5 : *integer
 }
 
 .chess_record {
     .record_detail {
         id 0 : integer
         time 1 : integer
-        score 2 : *integer
+        show_card 2 : *show_card
+        banker 3 : integer
     }
 
     id 0 : integer
@@ -203,6 +204,10 @@
 }
 
 .jdmj_card {
+    card 0 : *integer
+}
+
+.jd13_card {
     card 0 : *integer
 }
 

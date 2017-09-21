@@ -237,7 +237,7 @@ function jd13:pack(id, ip, agent)
                         agree = info.agree,
                         top_score = info.top_score,
                         status = info.status,
-                        pass = info.pass,
+                        pass = info.out_card~=nil,
                     }
                     if info.id == id then
                         u.own_card = info.deal_card
@@ -390,7 +390,7 @@ function jd13:is_all_agree()
             count = count + 1
         end
     end
-    return count >= (self._rule.user+1)//2
+    return count > self._rule.user//2
 end
 
 function jd13:reply(id, msg)
@@ -604,7 +604,7 @@ local function analyze(card, ib, ie)
             end
         end
     end
-    return {pt=pt, comp=comp, count=sv[1]}
+    return {pt=pt, comp=comp, count=sv[1] or 0}
 end
 
 local function comp_1(l, r)
@@ -652,7 +652,9 @@ local function comp_3(l, r)
     end
 end
 
-function jd13:settle()
+function jd13:settle(info)
+    local index = info.index
+    local id = info.id
     local count = self._rule.user
     local role = self._role
     local scores = {0, 0, 0, 0}
@@ -661,11 +663,14 @@ function jd13:settle()
         for j = i+1, count do
             local wc = 0
             local score = 0
-            local lt, rt = role[i].type_card, role[j].type_card
+            local extra = 0
+            local lr, rr = role[i], role[j]
+            local lt, rt = lr.type_card, rr.type_card
             local w1, wt1 = comp_3(lt[1], rt[1])
             wc = wc + w1
             if wt1 == base.P13_TYPE_SANZHANG then
                 score = score + w1 * 3
+                extra = extra + 1
             else
                 score = score + w1
             end
@@ -673,10 +678,13 @@ function jd13:settle()
             wc = wc + w2
             if wt2 == base.P13_TYPE_TONGHUASHUN then
                 score = score + w2 * 10
+                extra = extra + 1
             elseif wt2 == base.P13_TYPE_ZHADAN then
                 score = score + w2 * 8
+                extra = extra + 1
             elseif wt2 == base.P13_TYPE_HULU then
                 score = score + w2 * 2
+                extra = extra + 1
             else
                 score = score + w2
             end
@@ -684,17 +692,22 @@ function jd13:settle()
             wc = wc + w3
             if wt3 == base.P13_TYPE_TONGHUASHUN then
                 score = score + w3 * 5
+                extra = extra + 1
             elseif wt3 == base.P13_TYPE_ZHADAN then
                 score = score + w3 * 4
+                extra = extra + 1
             else
                 score = score + w3
             end
             if wc == 3 then
-                score = score + 3
+                score = score + 3 + extra
                 shoot[i] = shoot[i] + 1
             elseif wc == -3 then
-                score = score - 3
+                score = score - 3 - extra
                 shoot[j] = shoot[j] + 1
+            end
+            if lr.key or rr.key then
+                score = score * 2
             end
             scores[i] = scores[i] + score
             scores[j] = scores[j] - score
@@ -725,33 +738,40 @@ function jd13:settle()
     local user = {}
     local detail = self._detail
     detail.id = skynet.call(self._server, "lua", "gen_record_detail")
-    local record_score = {}
-    detail.score = record_score
+    local show_card = {}
+    local banker = self._banker
     local record_detail = {
         id = detail.id,
         time = detail.time,
-        score = record_score,
+        show_card = show_card,
+        banker = banker,
     }
     for k, v in ipairs(role) do
         v.ready = false
         v.deal_end = false
         local score = scores[k]
-        record_score[k] = score
         v.last_score = score
         v.score = v.score + score
+        local sc = {
+            own_card = v.out_card,
+            score = score,
+        }
         local u = {
             index = k,
             ready = v.ready,
             deal_end = v.deal_end,
             score = v.score,
-            show_card = {
-                own_card = v.out_card,
-                score = score,
-            },
+            show_card = sc,
         }
+        detail.user[k].show_card = sc
+        show_card[k] = sc
         if score > v.top_score then
             v.top_score = score
             u.top_score = score
+        end
+        if score > 0 then
+            v.hu_count = v.hu_count + 1
+            u.hu_count = v.hu_count
         end
         user[k] = u
     end
@@ -791,6 +811,7 @@ function jd13:settle()
     end
     self._old_banker = banker
     self._banker = index
+    user[index].pass = true
     local ci = {
         status=self._status, count=self._count, banker=self._banker, record_id=record_id
     }
@@ -845,7 +866,7 @@ function jd13:thirteen_out(id, msg)
         type_card = type_card,
     }
     if self:is_all_out() then
-        return self:settle()
+        return self:settle(info)
     else
         local user = {index=index, pass=true}
         broadcast({user}, nil, self._role, id)
@@ -872,13 +893,17 @@ function jd13:start()
     local record_user = {}
     local rule = self._rule
     for j = 1, rule.user do
-        local index = (self._banker+j-2)%base.P13_FOUR+1
+        local index = (self._banker+j-2)%rule.user+1
         local v = role[index]
         v.out_card = nil
         v.type_card = nil
+        v.key = nil
         local deal_card = {}
         for i = 1, base.P13_ROLE_CARD do
             local c = card[left]
+            if c == rule.key then
+                v.key = true
+            end
             left = left - 1
             deal_card[i] = c
         end
