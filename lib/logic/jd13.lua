@@ -720,10 +720,17 @@ function jd13:settle(info)
     if all_shoot > 1 then
         for i = 1, count do
             if shoot[i] == all_shoot then
-                scores[i] = scores[i] + 7 * all_shoot
+                local lr = role[i]
                 for j = 1, count do
                     if j ~= i then
-                        scores[j] = scores[j] - 7
+                        local rr = role[j]
+                        if lr.key or rr.key then
+                            scores[i] = scores[i] + 14
+                            scores[j] = scores[j] - 14
+                        else
+                            scores[i] = scores[i] + 7
+                            scores[j] = scores[j] - 7
+                        end
                     end
                 end
             end
