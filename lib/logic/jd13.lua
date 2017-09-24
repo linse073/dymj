@@ -707,12 +707,13 @@ function jd13:settle(info)
     end
     local user = {}
     local detail = self._detail
+    local now = floor(skynet.time())
     detail.id = skynet.call(self._server, "lua", "gen_record_detail")
     local show_card = {}
     local banker = self._banker
     local record_detail = {
         id = detail.id,
-        time = detail.time,
+        time = now,
         show_card = show_card,
         banker = banker,
     }
@@ -743,7 +744,6 @@ function jd13:settle(info)
         end
         user[k] = u
     end
-    local now = floor(skynet.time())
     local expire = bson.date(os.time())
     detail.time = now
     detail.expire = expire
