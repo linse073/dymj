@@ -923,11 +923,12 @@ function dymj:hu(id, msg)
         index = index,
         op = base.MJ_OP_HU,
     }
+    local now = floor(skynet.time())
     detail.id = skynet.call(self._server, "lua", "gen_record_detail")
     local show_card = {}
     local record_detail = {
         id = detail.id,
-        time = detail.time,
+        time = now,
         show_card = show_card,
         banker = banker,
     }
@@ -969,7 +970,6 @@ function dymj:hu(id, msg)
     local ws = win.show_card
     ws.last_deal = info.last_deal
     ws.hu = hu_type
-    local now = floor(skynet.time())
     local expire = bson.date(os.time())
     detail.time = now
     detail.expire = expire

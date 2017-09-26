@@ -49,11 +49,9 @@ local function jd13(rule)
         r.user = 2
     end
     if c == 1 then
-        r.total_count, r.total_card, r.single_card = 10, r.user, 1
-    elseif c == 2 then
-        r.total_count, r.total_card, r.single_card = 20, 2*r.user, 2
+        r.total_count, r.total_card, r.single_card = 20, r.user, 1
     else
-        r.total_count, r.total_card, r.single_card = 30, 3*r.user, 3
+        r.total_count, r.total_card, r.single_card = 40, 3*r.user, 3
     end
     r.key_type = kt
     r.key = k

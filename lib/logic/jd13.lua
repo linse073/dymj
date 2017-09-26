@@ -107,15 +107,6 @@ function jd13:status(id, status, addr)
                 info.agent = nil
             end
             local user = {index=info.index, status=status, ip=addr}
-            local chess
-            if self._status == base.CHESS_STATUS_DEAL and not info.deal_end then
-                info.deal_end = true
-                user.deal_end = true
-                if self:is_all_deal() then
-                    self._status = base.CHESS_STATUS_START
-                    chess = {status=self._status}
-                end
-            end
             broadcast({user}, chess, self._role)
         end
     end
@@ -192,7 +183,6 @@ function jd13:pack(id, ip, agent)
                         index = info.index,
                         score = info.score,
                         ready = info.ready,
-                        deal_end = info.deal_end,
                         top_score = info.top_score,
                         status = info.status,
                     }
@@ -207,7 +197,7 @@ function jd13:pack(id, ip, agent)
                 end
             end
             return {info=chess, user=user, start_session=si.session}
-        elseif status == base.CHESS_STATUS_START or status == base.CHESS_STATUS_DEAL then
+        elseif status == base.CHESS_STATUS_START then
             local chess = {
                 name = "jd13",
                 number = self._number,
@@ -233,7 +223,6 @@ function jd13:pack(id, ip, agent)
                         index = info.index,
                         score = info.score,
                         ready = info.ready,
-                        deal_end = info.deal_end,
                         agree = info.agree,
                         top_score = info.top_score,
                         status = info.status,
@@ -258,7 +247,7 @@ function jd13:enter(info, agent, index)
     info.index = index
     info.score = 0
     info.ready = false
-    info.deal_end = false
+    info.hu_count = 0
     info.top_score = 0
     info.session = 1
     info.status = base.USER_STATUS_ONLINE
@@ -322,8 +311,7 @@ function jd13:leave(id, msg)
     end
     local role = self._role
     local index = info.index
-    if self._count > 0 or self._status == base.CHESS_STATUS_START
-        or self._status == base.CHESS_STATUS_DEAL then
+    if self._count > 0 or self._status == base.CHESS_STATUS_START then
         if self._close_index > 0 then
             error{code = error_code.IN_CLOSE_PROCESS}
         end
@@ -487,33 +475,6 @@ function jd13:ready(id, msg)
     else
         broadcast({user}, chess, self._role, id)
     end
-    return session_msg(info, {user}, chess)
-end
-
-function jd13:is_all_deal()
-    local role = self._role
-    for i = 1, self._rule.user do
-        local v = role[i]
-        if not v.deal_end then
-            return false
-        end
-    end
-    return true
-end
-
-function jd13:deal_end(id, msg)
-    local info = self:op_check(id, base.CHESS_STATUS_DEAL)
-    if info.deal_end then
-        error{code = error_code.ALREADY_DEAL_END}
-    end
-    info.deal_end = true
-    local user = {index=info.index, deal_end=true}
-    local chess
-    if self:is_all_deal() then
-        self._status = base.CHESS_STATUS_START
-        chess = {status=self._status}
-    end
-    broadcast({user}, chess, self._role, id)
     return session_msg(info, {user}, chess)
 end
 
@@ -717,10 +678,17 @@ function jd13:settle(info)
     if all_shoot > 1 then
         for i = 1, count do
             if shoot[i] == all_shoot then
-                scores[i] = scores[i] + 7 * all_shoot
+                local lr = role[i]
                 for j = 1, count do
                     if j ~= i then
-                        scores[j] = scores[j] - 7
+                        local rr = role[j]
+                        if lr.key or rr.key then
+                            scores[i] = scores[i] + 14
+                            scores[j] = scores[j] - 14
+                        else
+                            scores[i] = scores[i] + 7
+                            scores[j] = scores[j] - 7
+                        end
                     end
                 end
             end
@@ -737,18 +705,18 @@ function jd13:settle(info)
     end
     local user = {}
     local detail = self._detail
+    local now = floor(skynet.time())
     detail.id = skynet.call(self._server, "lua", "gen_record_detail")
     local show_card = {}
     local banker = self._banker
     local record_detail = {
         id = detail.id,
-        time = detail.time,
+        time = now,
         show_card = show_card,
         banker = banker,
     }
     for k, v in ipairs(role) do
         v.ready = false
-        v.deal_end = false
         local score = scores[k]
         v.last_score = score
         v.score = v.score + score
@@ -759,7 +727,6 @@ function jd13:settle(info)
         local u = {
             index = k,
             ready = v.ready,
-            deal_end = v.deal_end,
             score = v.score,
             show_card = sc,
         }
@@ -775,7 +742,6 @@ function jd13:settle(info)
         end
         user[k] = u
     end
-    local now = floor(skynet.time())
     local expire = bson.date(os.time())
     detail.time = now
     detail.expire = expire
@@ -886,7 +852,7 @@ function jd13:start()
         util.shuffle(card, self._rand)
     end
     self._card = card
-    self._status = base.CHESS_STATUS_DEAL
+    self._status = base.CHESS_STATUS_START
     self._old_banker = nil
     local left = #card
     local role = self._role

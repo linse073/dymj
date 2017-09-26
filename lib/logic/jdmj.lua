@@ -1271,11 +1271,12 @@ function jdmj:hu_action(info, hu_type, mul, baotou, last_deal, last_index, contr
         index = index,
         op = base.MJ_OP_HU,
     }
+    local now = floor(skynet.time())
     detail.id = skynet.call(self._server, "lua", "gen_record_detail")
     local show_card = {}
     local record_detail = {
         id = detail.id,
-        time = detail.time,
+        time = now,
         show_card = show_card,
         banker = banker,
     }
@@ -1318,7 +1319,6 @@ function jdmj:hu_action(info, hu_type, mul, baotou, last_deal, last_index, contr
     ws.last_deal = last_deal
     ws.last_index = last_index
     ws.hu = hu_type
-    local now = floor(skynet.time())
     local expire = bson.date(os.time())
     detail.time = now
     detail.expire = expire
