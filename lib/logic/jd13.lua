@@ -184,6 +184,7 @@ function jd13:pack(id, ip, agent)
                         score = info.score,
                         ready = info.ready,
                         top_score = info.top_score,
+                        hu_count = info.hu_count,
                         status = info.status,
                     }
                     if info.out_card then
@@ -225,6 +226,7 @@ function jd13:pack(id, ip, agent)
                         ready = info.ready,
                         agree = info.agree,
                         top_score = info.top_score,
+                        hu_count = info.hu_count,
                         status = info.status,
                         pass = info.out_card~=nil,
                     }
