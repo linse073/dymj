@@ -368,7 +368,8 @@ function jdmj:join(info, room_card, agent)
     if self._status ~= base.CHESS_STATUS_READY then
         error{code = error_code.ERROR_OPERATION}
     end
-    if self._rule.aa_pay and room_card < self._rule.single_card then
+    local rule = self._rule
+    if rule.aa_pay and room_card < rule.single_card then
         error{code = error_code.ROOM_CARD_LIMIT}
     end
     local role = self._role
@@ -578,9 +579,9 @@ function jdmj:out_card(id, msg)
     if type_card[card] == 0 then
         error{code = error_code.NO_OUT_CARD}
     end
-    if self:is_out_magic(index) and card ~= self._deal_card then
-        error{code = error_code.OUT_CARD_LIMIT}
-    end
+    -- if self:is_out_magic(index) and card ~= self._deal_card then
+    --     error{code = error_code.OUT_CARD_LIMIT}
+    -- end
     self._can_out = nil
     type_card[card] = type_card[card] - 1
     if card == self._magic_card then
@@ -847,14 +848,15 @@ local function is_shisanbuda(type_card, magic_count, magic_card)
 end
 
 function jdmj:consume_card()
-    if self._rule.aa_pay then
-        local count = -self._rule.single_card
+    local rule = self._rule
+    if rule.aa_pay then
+        local count = -rule.single_card
         for k, v in ipairs(self._role) do
             skynet.call(offline_mgr, "lua", "add", v.id, "role", "add_room_card", count)
         end
     else
         local id = self._role[1].id
-        local count = -self._rule.total_card
+        local count = -rule.total_card
         skynet.call(offline_mgr, "lua", "add", id, "role", "add_room_card", count)
     end
 end
@@ -1002,7 +1004,7 @@ function jdmj:analyzeGangHu(card, index)
     self._pass_status = base.PASS_STATUS_GANG_HU
     self._gang_card = card
     self._gang_index = index
-    local has_hu
+    local has_hu = false
     for k, v in ipairs(self._role) do
         if k ~= index then
             local hu_type, hu_mul = self:gangHu(v, card)
@@ -1095,10 +1097,10 @@ end
 function jdmj:hu(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     local index = info.index
-    local hu_type, mul, baotou, scores, last_deal, last_index, contract
+    local hu_type, mul, baotou, last_deal, last_index, contract
     local role = self._role
     if self._pass_status ~= base.PASS_STATUS_GANG_HU then
-        if self._deal_index ~= inde then
+        if self._deal_index ~= index then
             error{code = error_code.ERROR_OPERATION}
         end
         if self._pass_status ~= base.PASS_STATUS_DEAL then

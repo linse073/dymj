@@ -364,7 +364,8 @@ function dymj:join(info, room_card, agent)
     if self._status ~= base.CHESS_STATUS_READY then
         error{code = error_code.ERROR_OPERATION}
     end
-    if self._rule.aa_pay and room_card < self._rule.single_card then
+    local rule = self._rule
+    if rule.aa_pay and room_card < rule.single_card then
         error{code = error_code.ROOM_CARD_LIMIT}
     end
     local role = self._role
@@ -767,14 +768,15 @@ local function is_qidui(type_card, magic_count)
 end
 
 function dymj:consume_card()
-    if self._rule.aa_pay then
-        local count = -self._rule.single_card
+    local rule = self._rule
+    if rule.aa_pay then
+        local count = -rule.single_card
         for k, v in ipairs(self._role) do
             skynet.call(offline_mgr, "lua", "add", v.id, "role", "add_room_card", count)
         end
     else
         local id = self._role[1].id
-        local count = -self._rule.total_card
+        local count = -rule.total_card
         skynet.call(offline_mgr, "lua", "add", id, "role", "add_room_card", count)
     end
 end
@@ -984,11 +986,11 @@ function dymj:chi(id, msg)
     if info.chi_count[out_index] >= base.MJ_CHI_COUNT then
         error{code = error_code.CHI_COUNT_LIMIT}
     end
+    if info.op[base.MJ_OP_CHI] > 0 then
+        error{code = error_code.WAIT_FOR_OTHER}
+    end
     if not info.respond[base.MJ_OP_CHI] then
         error{code = error_code.ERROR_OPERATION}
-    end
-    if info.op[base.MJ_OP_CHI] then
-        error{code = error_code.WAIT_FOR_OTHER}
     end
     local index = info.index
     if index ~= out_index%base.MJ_FOUR+1 then
