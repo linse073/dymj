@@ -294,10 +294,10 @@ function proc.enter_game(msg)
     if chess_table then
         data.chess_table = chess_table
         ret.chess = skynet.call(chess_table, "lua", "pack", user.id, user.ip, skynet.self())
-    elseif msg.name and msg.number then
+    elseif msg.number then
         chess_table = skynet.call(table_mgr, "lua", "get", msg.number)
         if chess_table then
-            local rmsg, info = skynet.call(chess_table, "lua", "join", msg.name, data.info, user.room_card, skynet.self())
+            local rmsg, info = skynet.call(chess_table, "lua", "join", data.info, user.room_card, skynet.self())
             if rmsg == "update_user" then
                 data.chess_table = chess_table
                 ret.chess = info.update.chess

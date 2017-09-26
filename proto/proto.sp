@@ -213,7 +213,6 @@
 
 .enter_game {
     number 0 : integer
-    name 1 : string
 }
 
 .review_record {
