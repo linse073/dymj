@@ -167,6 +167,8 @@ local function accept(conf, s, fd, addr, register_db)
             write("response 500", fd, "500 Password Error\n")
         elseif err:match("name exist") then
             write("response 501", fd, "501 Name Exist\n")
+        elseif err:match("account not exist") then
+            write("response 502", fd, "502 Account Not Exist\n")
         else
             write("response 403", fd, "403 Forbidden\n")
         end
