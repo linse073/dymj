@@ -85,6 +85,23 @@ function proc.jd13_card(msg)
     end
 end
 
+function proc.dy13_card(msg)
+    local data = game.data
+    if data.user.gm_level == 0 then
+        error{code = error_code.ROLE_NO_PERMIT}
+    end
+    local card = msg.card
+    if card then
+        card = util.reverse(card)
+    end
+    data.dy13_card = card
+    if data.chess_table then
+        return skynet.call(data.chess_table, "lua", "custom_card", "dy13", card)
+    else
+        return "response", ""
+    end
+end
+
 function proc.test_update_day(msg)
     local data = game.data
     if data.user.gm_level == 0 then
