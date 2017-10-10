@@ -211,6 +211,10 @@
     card 0 : *integer
 }
 
+.dy13_card {
+    card 0 : *integer
+}
+
 .enter_game {
     number 0 : integer
 }
