@@ -1052,7 +1052,7 @@ function dymj:chi(id, msg)
     if info.chi_count[out_index] >= base.MJ_CHI_COUNT then
         error{code = error_code.CHI_COUNT_LIMIT}
     end
-    if info.op[base.MJ_OP_CHI] > 0 then
+    if info.op[base.MJ_OP_CHI] then
         error{code = error_code.WAIT_FOR_OTHER}
     end
     if not info.respond[base.MJ_OP_CHI] then
