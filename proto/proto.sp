@@ -10,6 +10,7 @@
     day_card 8 : boolean
     last_login_time 9 : integer
     login_time 10 : integer
+    invite_code 11 : integer
 }
 
 .other_all {
@@ -236,4 +237,18 @@
 
 .thirteen_out {
     card 0 : *integer
+}
+
+.invite_code {
+    url 0 : string
+    code 1 : integer
+}
+
+.pay {
+    num 0 : integer
+    url 1 : string
+}
+
+.pay_ret {
+    url 0 : string
 }

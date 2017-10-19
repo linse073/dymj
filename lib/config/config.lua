@@ -37,6 +37,7 @@ config.mongo = {
         "record_info",
         "record_detail",
         "iap_log",
+        "pay_log",
     },
     index = {
         {"account", {"key", unique=true}},
@@ -50,6 +51,7 @@ config.mongo = {
         {"record_detail", {"id", unique=true}},
         {"record_detail", {"expire", expireAfterSeconds=4*24*60*60}},
         {"iap_log", {"transaction_id", unique=true}},
+        {"pay_log", {"id", unique=true}},
     },
 }
 

@@ -50,6 +50,7 @@ local type_msg = {
         "iap",
         "update_day",
         "share",
+        "invite_code",
     },
 
     [20000] = {

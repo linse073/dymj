@@ -22,6 +22,8 @@ local type_code = {
         ROLE_ALREADY_ENTER="已经登陆",
         IAP_FAIL="苹果内支付失败",
         ALREADY_SHARE="已经分享",
+        HAS_INVITE_CODE="已经绑定邀请码",
+        INVITE_CODE_ERROR="邀请码错误",
     },
 
     [3000] = {

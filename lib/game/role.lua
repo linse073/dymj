@@ -6,6 +6,7 @@ local util = require "util"
 local cjson = require "cjson"
 local func = require "func"
 local option = require "logic.option"
+local md5 = require "md5"
 
 local pairs = pairs
 local ipairs = ipairs
@@ -42,6 +43,9 @@ local user_record_db
 local record_info_db
 local record_detail_db
 local iap_log_db
+local pay_log_db
+
+local web_sign = skynet.getenv("web_sign")
 
 skynet.init(function()
     error_code = share.error_code
@@ -61,6 +65,7 @@ skynet.init(function()
     record_info_db = skynet.call(master, "lua", "get", "record_info")
     record_detail_db = skynet.call(master, "lua", "get", "record_detail")
     iap_log_db = skynet.call(master, "lua", "get", "iap_log")
+    pay_log_db = skynet.call(master, "lua", "get", "pay_log")
 end)
 
 function role.init_module()
@@ -452,6 +457,9 @@ function proc.iap(msg)
     end
     local result, content = skynet.call(webclient, "lua", "request", url, nil, msg.receipt, 
         false, "Content-Type: application/json")
+    if not result then
+        error{code = error_code.INTERNAL_ERROR}
+    end
     local content = cjson.decode(content)
     if content.status == 0 then
         local receipt = content.receipt
@@ -484,6 +492,61 @@ function proc.share(msg)
     user.day_card = true
     p.user.day_card = true
     return "update_user", {update=p}
+end
+
+function proc.invite(msg)
+    local code = msg.code
+    if not code or not msg.url then
+        error{code = error_code.ERROR_ARGS}
+    end
+    local user = game.data.user
+    if user.invite_code then
+        error{code = error_code.HAS_INVITE_CODE}
+    end
+    local now = floor(skynet.time())
+    local sign = md5.sumhexa(user.id .. "&" .. code .. "&" .. now .. "&" .. web_sign)
+    local result, content = skynet.call(webclient, "lua", "request", 
+        msg.url, {id=user.id, invite=code, time=now, sign=sign})
+    if not result then
+        error{code = error_code.INTERNAL_ERROR}
+    end
+    local content = cjson.decode(content)
+    if content.ret == "OK" then
+        local p = update_user()
+        user.invite_code = code
+        p.user.invite_code = code
+        return "update_user", {update=p}
+    else
+        error{code = error_code.INVITE_CODE_ERROR}
+    end
+end
+
+function proc.pay(msg)
+    if not msg.num then
+        error{code = error_code.ERROR_ARGS}
+    end
+    local data = game.data
+    local user = data.user
+    local now = floor(skynet.time())
+    local trade_id = skynet.call(data.server_address, "lua", "gen_pay")
+    local trade = {
+        id = trade_id,
+        user = user.id,
+        invite_code = user.invite_code,
+        num = msg.num,
+        time = now,
+        status = 0,
+    }
+    skynet.call(pay_log_db, "lua", "safe_insert", trade)
+    local invite_code 
+    if user.invite_code then
+        invite_code = tostring(user.invite_code)
+    else
+        invite_code = "null"
+    end
+    local sign = md5.sumhexa(user.id .. "&" .. invite_code .. "&" .. trade_id .. "&" .. msg.num .. "&" .. now .. "&" .. web_sign)
+    local url = msg.url .. string.format("?id=%d&invite=%s&tradeNO=%d&cashFee=%d&time=%d&sign=%s", user.id, invite_code, trade_id, msg.num, now, sign)
+    return "pay_ret", {url=url}
 end
 
 return role
