@@ -49,11 +49,11 @@ if mode == "agent" then
                 return {error="no player"}
             end
         end},
-        pay = {{"id", "tradeNO", "cashFee", "retCode", "retMsg", "time"}, function(q)
+        charge = {{"id", "tradeNO", "cashFee", "retCode", "retMsg", "time"}, function(q)
             local id = tonumber(q.id)
             local info = skynet.call(role_mgr, "lua", "get_info", id)
             if info then
-                skynet.call(offline_mgr, "lua", "add", id, "role", "pay", q)
+                skynet.call(offline_mgr, "lua", "add", id, "role", "charge", q)
                 return {ret="OK"}
             else
                 return {error="no player"}

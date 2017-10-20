@@ -43,7 +43,7 @@ local user_record_db
 local record_info_db
 local record_detail_db
 local iap_log_db
-local pay_log_db
+local charge_log_db
 
 local web_sign = skynet.getenv("web_sign")
 
@@ -65,7 +65,7 @@ skynet.init(function()
     record_info_db = skynet.call(master, "lua", "get", "record_info")
     record_detail_db = skynet.call(master, "lua", "get", "record_detail")
     iap_log_db = skynet.call(master, "lua", "get", "iap_log")
-    pay_log_db = skynet.call(master, "lua", "get", "pay_log")
+    charge_log_db = skynet.call(master, "lua", "get", "charge_log")
 end)
 
 function role.init_module()
@@ -241,10 +241,10 @@ function role.add_room_card(p, inform, num)
     end
 end
 
-function role.pay(p, inform, ret)
+function role.charge(p, inform, ret)
     if ret.retCode == "SUCCESS" then
         local trade_id = tonumber(ret.tradeNO)
-        local ret = skynet.call(pay_log_db, "lua", "findAndModify", 
+        local ret = skynet.call(charge_log_db, "lua", "findAndModify", 
             {query={id=trade_id, status=false}, update={["$set"]={status=true}}})
         util.dump(ret)
         if ret.ok == 1 then
@@ -253,7 +253,7 @@ function role.pay(p, inform, ret)
             skynet.error(string.format("No unfinished trade: %d.", trade_id))
         end
     else
-        skynet.error(string.format("Pay fail: %s.", ret.retMsg))
+        skynet.error(string.format("Charge fail: %s.", ret.retMsg))
     end
 end
 
@@ -538,7 +538,7 @@ function proc.invite(msg)
     end
 end
 
-function proc.pay(msg)
+function proc.charge(msg)
     local num = msg.num
     if not num or not msg.url then
         error{code = error_code.ERROR_ARGS}
@@ -546,7 +546,7 @@ function proc.pay(msg)
     local data = game.data
     local user = data.user
     local now = floor(skynet.time())
-    local trade_id = skynet.call(data.server_address, "lua", "gen_pay")
+    local trade_id = skynet.call(data.server_address, "lua", "gen_charge")
     local invite_code = user.invite_code
     local trade = {
         id = trade_id,
@@ -556,7 +556,7 @@ function proc.pay(msg)
         time = now,
         status = false,
     }
-    skynet.call(pay_log_db, "lua", "safe_insert", trade)
+    skynet.call(charge_log_db, "lua", "safe_insert", trade)
     invite_code = invite_code or "null"
     local str = table.concat({user.id, invite_code, trade_id, num, now, web_sign}, "&")
     local sign = md5.sumhexa(str)
@@ -569,7 +569,7 @@ function proc.pay(msg)
         sign = sign,
     }
     local url = msg.url .. "?" .. util.url_query(query)
-    return "pay_ret", {url=url}
+    return "charge_ret", {url=url}
 end
 
 return role

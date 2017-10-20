@@ -51,8 +51,8 @@ local type_msg = {
         "update_day",
         "share",
         "invite_code",
-        "pay",
-        "pay_ret",
+        "charge",
+        "charge_ret",
     },
 
     [20000] = {

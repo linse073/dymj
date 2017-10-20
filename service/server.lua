@@ -20,7 +20,7 @@ local id_key = {
     "account",
     "record",
     "record_detail",
-    "pay",
+    "charge",
 }
 
 local CMD = {}

@@ -244,11 +244,11 @@
     code 1 : integer
 }
 
-.pay {
+.charge {
     num 0 : integer
     url 1 : string
 }
 
-.pay_ret {
+.charge_ret {
     url 0 : string
 }
