@@ -513,7 +513,7 @@ function proc.share(msg)
     return "update_user", {update=p}
 end
 
-function proc.invite(msg)
+function proc.invite_code(msg)
     local code = msg.code
     if not code or not msg.url then
         error{code = error_code.ERROR_ARGS}
