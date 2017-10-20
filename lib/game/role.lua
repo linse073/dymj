@@ -504,7 +504,8 @@ function proc.invite(msg)
         error{code = error_code.HAS_INVITE_CODE}
     end
     local now = floor(skynet.time())
-    local sign = md5.sumhexa(user.id .. "&" .. code .. "&" .. now .. "&" .. web_sign)
+    local str = table.concat({user.id, code, now, web_sign}, "&")
+    local sign = md5.sumhexa(str)
     local result, content = skynet.call(webclient, "lua", "request", 
         msg.url, {id=user.id, invite=code, time=now, sign=sign})
     if not result then
@@ -522,30 +523,36 @@ function proc.invite(msg)
 end
 
 function proc.pay(msg)
-    if not msg.num then
+    local num = msg.num
+    if not num or not msg.url then
         error{code = error_code.ERROR_ARGS}
     end
     local data = game.data
     local user = data.user
     local now = floor(skynet.time())
     local trade_id = skynet.call(data.server_address, "lua", "gen_pay")
+    local invite_code = user.invite_code
     local trade = {
         id = trade_id,
         user = user.id,
-        invite_code = user.invite_code,
-        num = msg.num,
+        invite_code = invite_code,
+        num = num,
         time = now,
         status = 0,
     }
     skynet.call(pay_log_db, "lua", "safe_insert", trade)
-    local invite_code 
-    if user.invite_code then
-        invite_code = tostring(user.invite_code)
-    else
-        invite_code = "null"
-    end
-    local sign = md5.sumhexa(user.id .. "&" .. invite_code .. "&" .. trade_id .. "&" .. msg.num .. "&" .. now .. "&" .. web_sign)
-    local url = msg.url .. string.format("?id=%d&invite=%s&tradeNO=%d&cashFee=%d&time=%d&sign=%s", user.id, invite_code, trade_id, msg.num, now, sign)
+    invite_code = invite_code or "null"
+    local str = table.concat({user.id, invite_code, trade_id, num, now, web_sign}, "&")
+    local sign = md5.sumhexa(str)
+    local query = {
+        id = user.id,
+        invite = invite_code,
+        tradeNO = trade_id,
+        cashFee = num,
+        time = now,
+        sign = sign,
+    }
+    local url = msg.url .. "?" .. util.url_query(query)
     return "pay_ret", {url=url}
 end
 
