@@ -241,6 +241,22 @@ function role.add_room_card(p, inform, num)
     end
 end
 
+function role.pay(p, inform, ret)
+    if ret.retCode == "SUCCESS" then
+        local trade_id = tonumber(ret.tradeNO)
+        local ret = skynet.call(pay_log_db, "lua", "findAndModify", 
+            {query={id=trade_id, status=false}, update={["$set"]={status=true}}})
+        util.dump(ret)
+        if ret.ok == 1 then
+            role.add_room_card(p, inform, 10)
+        else
+            skynet.error(string.format("No unfinished trade: %d.", trade_id))
+        end
+    else
+        skynet.error(string.format("Pay fail: %s.", ret.retMsg))
+    end
+end
+
 function role.leave()
     local data = game.data
     cz.start()
@@ -538,7 +554,7 @@ function proc.pay(msg)
         invite_code = invite_code,
         num = num,
         time = now,
-        status = 0,
+        status = false,
     }
     skynet.call(pay_log_db, "lua", "safe_insert", trade)
     invite_code = invite_code or "null"
