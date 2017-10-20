@@ -242,12 +242,15 @@ function role.add_room_card(p, inform, num)
 end
 
 function role.charge(p, inform, ret)
+    print("ssssssssssssssssssssssssss")
+    util.dump(ret)
     if ret.retCode == "SUCCESS" then
         local trade_id = tonumber(ret.tradeNO)
-        local ret = skynet.call(charge_log_db, "lua", "findAndModify", 
+        local r = skynet.call(charge_log_db, "lua", "findAndModify", 
             {query={id=trade_id, status=false}, update={["$set"]={status=true}}})
-        util.dump(ret)
-        if ret.ok == 1 then
+        print("fffffffffffffffff")
+        util.dump(r)
+        if r.ok == 1 then
             role.add_room_card(p, inform, 10)
         else
             skynet.error(string.format("No unfinished trade: %d.", trade_id))
