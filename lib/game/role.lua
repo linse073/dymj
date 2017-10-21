@@ -29,6 +29,7 @@ local error_code
 local base
 local cz
 local rand
+local shop_item
 local game_day
 local role_mgr
 local offline_mgr
@@ -52,6 +53,7 @@ skynet.init(function()
     base = share.base
     cz = share.cz
     rand = share.rand
+    shop_item = share.shop_item
     game_day = func.game_day
     role_mgr = skynet.queryservice("role_mgr")
     offline_mgr = skynet.queryservice("offline_mgr")
@@ -110,6 +112,7 @@ local function get_user()
 				head_img = data.head_img,
 				ip = data.ip,
                 day_card = false,
+                first_charge = {},
 			}
 			skynet.call(user_db, "lua", "safe_insert", user)
 			data.user = user
@@ -230,6 +233,9 @@ function role.repair(user, now)
     if user.day_card == nil then
         user.day_card = false
     end
+    if not user.first_charge then
+        user.first_charge = {}
+    end
 end
 
 function role.add_room_card(p, inform, num)
@@ -242,21 +248,33 @@ function role.add_room_card(p, inform, num)
 end
 
 function role.charge(p, inform, ret)
-    print("ssssssssssssssssssssssssss")
-    util.dump(ret)
     if ret.retCode == "SUCCESS" then
         local trade_id = tonumber(ret.tradeNO)
         local r = skynet.call(charge_log_db, "lua", "findAndModify", 
             {query={id=trade_id, status=false}, update={["$set"]={status=true}}})
-        print("fffffffffffffffff")
-        util.dump(r)
-        if r.ok == 1 then
-            role.add_room_card(p, inform, 10)
+        if r.lastErrorObject.updatedExisting then
+            local cashFee = tonumber(ret.cashFee)
+            local num = shop_item[cashFee]
+            local user = game.data.user
+            local mul = 1
+            if user.invite_code then
+                mul = mul + 1
+            end
+            local first_charge = user.first_charge
+            if not first_charge[cashFee] then
+                first_charge[cashFee] = true
+                p.first_charge = {cashFee}
+                if cashFee == 600 then
+                    mul = mul + 1
+                end
+            end
+            num = num * mul
+            role.add_room_card(p, inform, num)
         else
             skynet.error(string.format("No unfinished trade: %d.", trade_id))
         end
     else
-        skynet.error(string.format("Charge fail: %s.", ret.retMsg))
+        skynet.error(string.format("Trade %s fail: %s.", ret.tradeNO, ret.retMsg))
     end
 end
 
@@ -312,6 +330,13 @@ function proc.enter_game(msg)
     local pack = game.iter_ret("pack_all")
     for _, v in ipairs(pack) do
         ret[v[1]] = v[2]
+    end
+    local first_charge = {}
+    for k, v in pairs(user.first_charge) do
+        first_charge[#first_charge+1] = k
+    end
+    if #first_charge > 0 then
+        ret.first_charge = first_charge
     end
     local chess_table = skynet.call(chess_mgr, "lua", "get", user.id)
     local code
@@ -545,6 +570,9 @@ function proc.charge(msg)
     local num = msg.num
     if not num or not msg.url then
         error{code = error_code.ERROR_ARGS}
+    end
+    if not shop_item[num] then
+        error{code = error_code.NO_SHOP_ITEM}
     end
     local data = game.data
     local user = data.user

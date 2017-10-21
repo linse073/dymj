@@ -32,6 +32,14 @@ skynet.start(function()
     end
     sharedata.new("mj_invalid_card", mj_invalid_card)
 
+    local shop_item = {
+        [600] = 40,
+        [3000] = 250,
+        [10800] = 900,
+        [32800] = 2840,
+    }
+    sharedata.new("shop_item", shop_item)
+
     -- protocol
     local file = skynet.getenv("root") .. "proto/proto.sp"
     sprotoloader.register(file, 1)

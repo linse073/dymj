@@ -24,6 +24,7 @@ local type_code = {
         ALREADY_SHARE="已经分享",
         HAS_INVITE_CODE="已经绑定邀请码",
         INVITE_CODE_ERROR="邀请码错误",
+        NO_SHOP_ITEM="商品不存在",
     },
 
     [3000] = {

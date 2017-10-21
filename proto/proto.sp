@@ -132,6 +132,7 @@
 .user_all {
     user 0 : user_info
     chess 1 : chess_all
+    first_charge 2 : *integer
 }
 
 .info_all {
