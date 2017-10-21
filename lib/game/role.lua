@@ -107,7 +107,7 @@ local function get_user()
 				logout_time = 0,
 				gm_level = gm_level,
 				create_time = now,
-				room_card = 150,
+				room_card = 100,
 				nick_name = data.nick_name,
 				head_img = data.head_img,
 				ip = data.ip,
@@ -558,6 +558,7 @@ function proc.invite_code(msg)
     local content = cjson.decode(content)
     if content.ret == "OK" then
         local p = update_user()
+        role.add_room_card(p, false, 60)
         user.invite_code = code
         p.user.invite_code = code
         return "update_user", {update=p}
