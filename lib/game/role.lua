@@ -253,7 +253,7 @@ function role.charge(p, inform, ret)
         local r = skynet.call(charge_log_db, "lua", "findAndModify", 
             {query={id=trade_id, status=false}, update={["$set"]={status=true}}})
         if r.lastErrorObject.updatedExisting then
-            local cashFee = tonumber(ret.cashFee)
+            local cashFee = r.value.num
             local num = shop_item[cashFee]
             local user = game.data.user
             local mul = 1
