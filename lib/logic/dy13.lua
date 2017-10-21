@@ -538,7 +538,6 @@ local function analyze(card, ib, ie)
             shunzi = true
         elseif array[1] == 1 and array[4] == 4 and array[5] == 13 then
             shunzi = true
-            comp[1].v = 14
         end
     end
     local pt = base.P13_TYPE_NONE
