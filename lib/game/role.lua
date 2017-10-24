@@ -112,6 +112,7 @@ local function get_user()
 				head_img = data.head_img,
 				ip = data.ip,
                 day_card = false,
+                invite_code = 0,
                 first_charge = {},
 			}
 			skynet.call(user_db, "lua", "safe_insert", user)
@@ -233,6 +234,9 @@ function role.repair(user, now)
     if user.day_card == nil then
         user.day_card = false
     end
+    if not user.invite_code then
+        user.invite_code = 0
+    end
     if not user.first_charge then
         user.first_charge = {}
     end
@@ -256,7 +260,7 @@ function role.charge(p, inform, ret)
             local cashFee = r.value.num
             local num = shop_item[cashFee]
             local user = game.data.user
-            if user.invite_code then
+            if user.invite_code > 0 then
                 num = num * 2
                 local first_charge = user.first_charge
                 if not first_charge[cashFee] then
@@ -542,7 +546,7 @@ function proc.invite_code(msg)
         error{code = error_code.ERROR_ARGS}
     end
     local user = game.data.user
-    if user.invite_code then
+    if user.invite_code > 0 then
         error{code = error_code.HAS_INVITE_CODE}
     end
     local now = floor(skynet.time())
@@ -587,7 +591,6 @@ function proc.charge(msg)
         status = false,
     }
     skynet.call(charge_log_db, "lua", "safe_insert", trade)
-    invite_code = invite_code or ""
     local str = table.concat({user.id, invite_code, trade_id, num, now, web_sign}, "&")
     local sign = md5.sumhexa(str)
     local query = {
