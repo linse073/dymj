@@ -256,19 +256,17 @@ function role.charge(p, inform, ret)
             local cashFee = r.value.num
             local num = shop_item[cashFee]
             local user = game.data.user
-            local mul = 1
             if user.invite_code then
-                mul = mul + 1
-            end
-            local first_charge = user.first_charge
-            if not first_charge[cashFee] then
-                first_charge[cashFee] = true
-                p.first_charge = {cashFee}
-                if cashFee == 600 then
-                    mul = mul + 1
+                num = num * 2
+                local first_charge = user.first_charge
+                if not first_charge[cashFee] then
+                    first_charge[cashFee] = true
+                    p.first_charge = {cashFee}
+                    if cashFee == 600 then
+                        num = num * 2
+                    end
                 end
             end
-            num = num * mul
             role.add_room_card(p, inform, num)
         else
             skynet.error(string.format("No unfinished trade: %d.", trade_id))
