@@ -107,7 +107,7 @@ local function get_user()
 				logout_time = 0,
 				gm_level = gm_level,
 				create_time = now,
-				room_card = 100,
+				room_card = 50,
 				nick_name = data.nick_name,
 				head_img = data.head_img,
 				ip = data.ip,
@@ -538,7 +538,7 @@ function proc.share(msg)
         error{code = error_code.ALREADY_SHARE}
     end
     local p = update_user()
-    role.add_room_card(p, false, 15)
+    role.add_room_card(p, false, 10)
     user.day_card = true
     p.user.day_card = true
     return "update_user", {update=p}
@@ -564,7 +564,7 @@ function proc.invite_code(msg)
     local content = cjson.decode(content)
     if content.ret == "OK" then
         local p = update_user()
-        role.add_room_card(p, false, 60)
+        role.add_room_card(p, false, 50)
         user.invite_code = code
         p.user.invite_code = code
         return "update_user", {update=p}

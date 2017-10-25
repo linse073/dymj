@@ -33,10 +33,10 @@ skynet.start(function()
     sharedata.new("mj_invalid_card", mj_invalid_card)
 
     local shop_item = {
-        [600] = 40,
-        [3000] = 250,
-        [10800] = 900,
-        [32800] = 2840,
+        [600] = 30,
+        [3000] = 180,
+        [10800] = 540,
+        [32800] = 2050,
     }
     sharedata.new("shop_item", shop_item)
 
