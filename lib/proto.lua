@@ -70,6 +70,7 @@ local type_msg = {
         "reply",
         "chat_info",
         "thirteen_out",
+        "p13_call",
     },
 }
 

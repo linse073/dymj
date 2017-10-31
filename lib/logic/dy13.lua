@@ -841,6 +841,14 @@ function dy13:thirteen_out(id, msg)
     end
 end
 
+function dy13:p13_call(id, msg)
+    local info = self:op_check(id, base.CHESS_STATUS_START)
+    local index = info.index
+    if info.out_card then
+        error{code = error_code.ALREADY_OUT}
+    end
+end
+
 function dy13:start()
     local card
     if self._custom_card then
