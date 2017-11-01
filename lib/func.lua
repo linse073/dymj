@@ -41,4 +41,9 @@ function func.return_msg(ok, msg, info)
     return msg, info
 end
 
+function func.poker_info(c)
+    local tc = c - 1
+    return tc//base.POKER_VALUE+1, tc%base.POKER_VALUE+1
+end
+
 return func

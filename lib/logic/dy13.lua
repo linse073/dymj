@@ -3,6 +3,7 @@ local share = require "share"
 local util = require "util"
 local timer = require "timer"
 local bson = require "bson"
+local func = require "func"
 
 local string = string
 local ipairs = ipairs
@@ -186,6 +187,7 @@ function dy13:pack(id, ip, agent)
                         top_score = info.top_score,
                         hu_count = info.hu_count,
                         status = info.status,
+                        out_index = info.out_index,
                     }
                     if info.out_card then
                         local show_card = {
@@ -228,11 +230,12 @@ function dy13:pack(id, ip, agent)
                         top_score = info.top_score,
                         hu_count = info.hu_count,
                         status = info.status,
-                        pass = info.out_card~=nil,
+                        pass = (info.out_card~=nil or info.out_index>0),
                     }
                     if info.id == id then
                         u.own_card = info.deal_card
                         u.out_card = info.out_card
+                        u.out_index = info.out_index
                     end
                     user[#user+1] = u
                 end
@@ -507,8 +510,7 @@ local function analyze(card, ib, ie)
     local array = {}
     local value_color = {}
     for i = ib, ie do
-        local tc = card[i] - 1
-        local c, v = tc//base.POKER_VALUE+1, tc%base.POKER_VALUE+1
+        local c, v = func.poker_info(card[i])
         color[c] = (color[c] or 0) + 1
         value[v] = (value[v] or 0) + 1
         array[#array+1] = v
@@ -621,57 +623,69 @@ function dy13:settle(info)
     local role = self._role
     local scores = {0, 0, 0, 0}
     local shoot = {0, 0, 0, 0}
+    local single = {
+        {0, 0, 0, 0},
+        {0, 0, 0, 0},
+        {0, 0, 0, 0},
+        {0, 0, 0, 0},
+    }
     for i = 1, count do
         for j = i+1, count do
-            local wc = 0
             local score = 0
-            local extra = 0
             local lr, rr = role[i], role[j]
-            local lt, rt = lr.type_card, rr.type_card
-            local w1, wt1 = comp_3(lt[1], rt[1])
-            wc = wc + w1
-            if wt1 == base.P13_TYPE_SANZHANG then
-                score = score + w1 * 3
-                extra = extra + 1
-            else
-                score = score + w1
+            local spe = false
+            if lr.out_index > 0 then
+                score = score + 6
+                spe = true
             end
-            local w2, wt2 = comp_3(lt[2], rt[2])
-            wc = wc + w2
-            if wt2 == base.P13_TYPE_TONGHUASHUN then
-                score = score + w2 * 10
-                extra = extra + 1
-            elseif wt2 == base.P13_TYPE_ZHADAN then
-                score = score + w2 * 8
-                extra = extra + 1
-            elseif wt2 == base.P13_TYPE_HULU then
-                score = score + w2 * 2
-                extra = extra + 1
-            else
-                score = score + w2
+            if rr.out_index > 0 then
+                score = score - 6
+                spe = true
             end
-            local w3, wt3 = comp_3(lt[3], rt[3])
-            wc = wc + w3
-            if wt3 == base.P13_TYPE_TONGHUASHUN then
-                score = score + w3 * 5
-                extra = extra + 1
-            elseif wt3 == base.P13_TYPE_ZHADAN then
-                score = score + w3 * 4
-                extra = extra + 1
-            else
-                score = score + w3
+            if not spe then
+                local wc = 0
+                local lt, rt = lr.type_card, rr.type_card
+                local w1, wt1 = comp_3(lt[1], rt[1])
+                wc = wc + w1
+                if wt1 == base.P13_TYPE_SANZHANG then
+                    score = score + w1 * 3
+                else
+                    score = score + w1
+                end
+                local w2, wt2 = comp_3(lt[2], rt[2])
+                wc = wc + w2
+                if wt2 == base.P13_TYPE_TONGHUASHUN then
+                    score = score + w2 * 10
+                elseif wt2 == base.P13_TYPE_ZHADAN then
+                    score = score + w2 * 8
+                elseif wt2 == base.P13_TYPE_HULU then
+                    score = score + w2 * 2
+                else
+                    score = score + w2
+                end
+                local w3, wt3 = comp_3(lt[3], rt[3])
+                wc = wc + w3
+                if wt3 == base.P13_TYPE_TONGHUASHUN then
+                    score = score + w3 * 5
+                elseif wt3 == base.P13_TYPE_ZHADAN then
+                    score = score + w3 * 4
+                else
+                    score = score + w3
+                end
+                if wc == 3 then
+                    score = score * 2
+                    shoot[i] = shoot[i] + 1
+                elseif wc == -3 then
+                    score = score * 2
+                    shoot[j] = shoot[j] + 1
+                end
+                if lr.key or rr.key then
+                    score = score * 2
+                end
             end
-            if wc == 3 then
-                score = score + 3 + extra
-                shoot[i] = shoot[i] + 1
-            elseif wc == -3 then
-                score = score - 3 - extra
-                shoot[j] = shoot[j] + 1
-            end
-            if lr.key or rr.key then
-                score = score * 2
-            end
+            single[i][j] = score
             scores[i] = scores[i] + score
+            single[j][i] = -score
             scores[j] = scores[j] - score
         end
     end
@@ -679,17 +693,10 @@ function dy13:settle(info)
     if all_shoot > 1 then
         for i = 1, count do
             if shoot[i] == all_shoot then
-                local lr = role[i]
                 for j = 1, count do
                     if j ~= i then
-                        local rr = role[j]
-                        if lr.key or rr.key then
-                            scores[i] = scores[i] + 14
-                            scores[j] = scores[j] - 14
-                        else
-                            scores[i] = scores[i] + 7
-                            scores[j] = scores[j] - 7
-                        end
+                        scores[i] = scores[i] + single[i][j]
+                        scores[j] = scores[j] + single[j][i]
                     end
                 end
             end
@@ -793,7 +800,7 @@ function dy13:is_all_out()
     local role = self._role
     for i = 1, self._rule.user do
         local v = role[i]
-        if not v.out_card then
+        if not v.out_card and v.out_index == 0 then
             return false
         end
     end
@@ -805,6 +812,9 @@ function dy13:thirteen_out(id, msg)
     local index = info.index
     if info.out_card then
         error{code = error_code.ALREADY_OUT}
+    end
+    if info.out_index > 0 then
+        error{code = error_code.ALREADY_CALL}
     end
     local card = msg.card
     local temp_card = util.clone(card)
@@ -841,11 +851,222 @@ function dy13:thirteen_out(id, msg)
     end
 end
 
+local function jintiao(v, i1, i2)
+    local diff = i2 - i1
+    local vb, ve = v[i1], v[i2]
+    return vb-ve==diff or (vb-ve==12 and v[i1+1]-ve==diff-1)
+end
+local function jintiao_1(v, i, i1, i2)
+    local diff = i2 - i1 + 1
+    local vb, ve = v[i], v[i2]
+    return vb-ve==diff or (vb-ve==12 and v[i1]-ve==diff-1)
+end
+local function sanjintiao(color)
+    for k, v in pairs(color) do
+        local len = #v
+        if len == 3 then
+            if not jintiao(v, 1, 3) then
+                return false
+            end
+        elseif len == 5 then
+            if not jintiao(v, 1, 5) then
+                return false
+            end
+        elseif len == 8 then
+            if not ((jintiao(v, 1, 5) and jintiao(v, 6, 8)) 
+                or (jintiao(v, 1, 3) and jintiao(v, 4, 8))
+                or (jintiao_1(v, 1, 5, 8) and jintiao(v, 2, 4))
+                or (jintiao_1(v, 1, 7, 8) and jintiao(v, 2, 6))) then
+                return false
+            end
+        else
+            return false
+        end
+    end
+    return true
+end
+local function santonghua(color)
+    for k, v in pairs(color) do
+        local len = #v
+        if not (len==3 or len==5 or len==8) then
+            return false
+        end
+    end
+    return true
+end
+local shunzi_find
+local function shunzi_check(v, ib, i1, i2)
+    for i = i1, i2 do
+        if v[i] <= 0 then
+            return false
+        end
+    end
+    for i = i1, i2 do
+        v[i] = v[i] - 1
+    end
+    v[ib] = v[ib] - 1
+    local nb
+    for i = ib, 1, -1 do
+        if v[i] > 0 then
+            nb = i
+            break
+        end
+    end
+    if nb then
+        if shunzi_find(v, nb) then
+            return true
+        else
+            for i = i1, i2 do
+                v[i] = v[i] + 1
+            end
+            v[ib] = v[ib] + 1
+            return false
+        end
+    else
+        return true
+    end
+end
+shunzi_find = function(v, ib)
+    if ib == 13 then
+        if shunzi_check(v, ib, 1, 4) then
+            return true
+        end
+        if shunzi_check(v, ib, 1, 2) then
+            return true
+        end
+    end
+    if ib >= 5 and shunzi_check(v, ib, ib-4, ib-1) then
+        return true
+    end
+    if ib >= 3 and shunzi_check(v, ib, ib-2, ib-1) then
+        return true
+    end
+    return false
+end
+local function sanshunzi(value)
+    local ib
+    local nv = {}
+    for i = 1, base.POKER_VALUE do
+        local v = value[i]
+        if v then
+            nv[i] = v
+            ib = i
+        else
+            nv[i] = 0
+        end
+    end
+    return shunzi_find(nv, ib)
+end
+local function special(card)
+    local color = {}
+    local value = {}
+    local ccount, vcount = 0, 0
+    for k, v in ipairs(card) do
+        local cl, vl = func.poker_info(v)
+        local ci = color[cl]
+        if ci then
+            ci[#ci+1] = vl
+        else
+            ci = {vl}
+            color[cl] = ci
+            ccount = ccount + 1
+        end
+        local vi = value[vl]
+        if vi then
+            value[vl] = vi + 1
+        else
+            value[vl] = 1
+            vcount = vcount + 1
+        end
+    end
+    if ccount == 1 then
+        return base.P13_SPECIAL_QINGLONG
+    end
+    if vcount == 13 then
+        return base.P13_SPECIAL_YITIAOLONG
+    end
+    if sanjintiao(color) then
+        return base.P13_SPECIAL_SANJINTIAO
+    end
+    local nv = {0, 0, 0, 0}
+    local nb, ns = 0, 0
+    for k, v in pairs(value) do
+        nv[v] = nv[v] + 1
+        if k >= 7 then
+            nb = nb + 1
+        end
+        if k <= 7 then
+            ns = ns + 1
+        end
+    end
+    if nv[4] == 3 then
+        return base.P13_SPECIAL_SANZHADAN
+    end
+    if nb == 13 then
+        return base.P13_SPECIAL_QUANDA
+    end
+    if ns == 13 then
+        return base.P13_SPECIAL_QUANXIAO
+    end
+    local ncr, ncb = 0, 0
+    for k, v in pairs(color) do
+        if k == 1 or k == 3 then
+            ncr = ncr + #v
+        elseif k == 2 or k == 4 then
+            ncb = ncb + #v
+        end
+    end
+    if ncb == 13 then
+        return base.P13_SPECIAL_QUANHEI
+    end
+    if ncr == 13 then
+        return base.P13_SPECIAL_QUANHONG
+    end
+    local count2 = nv[2] + nv[4] * 2
+    if count2 == 5 and nv[3] == 1 then
+        return base.P13_SPECIAL_WUDUIYIKE
+    end
+    if count2 == 6 then
+        return base.P13_SPECIAL_LIUDUIBAN
+    end
+    if nv[3] == 4 then
+        return base.P13_SPECIAL_SISANTIAO
+    end
+    if santonghua(color) then
+        return base.P13_SPECIAL_SANTONGHUA
+    end
+    if sanshunzi(value) then
+        return base.P13_SPECIAL_SANSHUNZI
+    end
+    return 0
+end
 function dy13:p13_call(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     local index = info.index
     if info.out_card then
         error{code = error_code.ALREADY_OUT}
+    end
+    if info.out_index > 0 then
+        error{code = error_code.ALREADY_CALL}
+    end
+    local temp_own = util.clone(info.deal_card)
+    table.sort(temp_own)
+    local out_index = special(temp_own)
+    if out_index or out_index ~= msg.call then
+        error{code = error_code.ERROR_OPERATION}
+    end
+    info.out_index = out_index
+    local record_action = self._detail.action
+    record_action[#record_action+1] = {
+        index = index,
+        out_index = out_index,
+    }
+    if self:is_all_out() then
+        return self:settle(info)
+    else
+        local user = {index=index, pass=true}
+        broadcast({user}, nil, self._role, id)
+        return session_msg(info, {user})
     end
 end
 
@@ -871,6 +1092,7 @@ function dy13:start()
         local index = (self._banker+j-2)%rule.user+1
         local v = role[index]
         v.out_card = nil
+        v.oun_index = 0
         v.type_card = nil
         v.key = nil
         local deal_card = {}

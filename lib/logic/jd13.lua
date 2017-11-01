@@ -3,6 +3,7 @@ local share = require "share"
 local util = require "util"
 local timer = require "timer"
 local bson = require "bson"
+local func = require "func"
 
 local string = string
 local ipairs = ipairs
@@ -507,8 +508,7 @@ local function analyze(card, ib, ie)
     local array = {}
     local value_color = {}
     for i = ib, ie do
-        local tc = card[i] - 1
-        local c, v = tc//base.POKER_VALUE+1, tc%base.POKER_VALUE+1
+        local c, v = func.poker_info(card[i])
         color[c] = (color[c] or 0) + 1
         value[v] = (value[v] or 0) + 1
         array[#array+1] = v
