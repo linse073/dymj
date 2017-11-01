@@ -16,6 +16,7 @@ local string = string
 local math = math
 local floor = math.floor
 local tonumber = tonumber
+local tostring = tostring
 local pcall = pcall
 local table = table
 
@@ -263,8 +264,9 @@ function role.charge(p, inform, ret)
             if user.invite_code > 0 then
                 num = num * 2
                 local first_charge = user.first_charge
-                if not first_charge[cashFee] then
-                    first_charge[cashFee] = true
+                local feeStr = tostring(cashFee)
+                if not first_charge[feeStr] then
+                    first_charge[feeStr] = true
                     p.first_charge = {cashFee}
                     if cashFee == 600 then
                         num = num * 2
@@ -334,8 +336,9 @@ function proc.enter_game(msg)
         ret[v[1]] = v[2]
     end
     local first_charge = {}
+    -- NOTICE: the type of mongo map key is string
     for k, v in pairs(user.first_charge) do
-        first_charge[#first_charge+1] = k
+        first_charge[#first_charge+1] = tonumber(k)
     end
     if #first_charge > 0 then
         ret.first_charge = first_charge
