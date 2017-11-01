@@ -253,7 +253,3 @@
 .charge_ret {
     url 0 : string
 }
-
-.p13_call {
-    call 0 : integer
-}

@@ -1053,7 +1053,7 @@ function dy13:p13_call(id, msg)
     local temp_own = util.clone(info.deal_card)
     table.sort(temp_own)
     local out_index = special(temp_own)
-    if out_index or out_index ~= msg.call then
+    if out_index then
         error{code = error_code.ERROR_OPERATION}
     end
     info.out_index = out_index
