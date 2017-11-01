@@ -1067,7 +1067,9 @@ function dy13:p13_call(id, msg)
     else
         local user = {index=index, pass=true}
         broadcast({user}, nil, self._role, id)
-        return session_msg(info, {user})
+        return session_msg(info, {
+            {index=index, pass=true, out_index=out_index},
+        })
     end
 end
 
