@@ -24,7 +24,7 @@ local function change_log()
     if f then
         f:close()
     end
-    local name = dir..date("%m_%d_%Y.log", floor(skynet.time()))
+    local name = log_dir..date("%m_%d_%Y.log", floor(skynet.time()))
     f = assert(io.open(name, "a"), string.format("Can't open log file %s.", name))
     skynet.timeout(8640000, change_log) -- one day
 end
