@@ -4,11 +4,13 @@ local util = require "util"
 
 local assert = assert
 
+local database = skynet.getenv("database")
+
 local CMD = {}
 
 function CMD.open(conf, name)
     local d = mongo.client({host=conf.host})
-    util.cmd_wrap(CMD, d.game[name])
+    util.cmd_wrap(CMD, d[database][name])
 end
 
 skynet.start(function()

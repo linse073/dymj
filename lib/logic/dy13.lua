@@ -736,6 +736,7 @@ function dy13:settle(info)
             index = k,
             ready = v.ready,
             score = v.score,
+            out_index = v.out_index,
             show_card = sc,
         }
         detail.user[k].show_card = sc
@@ -1092,7 +1093,7 @@ function dy13:start()
         local index = (self._banker+j-2)%rule.user+1
         local v = role[index]
         v.out_card = nil
-        v.oun_index = 0
+        v.out_index = 0
         v.type_card = nil
         v.key = nil
         local deal_card = {}

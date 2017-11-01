@@ -9,8 +9,9 @@ config.server = {
 }
 
 config.gate = {
-    ip = "192.168.1.202",
-    port = 9888,
+    ip = "192.168.2.100",
+    -- ip = "192.168.1.202",
+    port = 8888,
     maxclient = 65535,
     servername = "gate01",
 }
@@ -18,7 +19,7 @@ config.gate = {
 config.redis = {
     host = "127.0.0.1",
     port = 6379,
-    base = 10,
+    base = 0,
     name = {
     },
 }

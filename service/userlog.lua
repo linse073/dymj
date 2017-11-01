@@ -1,8 +1,12 @@
 local skynet = require "skynet"
 require "skynet.manager"
 
+local assert = assert
+local string = string
 local date = os.date
 local floor = math.floor
+
+local log_dir = skynet.getenv("log_dir")
 
 local p
 local f
@@ -13,14 +17,14 @@ skynet.register_protocol {
 	unpack = skynet.tostring,
 	dispatch = function(_, address, msg)
 		p(string.format("[%s][%s]: %s", skynet.address(address), date("%m/%d/%Y %X", floor(skynet.time())), msg))
-	end
+    end,
 }
 
 local function change_log()
     if f then
         f:close()
     end
-    local name = skynet.getenv("root").."log/"..date("%m_%d_%Y.log", floor(skynet.time()))
+    local name = dir..date("%m_%d_%Y.log", floor(skynet.time()))
     f = assert(io.open(name, "a"), string.format("Can't open log file %s.", name))
     skynet.timeout(8640000, change_log) -- one day
 end
