@@ -189,9 +189,10 @@ function dy13:pack(id, ip, agent)
                         status = info.status,
                         out_index = info.out_index,
                     }
-                    if info.out_card then
+                    if info.out_card or info.out_index > 0 then
                         local show_card = {
                             own_card = info.out_card,
+                            last_index = info.out_index,
                             score = info.last_score,
                         }
                         u.show_card = show_card
