@@ -730,6 +730,7 @@ function dy13:settle(info)
         v.score = v.score + score
         local sc = {
             own_card = v.out_card,
+            last_index = v.out_index,
             score = score,
         }
         local u = {
