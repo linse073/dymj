@@ -1053,7 +1053,7 @@ function dy13:p13_call(id, msg)
         error{code = error_code.ALREADY_CALL}
     end
     local temp_own = util.clone(info.deal_card)
-    table.sort(temp_own)
+    table.sort(temp_own, func.sort_poker_value)
     local out_index = special(temp_own)
     if out_index == 0 then
         error{code = error_code.ERROR_OPERATION}

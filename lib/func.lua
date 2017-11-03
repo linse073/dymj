@@ -4,6 +4,8 @@ local sharedata = require "skynet.sharedata"
 
 local assert = assert
 local ipairs = ipairs
+local type = type
+local tonumber = tonumber
 local string = string
 local base
 local error_code
@@ -44,6 +46,24 @@ end
 function func.poker_info(c)
     local tc = c - 1
     return tc//base.POKER_VALUE+1, tc%base.POKER_VALUE+1
+end
+
+function func.sort_poker_value(l, r)
+    local lc, lv = func.poker_info(l)
+    local rc, rv = func.poker_info(r)
+    if lv ~= rv then
+        return lv > rv
+    end
+    return lc > rc
+end
+
+function func.sort_poker_color(l, r)
+    local lc, lv = func.poker_info(l)
+    local rc, rv = func.poker_info(r)
+    if lc ~= rc then
+        return lc > rc
+    end
+    return lv > rv
 end
 
 return func
