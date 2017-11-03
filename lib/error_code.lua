@@ -55,7 +55,6 @@ local type_code = {
 
     [4000] = {
         ALREADY_OUT="已经摆牌",
-        ALREADY_CALL="已经扔牌",
     },
 }
 

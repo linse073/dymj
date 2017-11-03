@@ -189,7 +189,7 @@ function dy13:pack(id, ip, agent)
                         status = info.status,
                         out_index = info.out_index,
                     }
-                    if info.out_card or info.out_index > 0 then
+                    if info.out_card then
                         local show_card = {
                             own_card = info.out_card,
                             last_index = info.out_index,
@@ -231,7 +231,7 @@ function dy13:pack(id, ip, agent)
                         top_score = info.top_score,
                         hu_count = info.hu_count,
                         status = info.status,
-                        pass = (info.out_card~=nil or info.out_index>0),
+                        pass = info.out_card~=nil,
                     }
                     if info.id == id then
                         u.own_card = info.deal_card
@@ -803,7 +803,7 @@ function dy13:is_all_out()
     local role = self._role
     for i = 1, self._rule.user do
         local v = role[i]
-        if not v.out_card and v.out_index == 0 then
+        if not v.out_card then
             return false
         end
     end
@@ -815,9 +815,6 @@ function dy13:thirteen_out(id, msg)
     local index = info.index
     if info.out_card then
         error{code = error_code.ALREADY_OUT}
-    end
-    if info.out_index > 0 then
-        error{code = error_code.ALREADY_CALL}
     end
     local card = msg.card
     local temp_card = util.clone(card)
@@ -1049,19 +1046,18 @@ function dy13:p13_call(id, msg)
     if info.out_card then
         error{code = error_code.ALREADY_OUT}
     end
-    if info.out_index > 0 then
-        error{code = error_code.ALREADY_CALL}
-    end
     local temp_own = util.clone(info.deal_card)
     table.sort(temp_own, func.sort_poker_value)
     local out_index = special(temp_own)
     if out_index == 0 then
         error{code = error_code.ERROR_OPERATION}
     end
+    info.out_card = temp_own
     info.out_index = out_index
     local record_action = self._detail.action
     record_action[#record_action+1] = {
         index = index,
+        out_card = temp_own,
         out_index = out_index,
     }
     if self:is_all_out() then
