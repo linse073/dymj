@@ -461,26 +461,28 @@ function proc.get_record(msg)
     if ur then
         local nr = {}
         local record = ur.record
-        local len = #record
-        local count = 0
-        for i = len, 1, -1 do
-            local v = record[i]
-            local ri = skynet.call(record_info_db, "lua", "findOne", {id=v})
-            if ri then
-                count = count + 1
-                ret[count] = ri
-                nr[count] = v
-                if count >= 12 then
-                    break
+        if record then
+            local len = #record
+            local count = 0
+            for i = len, 1, -1 do
+                local v = record[i]
+                local ri = skynet.call(record_info_db, "lua", "findOne", {id=v})
+                if ri then
+                    count = count + 1
+                    ret[count] = ri
+                    nr[count] = v
+                    if count >= 12 then
+                        break
+                    end
                 end
             end
-        end
-        if count ~= len then
-            util.reverse(nr)
-            if count == 0 then
-                skynet.call(user_record_db, "lua", "update", {id=data.id}, {["$unset"]={record=0}}, true)
-            else
-                skynet.call(user_record_db, "lua", "update", {id=data.id}, {["$set"]={record=nr}}, true)
+            if count ~= len then
+                util.reverse(nr)
+                if count == 0 then
+                    skynet.call(user_record_db, "lua", "update", {id=data.id}, {["$unset"]={record=0}}, true)
+                else
+                    skynet.call(user_record_db, "lua", "update", {id=data.id}, {["$set"]={record=nr}}, true)
+                end
             end
         end
     end
