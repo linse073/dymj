@@ -985,9 +985,9 @@ local function special(card)
     if vcount == 13 then
         return base.P13_SPECIAL_YITIAOLONG
     end
-    if sanjintiao(color) then
-        return base.P13_SPECIAL_SANJINTIAO
-    end
+    -- if sanjintiao(color) then
+    --     return base.P13_SPECIAL_SANJINTIAO
+    -- end
     local nv = {0, 0, 0, 0}
     local nb, ns = 0, 0
     for k, v in pairs(value) do
@@ -999,15 +999,15 @@ local function special(card)
             ns = ns + 1
         end
     end
-    if nv[4] == 3 then
-        return base.P13_SPECIAL_SANZHADAN
-    end
-    if nb == 13 then
-        return base.P13_SPECIAL_QUANDA
-    end
-    if ns == 13 then
-        return base.P13_SPECIAL_QUANXIAO
-    end
+    -- if nv[4] == 3 then
+    --     return base.P13_SPECIAL_SANZHADAN
+    -- end
+    -- if nb == 13 then
+    --     return base.P13_SPECIAL_QUANDA
+    -- end
+    -- if ns == 13 then
+    --     return base.P13_SPECIAL_QUANXIAO
+    -- end
     local ncr, ncb = 0, 0
     for k, v in pairs(color) do
         if k == 1 or k == 3 then
@@ -1023,9 +1023,9 @@ local function special(card)
         return base.P13_SPECIAL_QUANHONG
     end
     local count2 = nv[2] + nv[4] * 2
-    if count2 == 5 and nv[3] == 1 then
-        return base.P13_SPECIAL_WUDUIYIKE
-    end
+    -- if count2 == 5 and nv[3] == 1 then
+    --     return base.P13_SPECIAL_WUDUIYIKE
+    -- end
     if count2 == 6 then
         return base.P13_SPECIAL_LIUDUIBAN
     end
