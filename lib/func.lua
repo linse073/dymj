@@ -66,4 +66,12 @@ function func.sort_poker_color(l, r)
     return lv > rv
 end
 
+function func.p13_special_score(i)
+    local s = base.P13_SPECIAL_SCORE[i]
+    if s then
+        return s
+    end
+    return 6
+end
+
 return func

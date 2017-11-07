@@ -26,9 +26,9 @@ local function dymj(rule)
         r.aa_pay = false
     end
     if c == 1 then
-        r.total_count, r.total_card, r.single_card = 8, 40, 10
+        r.total_count, r.total_card, r.single_card = 6, 24, 6
     else
-        r.total_count, r.total_card, r.single_card = 16, 80, 20
+        r.total_count, r.total_card, r.single_card = 12, 48, 12
     end
     return r
 end
@@ -51,7 +51,7 @@ local function jd13(rule)
     if c == 1 then
         r.total_count, r.total_card, r.single_card = 20, r.user*10, 10
     else
-        r.total_count, r.total_card, r.single_card = 40, r.user*30, 30
+        r.total_count, r.total_card, r.single_card = 40, r.user*20, 20
     end
     r.key_type = kt
     r.key = k
@@ -74,9 +74,9 @@ local function dy13(rule)
         r.user = 2
     end
     if c == 1 then
-        r.total_count, r.total_card, r.single_card = 20, r.user*10, 10
+        r.total_count, r.total_card, r.single_card = 12, r.user*6, 6
     else
-        r.total_count, r.total_card, r.single_card = 40, r.user*30, 30
+        r.total_count, r.total_card, r.single_card = 24, r.user*12, 12
     end
     r.key_type = kt
     r.key = k

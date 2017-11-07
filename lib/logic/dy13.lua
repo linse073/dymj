@@ -636,11 +636,11 @@ function dy13:settle(info)
             local lr, rr = role[i], role[j]
             local spe = false
             if lr.out_index > 0 then
-                score = score + 6
+                score = score + func.p13_special_score(lr.out_index)
                 spe = true
             end
             if rr.out_index > 0 then
-                score = score - 6
+                score = score - func.p13_special_score(rr.out_index)
                 spe = true
             end
             if not spe then
@@ -680,9 +680,9 @@ function dy13:settle(info)
                     score = score * 2
                     shoot[j] = shoot[j] + 1
                 end
-                if lr.key or rr.key then
-                    score = score * 2
-                end
+            end
+            if lr.key or rr.key then
+                score = score * 2
             end
             single[i][j] = score
             scores[i] = scores[i] + score

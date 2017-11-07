@@ -77,4 +77,11 @@ local base = {
     P13_SPECIAL_SANSHUNZI = 13,
 }
 
+base.P13_SPECIAL_SCORE = {
+    [base.P13_SPECIAL_QINGLONG] = 108,
+    [base.P13_SPECIAL_YITIAOLONG] = 26,
+    [base.P13_SPECIAL_QUANHEI] = 26,
+    [base.P13_SPECIAL_QUANHONG] = 26,
+}
+
 return base
