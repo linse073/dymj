@@ -5,12 +5,12 @@ local floor = math.floor
 local arg = table.pack(...)
 
 skynet.start(function()
-    for k, v in pairs(arg) do
-        print(v)
+    if arg.n == 2 then
+        local offline_mgr = skynet.queryservice("offline_mgr")
+        skynet.call(offline_mgr, "lua", "add", tonumber(arg[1]), "role", "add_room_card", tonumber(arg[2]))
+        skynet.error("add card finish.")
+    else
+        skynet.error("wrong number arg of add card.")
     end
-    -- local offline_mgr = skynet.queryservice("offline_mgr")
-    -- skynet.call(offline_mgr, "lua", "add", id, "role", "add_room_card", tonumber(q.card))
-
-    skynet.error("add card finish.")
     skynet.exit()
 end)
