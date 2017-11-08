@@ -724,19 +724,19 @@ function dy13:settle(info)
         show_card = show_card,
         banker = banker,
     }
-    local top_score
-    local top_role
+    local top_score, top_role
     for k, v in ipairs(role) do
         v.ready = false
         local score = scores[k]
-        if not top_score or score > top_score then
-            top_score = score
+        v.last_score = score
+        local rc = v.score + score
+        v.score = rc
+        if not top_score or rc > top_score then
+            top_score = rc
             top_role = {k}
-        elseif score == top_score then
+        elseif rc == top_score then
             top_role[#top_role+1] = k
         end
-        v.last_score = score
-        v.score = v.score + score
         local sc = {
             own_card = v.out_card,
             last_index = v.out_index,
@@ -745,7 +745,7 @@ function dy13:settle(info)
         local u = {
             index = k,
             ready = v.ready,
-            score = v.score,
+            score = rc,
             out_index = v.out_index,
             show_card = sc,
         }
@@ -797,13 +797,13 @@ function dy13:settle(info)
     self._old_banker = banker
     self._banker = index
     user[index].pass = true
-    local gang_index
+    local win = 0
     if top_score > 0 then
         local top_len = #top_role
         if top_len == 1 then
-            gang_index = top_role[1]
+            win = top_role[1]
         else
-            gang_index = self._rand.randi(1, top_len)
+            win = top_role[self._rand.randi(1, top_len)]
         end
     end
     local ci = {
@@ -811,7 +811,7 @@ function dy13:settle(info)
         count = self._count, 
         banker = self._banker, 
         record_id = record_id,
-        gang_index = gang_index,
+        win = win,
     }
     broadcast(user, ci, role, id)
     if self._status == base.CHESS_STATUS_FINISH then

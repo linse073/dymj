@@ -85,6 +85,7 @@
     can_out 17 : integer
     gang_card 18 : integer
     gang_index 19 : integer
+    win 20 : integer
 }
 
 .chess_all {

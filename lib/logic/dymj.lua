@@ -932,12 +932,20 @@ function dymj:hu(id, msg)
         show_card = show_card,
         banker = banker,
     }
+    local top_score, top_role
     for k, v in ipairs(role) do
         v.ready = false
         v.deal_end = false
         local score = scores[k]
         v.last_score = score
-        v.score = v.score + score
+        local rc = v.score + score
+        v.score = rc
+        if not top_score or rc > top_score then
+            top_score = rc
+            top_role = {k}
+        elseif rc == top_score then
+            top_role[#top_role+1] = k
+        end
         local own_card = {}
         for k1, v1 in pairs(v.type_card) do
             for i = 1, v1 do
@@ -953,7 +961,7 @@ function dymj:hu(id, msg)
             index = k,
             ready = v.ready,
             deal_end = v.deal_end,
-            score = v.score,
+            score = rc,
             show_card = sc,
         }
         detail.user[k].show_card = sc
@@ -1009,8 +1017,21 @@ function dymj:hu(id, msg)
     }
     self._old_banker = banker
     self._banker = index
+    local winner = 0
+    if top_score > 0 then
+        local top_len = #top_role
+        if top_len == 1 then
+            winner = top_role[1]
+        else
+            winner = top_role[self._rand.randi(1, top_len)]
+        end
+    end
     local ci = {
-        status=self._status, count=self._count, banker=self._banker, record_id=record_id
+        status = self._status, 
+        count = self._count, 
+        banker = self._banker, 
+        record_id = record_id,
+        win = winner,
     }
     broadcast(user, ci, role, id)
     if self._status == base.CHESS_STATUS_FINISH then
