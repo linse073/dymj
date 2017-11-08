@@ -21,9 +21,9 @@ local function dymj(rule)
     local r = {pack=rule}
     local p, c = string.unpack("BB", rule)
     if p == 1 then
-        r.aa_pay = true
-    else
         r.aa_pay = false
+    else
+        r.aa_pay = true
     end
     if c == 1 then
         r.total_count, r.total_card, r.single_card = 6, 24, 6
@@ -62,9 +62,9 @@ local function dy13(rule)
     local r = {pack=rule}
     local p, c, n, kt, k = string.unpack("BBBBB", rule)
     if p == 1 then
-        r.aa_pay = true
-    else
         r.aa_pay = false
+    else
+        r.aa_pay = true
     end
     if n == 1 then
         r.user = 4
