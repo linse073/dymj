@@ -798,11 +798,13 @@ function dy13:settle(info)
     self._banker = index
     user[index].pass = true
     local gang_index
-    local top_len = #top_role
-    if top_len == 1 then
-        gang_index = top_role[1]
-    else
-        gang_index = self._rand.randi(1, top_len)
+    if top_score > 0 then
+        local top_len = #top_role
+        if top_len == 1 then
+            gang_index = top_role[1]
+        else
+            gang_index = self._rand.randi(1, top_len)
+        end
     end
     local ci = {
         status = self._status, 
