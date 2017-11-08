@@ -1,7 +1,5 @@
 local skynet = require "skynet"
 
-local floor = math.floor
-
 local arg = table.pack(...)
 
 skynet.start(function()
