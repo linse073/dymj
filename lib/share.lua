@@ -19,7 +19,7 @@ skynet.init(function()
     share.name_msg = sharedata.query("name_msg")
 
     share.mj_invalid_card = sharedata.query("mj_invalid_card")
-    share.shop_item = sharedata.query("shop_item")
+    share.define = sharedata.query("define")
 
     -- share in current agent
     share.sproto = sprotoloader.load(1)

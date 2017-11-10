@@ -32,13 +32,8 @@ skynet.start(function()
     end
     sharedata.new("mj_invalid_card", mj_invalid_card)
 
-    local shop_item = {
-        [600] = 30,
-        [3000] = 180,
-        [10800] = 540,
-        [32800] = 2050,
-    }
-    sharedata.new("shop_item", shop_item)
+    local define = require("define")
+    sharedata.new("define", define)
 
     -- protocol
     local file = skynet.getenv("root") .. "proto/proto.sp"

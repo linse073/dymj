@@ -30,7 +30,7 @@ local error_code
 local base
 local cz
 local rand
-local shop_item
+local define
 local game_day
 local role_mgr
 local offline_mgr
@@ -54,7 +54,7 @@ skynet.init(function()
     base = share.base
     cz = share.cz
     rand = share.rand
-    shop_item = share.shop_item
+    define = share.define
     game_day = func.game_day
     role_mgr = skynet.queryservice("role_mgr")
     offline_mgr = skynet.queryservice("offline_mgr")
@@ -259,7 +259,7 @@ function role.charge(p, inform, ret)
             {query={id=trade_id, status=false}, update={["$set"]={status=true}}})
         if r.lastErrorObject.updatedExisting then
             local cashFee = r.value.num
-            local num = shop_item[cashFee]
+            local num = define.shop_item[cashFee]
             local user = game.data.user
             if user.invite_code > 0 then
                 num = num * 2
@@ -543,7 +543,7 @@ function proc.share(msg)
         error{code = error_code.ALREADY_SHARE}
     end
     local p = update_user()
-    role.add_room_card(p, false, 10)
+    role.add_room_card(p, false, define.share_reward)
     user.day_card = true
     p.user.day_card = true
     return "update_user", {update=p}
@@ -583,7 +583,7 @@ function proc.charge(msg)
     if not num or not msg.url then
         error{code = error_code.ERROR_ARGS}
     end
-    if not shop_item[num] then
+    if not define.shop_item[num] then
         error{code = error_code.NO_SHOP_ITEM}
     end
     local data = game.data
