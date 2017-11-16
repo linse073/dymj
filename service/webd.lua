@@ -59,6 +59,16 @@ if mode == "agent" then
                 return {error="no player"}
             end
         end},
+        unlink = {{"id"}, function(q)
+            local id = tonumber(q.id)
+            local info = skynet.call(role_mgr, "lua", "get_info", id)
+            if info then
+                skynet.call(offline_mgr, "lua", "add", id, "role", "unlink")
+                return {ret="OK"}
+            else
+                return {error="no player"}
+            end
+        end},
     }
 
     local function response(id, ...)

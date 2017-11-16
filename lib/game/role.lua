@@ -252,6 +252,15 @@ function role.add_room_card(p, inform, num)
     end
 end
 
+function role.unlink(p, inform)
+    local user = game.data.user
+    user.invite_code = 0
+    p.user.invite_code = 0
+    if inform then
+        notify.add("update_user", {update=p})
+    end
+end
+
 function role.charge(p, inform, ret)
     if ret.retCode == "SUCCESS" then
         local trade_id = tonumber(ret.tradeNO)
