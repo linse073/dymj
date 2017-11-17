@@ -8,6 +8,8 @@ local define = {
     },
 
 	share_reward = 10,
+
+    syn_user_url = "http://web.dyzx7.cn/dy/g/uinfo",
 }
 
 return define

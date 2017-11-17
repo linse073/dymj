@@ -51,6 +51,8 @@ local auth_proc = {
 			nick_name = content.nickname,
 			sex = content.sex,
 			head_img = content.headimgurl,
+            openid = content.openid,
+            unionid = content.unionid,
 		}
     end,
 }
