@@ -254,10 +254,12 @@ end
 
 function role.unlink(p, inform)
     local user = game.data.user
-    user.invite_code = 0
-    p.user.invite_code = 0
-    if inform then
-        notify.add("update_user", {update=p})
+    if user.invite_code > 0 then
+        user.invite_code = 0
+        p.user.invite_code = 0
+        if inform then
+            notify.add("update_user", {update=p})
+        end
     end
 end
 
@@ -312,6 +314,32 @@ function proc.heart_beat(msg)
     return "heart_beat_response", {time=msg.time, server_time=skynet.time()*100}
 end
 
+local function syn_info(now)
+    local data = game.data
+    local user = data.user
+    local str = table.concat({
+        user.id, 
+        data.unionid or "", 
+        data.openid or "", 
+        data.nick_name or "", 
+        data.head_img or "", 
+        now, 
+        web_sign
+    }, "&")
+    local sign = md5.sumhexa(str)
+    local result, content = skynet.call(webclient, "lua", "request", "http://web.dyzx7.cn/tui/g/uinfo", {
+        id = user.id, 
+        unionid = data.unionid, 
+        openid = data.openid, 
+        nickname = data.nick_name, 
+        headimgurl = data.head_img, 
+        time = now, 
+        sign = sign,
+    })
+    if not result then
+        skynet.error(string.format("synchronize user info %d fail.", user.id))
+    end
+end
 function proc.enter_game(msg)
 	cz.start()
 	local data = game.data
@@ -374,24 +402,9 @@ function proc.enter_game(msg)
     timer.add_routine("save_role", role.save_routine, 300)
     timer.add_day_routine("update_day", role.update_day)
     skynet.call(role_mgr, "lua", "enter", data.info, skynet.self())
+    skynet.fork(syn_info, now)
     data.enter = true
     cz.finish()
-    local str = table.concat({user.id, data.unionid or "", data.openid or "", 
-            data.nick_name or "", data.head_img or "", now, web_sign}, "&")
-    local sign = md5.sumhexa(str)
-    local result, content = skynet.call(webclient, "lua", "request", 
-        "http://web.dyzx7.cn/tui/g/uinfo", {
-            id = user.id, 
-            unionid = data.unionid, 
-            openid = data.openid, 
-            nickname = data.nick_name, 
-            headimgurl = data.head_img, 
-            time = now, 
-            sign = sign,
-        })
-    if not result then
-        skynet.error("synchronize user info fail.")
-    end
     return "info_all", {user=ret, start_time=start_utc_time, code=code}
 end
 
