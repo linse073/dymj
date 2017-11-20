@@ -327,7 +327,7 @@ local function syn_info(now)
         web_sign
     }, "&")
     local sign = md5.sumhexa(str)
-    local result, content = skynet.call(webclient, "lua", "request", "http://web.dyzx7.cn/tui/g/uinfo", {
+    local result, content = skynet.call(webclient, "lua", "request", define.syn_user_url, {
         id = user.id, 
         unionid = data.unionid, 
         openid = data.openid, 
