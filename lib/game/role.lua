@@ -336,7 +336,7 @@ local function syn_info(now)
         time = now, 
         sign = sign,
     })
-    if not result then
+    if not result or content.ret ~= "OK" then
         skynet.error(string.format("synchronize user info %d fail.", user.id))
     end
 end
