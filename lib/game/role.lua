@@ -88,6 +88,8 @@ local function get_user()
 			user.head_img = data.head_img
 			user.ip = data.ip
             user.sex = data.sex
+            user.openid = data.openid
+            user.unionid = data.unionid
 			data.user = user
 			data.info = {
 				account = user.account,
@@ -95,6 +97,8 @@ local function get_user()
 				sex = user.sex,
 				nick_name = user.nick_name,
 				head_img = user.head_img,
+                openid = user.openid,
+                unionid = user.unionid,
 				ip = user.ip,
 			}
 		else
@@ -111,6 +115,8 @@ local function get_user()
 				room_card = 50,
 				nick_name = data.nick_name,
 				head_img = data.head_img,
+                openid = data.openid,
+                unionid = data.unionid,
 				ip = data.ip,
                 day_card = false,
                 invite_code = 0,
@@ -124,6 +130,8 @@ local function get_user()
 				sex = user.sex,
 				nick_name = user.nick_name,
 				head_img = user.head_img,
+                openid = user.openid,
+                unionid = user.unionid,
 				ip = user.ip,
 			}
 			skynet.call(info_db, "lua", "safe_insert", info)
