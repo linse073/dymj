@@ -269,7 +269,7 @@ end
 function util.shuffle(card, rand)
     local len = #card
     for i = 1, len-1 do
-        local r = rand.randi(i+1, len)
+        local r = rand.randi(i, len)
         card[i], card[r] = card[r], card[i]
     end
 end

@@ -1119,13 +1119,13 @@ function dy13:start()
         v.key = nil
         local deal_card = {}
         for i = 1, base.P13_ROLE_CARD do
-            local c = card[left]
+            local c = card[(i-1)*rule.user+j]
             if c == rule.key then
                 v.key = true
             end
-            left = left - 1
             deal_card[i] = c
         end
+        left = left - base.P13_ROLE_CARD
         v.deal_card = deal_card
         record_user[index] = {
             account = v.account,

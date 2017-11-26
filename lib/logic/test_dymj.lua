@@ -1470,11 +1470,11 @@ function dymj:start()
         v.out_magic = 0
         local deal_card = {}
         for i = 1, base.MJ_ROLE_CARD do
-            local c = card[left]
-            left = left - 1
+            local c = card[(i-1)*base.MJ_FOUR+j]
             type_card[c] = type_card[c] + 1
             deal_card[i] = c
         end
+        left = left - base.MJ_ROLE_CARD
         v.deal_card = deal_card
     end
     self._left = left
