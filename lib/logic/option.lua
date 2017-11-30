@@ -83,6 +83,31 @@ local function dy13(rule)
     return r
 end
 
+local function jhbj(rule)
+    local r = {pack=rule}
+    local p, c, n, kt, k = string.unpack("BBBBB", rule)
+    if p == 1 then
+        r.aa_pay = true
+    else
+        r.aa_pay = false
+    end
+    if n == 1 then
+        r.user = 4
+    elseif n == 2 then
+        r.user = 3
+    else
+        r.user = 2
+    end
+    if c == 1 then
+        r.total_count, r.total_card, r.single_card = 20, r.user*10, 10
+    else
+        r.total_count, r.total_card, r.single_card = 40, r.user*20, 20
+    end
+    r.key_type = kt
+    r.key = k
+    return r
+end
+
 local option = {
     dymj = dymj,
     test_dymj = dymj,
@@ -90,6 +115,7 @@ local option = {
     test_jdmj = jdmj,
     jd13 = jd13,
     dy13 = dy13,
+    jhbj = jhbj,
 }
 
 return option

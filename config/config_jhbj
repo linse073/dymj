@@ -1,0 +1,22 @@
+root = "../../"
+thread = 8
+logger = "userlog"
+logservice = "snlua"
+harbor = 0
+start = "main"
+bootstrap = "snlua bootstrap"	-- The service for bootstrap
+lualoader = "lualib/loader.lua"
+daemon = "./skynet_jhbj.pid"
+luaservice = root.."service/?.lua;"..root.."cmd/?.lua;./service/?.lua"
+cpath = "./cservice/?.so"
+lua_path = root.."lib/?.lua;"..root.."lib/?/init.lua;"..root.."game/jhbj/?.lua;"..root.."game/jhbj/?/init.lua;./lualib/?.lua;./lualib/?/init.lua"
+
+config = "config.config_jhbj"
+debug_console = 8100
+login = 8001
+web = 8200
+web_sign = "7SgHmw7fg357mGrzp5320pD8P2w4IQ8H"
+start_time = "2016-05-10 00:00:00"
+gm_level = 1
+log_dir = root.."jhbj_log/"
+database = "jhbj"
