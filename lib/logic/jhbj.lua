@@ -187,12 +187,10 @@ function jhbj:pack(id, ip, agent)
                         top_score = info.top_score,
                         hu_count = info.hu_count,
                         status = info.status,
-                        out_index = info.out_index,
                     }
                     if info.out_card then
                         local show_card = {
                             own_card = info.out_card,
-                            last_index = info.out_index,
                             score = info.last_score,
                         }
                         u.show_card = show_card
@@ -236,7 +234,6 @@ function jhbj:pack(id, ip, agent)
                     if info.id == id then
                         u.own_card = info.deal_card
                         u.out_card = info.out_card
-                        u.out_index = info.out_index
                     end
                     user[#user+1] = u
                 end
@@ -519,7 +516,7 @@ local function analyze(card, ib, ie)
     end
     local sc = false
     for k, v in pairs(color) do
-        if v == 5 then
+        if v == 3 then
             sc = true
         end
         break
@@ -535,64 +532,31 @@ local function analyze(card, ib, ie)
     end
     table.sort(comp, compare)
     local shunzi = false
-    if sv[1] == 5 then
+    if sv[1] == 3 then
         table.sort(array)
-        if array[5] - array[1] == 4 then
+        if array[3] - array[1] == 2 then
             shunzi = true
-        elseif array[1] == 1 and array[4] == 4 and array[5] == 13 then
+        elseif array[1] == 1 and array[2] == 2 and array[3] == 13 then
             shunzi = true
         end
     end
-    local pt = base.P13_TYPE_NONE
+    local pt = base.PBJ_TYPE_NONE
     if sc then
         if shunzi then
-            pt = base.P13_TYPE_TONGHUASHUN
+            pt = base.PBJ_TYPE_TONGHUASHUN
         else
-            pt = base.P13_TYPE_TONGHUA
+            pt = base.PBJ_TYPE_TONGHUA
         end
     else
         if shunzi then
-            pt = base.P13_TYPE_SHUNZI
-        elseif sv[4] then
-            pt = base.P13_TYPE_ZHADAN
+            pt = base.PBJ_TYPE_SHUNZI
         elseif sv[3] then
-            if sv[2] then
-                pt = base.P13_TYPE_HULU
-            else
-                pt = base.P13_TYPE_SANZHANG
-            end
+            pt = base.PBJ_TYPE_SANTIAO
         elseif sv[2] then
-            if sv[2] == 2 then
-                pt = base.P13_TYPE_LIANGDUI
-            else
-                pt = base.P13_TYPE_DUIZI
-            end
+            pt = base.PBJ_TYPE_DUIZI
         end
     end
     return {pt=pt, comp=comp, count=sv[1] or 0}
-end
-
-local function comp_1(l, r)
-    if l.pt ~= r.pt then
-        return l.pt > r.pt
-    end
-    local lcomp = l.comp
-    local rcomp = r.comp
-    local rc = {}
-    for i = 1, #lcomp-l.count do
-        rc[i] = rcomp[i]
-    end
-    local b = #rcomp - r.count
-    for i = b+1, b+l.count do
-        rc[#rc+1] = rcomp[i]
-    end
-    for k, v in ipairs(lcomp) do
-        local lv, rv = v.v, rc[k].v
-        if lv ~= rv then
-            return lv > rv
-        end
-    end
-    return true
 end
 
 local function comp_2(l, r)

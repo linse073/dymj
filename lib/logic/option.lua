@@ -4,11 +4,7 @@ local string = string
 local function jdmj(rule)
     local r = {pack=rule}
     local p, c = string.unpack("BB", rule)
-    if p == 1 then
-        r.aa_pay = true
-    else
-        r.aa_pay = false
-    end
+    r.aa_pay = (p == 1)
     if c == 1 then
         r.total_count, r.total_card, r.single_card = 10, 40, 10
     else
@@ -20,11 +16,7 @@ end
 local function dymj(rule)
     local r = {pack=rule}
     local p, c = string.unpack("BB", rule)
-    if p == 1 then
-        r.aa_pay = false
-    else
-        r.aa_pay = true
-    end
+    r.aa_pay = (p ~= 1)
     if c == 1 then
         r.total_count, r.total_card, r.single_card = 6, 24, 6
     else
@@ -36,18 +28,9 @@ end
 local function jd13(rule)
     local r = {pack=rule}
     local p, c, n, kt, k = string.unpack("BBBBB", rule)
-    if p == 1 then
-        r.aa_pay = true
-    else
-        r.aa_pay = false
-    end
-    if n == 1 then
-        r.user = 4
-    elseif n == 2 then
-        r.user = 3
-    else
-        r.user = 2
-    end
+    r.aa_pay = (p == 1)
+    r.user = 5 - n
+    assert(r.user>=2 and r.user<=4, string.format("jd13 error user: %d.", r.user))
     if c == 1 then
         r.total_count, r.total_card, r.single_card = 20, r.user*10, 10
     else
@@ -61,18 +44,9 @@ end
 local function dy13(rule)
     local r = {pack=rule}
     local p, c, n, kt, k = string.unpack("BBBBB", rule)
-    if p == 1 then
-        r.aa_pay = false
-    else
-        r.aa_pay = true
-    end
-    if n == 1 then
-        r.user = 4
-    elseif n == 2 then
-        r.user = 3
-    else
-        r.user = 2
-    end
+    r.aa_pay = (p ~= 1)
+    r.user = 5 - n
+    assert(r.user>=2 and r.user<=4, string.format("dy13 error user: %d.", r.user))
     if c == 1 then
         r.total_count, r.total_card, r.single_card = 12, r.user*6, 6
     else
@@ -85,26 +59,17 @@ end
 
 local function jhbj(rule)
     local r = {pack=rule}
-    local p, c, n, kt, k = string.unpack("BBBBB", rule)
-    if p == 1 then
-        r.aa_pay = true
-    else
-        r.aa_pay = false
-    end
-    if n == 1 then
-        r.user = 4
-    elseif n == 2 then
-        r.user = 3
-    else
-        r.user = 2
-    end
+    local p, c, n, e, g = string.unpack("BBBBB", rule)
+    r.aa_pay = (p == 1)
+    r.user = 6 - n
+    assert(r.user>=2 and r.user<=5, string.format("jhbj error user: %d.", r.user))
     if c == 1 then
         r.total_count, r.total_card, r.single_card = 20, r.user*10, 10
     else
         r.total_count, r.total_card, r.single_card = 40, r.user*20, 20
     end
-    r.key_type = kt
-    r.key = k
+    r.extra = (e == 1)
+    r.give_up = (g == 1)
     return r
 end
 
