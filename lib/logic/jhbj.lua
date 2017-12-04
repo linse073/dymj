@@ -581,11 +581,40 @@ local function comp_3(l, r)
     end
 end
 
+local function comp_1(l, r)
+    return comp_2(l[2], r[2])
+end
+
 function jhbj:settle(info)
     local index = info.index
     local id = info.id
     local count = self._rule.user
     local role = self._role
+    local temp = {{}, {}, {}}
+    for i = 1, count do
+        local type_card = role[i].type_card
+        for j = 1, 3 do
+            temp[j][i] = {i, type_card[j]}
+        end
+    end
+    local scores = {0, 0, 0, 0, 0}
+    local ps = base.PBJ_SCORE[count]
+    for k, v in ipairs(temp) do
+        table.sort(v, comp_1)
+        for k1, v1 in ipairs(v) do
+        end
+    end
+
+    for i = 1, 3 do
+        local temp = {}
+        for j = 1, count do
+            temp[j] = role[j].type_card[i]
+        end
+    end
+    
+    for i = 1, count do
+    end
+
     local scores = {0, 0, 0, 0}
     local shoot = {0, 0, 0, 0}
     local single = {
@@ -667,6 +696,7 @@ function jhbj:settle(info)
             end
         end
     end
+
     self._count = self._count + 1
     if self._count == self._rule.total_count then
         self._status = base.CHESS_STATUS_FINISH
