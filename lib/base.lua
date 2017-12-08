@@ -114,12 +114,4 @@ base.PBJ_SPECIAL_SCORE = {
     [base.PBJ_SPECIAL_SHUNGZHADAN] = 20,
 }
 
-base.PBJ_SCORE = {
-    {},
-    {1, -1},
-    {3, -1, -2},
-    {6, -1, -2, -3},
-    {10, -1, -2, -3, -4},
-}
-
 return base

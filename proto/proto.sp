@@ -32,6 +32,7 @@
     hu 3 : integer
     last_index 4 : integer
     weave_card 5 : *weave_card
+    give_up 6 : boolean
 }
 
 .chess_user {
@@ -62,6 +63,7 @@
     chat_audio 24 : binary
     deal_end 25 : boolean
     pass 26 : boolean
+    give_up 27 : boolean
 }
 
 .chess_info {
