@@ -243,6 +243,10 @@
     card 0 : *integer
 }
 
+.bj_out {
+    card 0 : *integer
+}
+
 .invite_code {
     url 0 : string
     code 1 : integer

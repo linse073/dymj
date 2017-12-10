@@ -596,108 +596,8 @@ local function jintiao(v, i1, i2)
     local vb, ve = v[i1], v[i2]
     return vb-ve==diff or (vb-ve==12 and v[i1+1]-ve==diff-1)
 end
-local function jintiao_1(v, i, i1, i2)
-    local diff = i2 - i1 + 1
-    local vb, ve = v[i], v[i2]
-    return vb-ve==diff or (vb-ve==12 and v[i1]-ve==diff-1)
-end
-local function sanjintiao(color)
-    for k, v in pairs(color) do
-        local len = #v
-        if len == 3 then
-            if not jintiao(v, 1, 3) then
-                return false
-            end
-        elseif len == 5 then
-            if not jintiao(v, 1, 5) then
-                return false
-            end
-        elseif len == 8 then
-            if not ((jintiao(v, 1, 5) and jintiao(v, 6, 8)) 
-                or (jintiao(v, 1, 3) and jintiao(v, 4, 8))
-                or (jintiao_1(v, 1, 5, 8) and jintiao(v, 2, 4))
-                or (jintiao_1(v, 1, 7, 8) and jintiao(v, 2, 6))) then
-                return false
-            end
-        else
-            return false
-        end
-    end
-    return true
-end
-local function santonghua(color)
-    for k, v in pairs(color) do
-        local len = #v
-        if not (len==3 or len==5 or len==8) then
-            return false
-        end
-    end
-    return true
-end
-local shunzi_find
-local function shunzi_check(v, ib, i1, i2)
-    for i = i1, i2 do
-        if v[i] <= 0 then
-            return false
-        end
-    end
-    for i = i1, i2 do
-        v[i] = v[i] - 1
-    end
-    v[ib] = v[ib] - 1
-    local nb
-    for i = ib, 1, -1 do
-        if v[i] > 0 then
-            nb = i
-            break
-        end
-    end
-    if nb then
-        if shunzi_find(v, nb) then
-            return true
-        else
-            for i = i1, i2 do
-                v[i] = v[i] + 1
-            end
-            v[ib] = v[ib] + 1
-            return false
-        end
-    else
-        return true
-    end
-end
-shunzi_find = function(v, ib)
-    if ib == 13 then
-        if shunzi_check(v, ib, 1, 4) then
-            return true
-        end
-        if shunzi_check(v, ib, 1, 2) then
-            return true
-        end
-    end
-    if ib >= 5 and shunzi_check(v, ib, ib-4, ib-1) then
-        return true
-    end
-    if ib >= 3 and shunzi_check(v, ib, ib-2, ib-1) then
-        return true
-    end
-    return false
-end
-local function sanshunzi(value)
-    local ib
-    local nv = {}
-    for i = 1, base.POKER_VALUE do
-        local v = value[i]
-        if v then
-            nv[i] = v
-            ib = i
-        else
-            nv[i] = 0
-        end
-    end
-    return shunzi_find(nv, ib)
-end
-local function special(card)
+
+local function special(extra, card, type_card)
     local color = {}
     local value = {}
     local ccount, vcount = 0, 0
@@ -719,65 +619,68 @@ local function special(card)
             vcount = vcount + 1
         end
     end
-
-    if ccount == 1 then
-        return base.P13_SPECIAL_QINGLONG
+    local count3, ths = 0, 0
+    for k, v in ipairs(type_card) do
+        if v.pt == base.PBJ_TYPE_SANTIAO then
+            count3 = count3 + 1
+        elseif v.pt == base.PBJ_TYPE_TONGHUASHUN then
+            ths = ths + 1
+        end
     end
-    if vcount == 13 then
-        return base.P13_SPECIAL_YITIAOLONG
-    end
-    -- if sanjintiao(color) then
-    --     return base.P13_SPECIAL_SANJINTIAO
-    -- end
     local nv = {0, 0, 0, 0}
-    local nb, ns = 0, 0
     for k, v in pairs(value) do
         nv[v] = nv[v] + 1
-        if k >= 7 then
-            nb = nb + 1
+    end
+    if nv[4] == 2 and count3 == 2 then
+        return base.PBJ_SPECIAL_SHUANGZHADAN
+    end
+    if extra then
+        if vcount == 9 and jintiao(card, 1, 9) then
+            if ccount == 1 then
+                return base.PBJ_SPECIAL_JIULIANTONGHUASHUN
+            else
+                return base.PBJ_SPECIAL_JIULIANSHUN
+            end
         end
-        if k <= 7 then
-            ns = ns + 1
+        if count3 == 3 then
+            return base.PBJ_SPECIAL_QUANSANTIAO
         end
-    end
-    -- if nv[4] == 3 then
-    --     return base.P13_SPECIAL_SANZHADAN
-    -- end
-    -- if nb == 13 then
-    --     return base.P13_SPECIAL_QUANDA
-    -- end
-    -- if ns == 13 then
-    --     return base.P13_SPECIAL_QUANXIAO
-    -- end
-    local ncr, ncb = 0, 0
-    for k, v in pairs(color) do
-        if k == 1 or k == 3 then
-            ncr = ncr + #v
-        elseif k == 2 or k == 4 then
-            ncb = ncb + #v
+        if count3 == 1 and nv[4] == 1 then
+            return base.PBJ_SPECIAL_ZHADAN
         end
-    end
-    if ncb == 13 then
-        return base.P13_SPECIAL_QUANHEI
-    end
-    if ncr == 13 then
-        return base.P13_SPECIAL_QUANHONG
-    end
-    local count2 = nv[2] + nv[4] * 2
-    -- if count2 == 5 and nv[3] == 1 then
-    --     return base.P13_SPECIAL_WUDUIYIKE
-    -- end
-    if count2 == 6 then
-        return base.P13_SPECIAL_LIUDUIBAN
-    end
-    if nv[3] == 4 then
-        return base.P13_SPECIAL_SISANTIAO
-    end
-    if santonghua(color) then
-        return base.P13_SPECIAL_SANTONGHUA
-    end
-    if sanshunzi(value) then
-        return base.P13_SPECIAL_SANSHUNZI
+        if ths == 3 then
+            return base.PBJ_SPECIAL_SANTONGHUASHUN
+        end
+        if type_card[1].pt >= base.PBJ_TYPE_TONGHUASHUN then
+            return base.PBJ_SPECIAL_SANQING
+        end
+        if type_card[2].pt == base.PBJ_TYPE_SANTIAO 
+            and type_card[3].pt == base.PBJ_TYPE_SANTIAO then
+            return base.PBJ_SPECIAL_SHUANGSANTIAO
+        end
+        if type_card[2].pt == base.PBJ_TYPE_TONGHUASHUN
+            and type_card[3].pt == base.PBJ_TYPE_TONGHUASHUN then
+            return base.PBJ_SPECIAL_SHUANGTONGHUASHUN
+        end
+        if type_card[1].pt == base.PBJ_TYPE_SHUNZI
+            and type_card[2].pt == base.PBJ_TYPE_SHUNZI
+            and type_card[3].pt == base.PBJ_TYPE_SHUNZI then   
+            return base.PBJ_SPECIAL_SANSHUNZI
+        end
+        local ncr, ncb = 0, 0
+        for k, v in pairs(color) do
+            if k == 1 or k == 3 then
+                ncr = ncr + #v
+            elseif k == 2 or k == 4 then
+                ncb = ncb + #v
+            end
+        end
+        if ncb == 9 then
+            return base.PBJ_SPECIAL_QUANHEI
+        end
+        if ncr == 9 then
+            return base.PBJ_SPECIAL_QUANHONG
+        end
     end
     return 0
 end
@@ -786,25 +689,31 @@ function jhbj:settle(info)
     local index = info.index
     local id = info.id
     local count = self._rule.user
+    local extra = self._rule.extra
     local role = self._role
     local scores = {0, 0, 0, 0, 0}
     if self._give_up < count then
-        local ti = 1
+        local len = 0
+        local temp = {{}, {}, {}}
+        local ng = {}
         local gscore = (1 - count) * 3
         for i = 1, count do
             local r = role[i]
             if r.give_up then
                 scores[i] = gscore
             else
+                len = len + 1
                 local rt = r.type_card
                 for j = 1, 3 do
-                    temp[j][ti] = {i, rt[j]}
+                    temp[j][len] = {i, rt[j]}
                 end
-                ti = ti + 1
+                ng[len] = r
+                local temp_own = util.clone(r.deal_card)
+                table.sort(temp_own, func.sort_poker_value)
+                r.out_index = special(extra, temp_own, r.type_card)
             end
         end
-        local len = ti - 1
-        local extra = (count - 1) * self._give_up
+        local gt = (count - 1) * self._give_up
         for k, v in ipairs(temp) do
             table.sort(v, comp_1)
             local total = 0
@@ -814,93 +723,39 @@ function jhbj:settle(info)
                 total = total + score
             end
             local ri = v[1][1]
-            scores[ri] = scores[ri] + total + extra
+            scores[ri] = scores[ri] + total + gt
         end
-    end
-
-
-    local scores = {0, 0, 0, 0}
-    local shoot = {0, 0, 0, 0}
-    local single = {
-        {0, 0, 0, 0},
-        {0, 0, 0, 0},
-        {0, 0, 0, 0},
-        {0, 0, 0, 0},
-    }
-    for i = 1, count do
-        for j = i+1, count do
-            local score = 0
-            local lr, rr = role[i], role[j]
-            local spe = false
-            if lr.out_index > 0 then
-                score = score + func.p13_special_score(lr.out_index)
-                spe = true
-            end
-            if rr.out_index > 0 then
-                score = score - func.p13_special_score(rr.out_index)
-                spe = true
-            end
-            if not spe then
-                local wc = 0
-                local lt, rt = lr.type_card, rr.type_card
-                local w1, wt1 = comp_3(lt[1], rt[1])
-                wc = wc + w1
-                if wt1 == base.P13_TYPE_SANZHANG then
-                    score = score + w1 * 3
-                else
-                    score = score + w1
+        for k, v in ipairs(ng) do
+            if v.out_index > 0 then
+                local score = base.PBJ_SPECIAL_SCORE[v.out_index]
+                if not score then
+                    score = count - 1
                 end
-                local w2, wt2 = comp_3(lt[2], rt[2])
-                wc = wc + w2
-                if wt2 == base.P13_TYPE_TONGHUASHUN then
-                    score = score + w2 * 10
-                elseif wt2 == base.P13_TYPE_ZHADAN then
-                    score = score + w2 * 8
-                elseif wt2 == base.P13_TYPE_HULU then
-                    score = score + w2 * 2
-                else
-                    score = score + w2
-                end
-                local w3, wt3 = comp_3(lt[3], rt[3])
-                wc = wc + w3
-                if wt3 == base.P13_TYPE_TONGHUASHUN then
-                    score = score + w3 * 5
-                elseif wt3 == base.P13_TYPE_ZHADAN then
-                    score = score + w3 * 4
-                else
-                    score = score + w3
-                end
-                if wc == 3 then
-                    score = score * 2
-                    shoot[i] = shoot[i] + 1
-                elseif wc == -3 then
-                    score = score * 2
-                    shoot[j] = shoot[j] + 1
-                end
-            end
-            if lr.key or rr.key then
-                score = score * 2
-            end
-            single[i][j] = score
-            scores[i] = scores[i] + score
-            single[j][i] = -score
-            scores[j] = scores[j] - score
-        end
-    end
-    local all_shoot = count - 1
-    if all_shoot > 1 then
-        for i = 1, count do
-            if shoot[i] == all_shoot then
-                for j = 1, count do
-                    if j ~= i then
-                        scores[i] = scores[i] + single[i][j]
-                        scores[j] = scores[j] + single[j][i]
+                local total = 0
+                for k1, v1 in ipairs(ng) do
+                    if k ~= k1 then
+                        local ri = v1.index
+                        scores[ri] = scores[ri] - score
+                        total = total + score
                     end
                 end
+                local ri = v1.index
+                scores[ri] = scores[ri] + total
             end
         end
+        local mi = temp[1][1][1]
+        if temp[2][1][1] == mi and temp[3][1][1] == mi then
+            local total, score = 0, count - 1
+            for k, v in ipairs(ng) do
+                local ri = v.index
+                if ri ~= mi then
+                    scores[ri] = scores[ri] - score
+                    total = total + score
+                end
+            end
+            scores[mi] = scores[mi] + total
+        end
     end
-
     self._count = self._count + 1
     if self._count == self._rule.total_count then
         self._status = base.CHESS_STATUS_FINISH
@@ -1022,18 +877,21 @@ function jhbj:is_all_out()
     local role = self._role
     for i = 1, self._rule.user do
         local v = role[i]
-        if not v.out_card then
+        if not v.out_card and not v.give_up then
             return false
         end
     end
     return true
 end
 
-function jhbj:thirteen_out(id, msg)
+function jhbj:bj_out(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     local index = info.index
     if info.out_card then
         error{code = error_code.ALREADY_OUT}
+    end
+    if info.give_up then
+        error{code = error_code.ALREADY_GIVE_UP}
     end
     local card = msg.card
     local temp_card = util.clone(card)
@@ -1047,10 +905,10 @@ function jhbj:thirteen_out(id, msg)
     end
     local type_card = {
         analyze(card, 1, 3),
-        analyze(card, 4, 8),
-        analyze(card, 9, 13),
+        analyze(card, 4, 6),
+        analyze(card, 7, 9),
     }
-    if comp_1(type_card[1], type_card[2]) or comp_2(type_card[2], type_card[3]) then
+    if comp_2(type_card[1], type_card[2]) or comp_2(type_card[2], type_card[3]) then
         error{code = error_code.ERROR_OPERATION}
     end
     info.out_card = card
@@ -1070,25 +928,19 @@ function jhbj:thirteen_out(id, msg)
     end
 end
 
-function jhbj:p13_call(id, msg)
+function jhbj:give_up(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     local index = info.index
     if info.out_card then
         error{code = error_code.ALREADY_OUT}
     end
-    local temp_own = util.clone(info.deal_card)
-    table.sort(temp_own, func.sort_poker_value)
-    local out_index = special(temp_own)
-    if out_index == 0 then
-        error{code = error_code.ERROR_OPERATION}
+    if info.give_up then
+        error{code = error_code.ALREADY_GIVE_UP}
     end
-    info.out_card = temp_own
-    info.out_index = out_index
     local record_action = self._detail.action
     record_action[#record_action+1] = {
         index = index,
-        out_card = temp_own,
-        out_index = out_index,
+        give_up = true,
     }
     if self:is_all_out() then
         return self:settle(info)

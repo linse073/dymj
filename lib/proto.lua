@@ -71,6 +71,8 @@ local type_msg = {
         "chat_info",
         "thirteen_out",
         "p13_call",
+        "bj_out",
+        "give_up",
     },
 }
 
