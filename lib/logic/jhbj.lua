@@ -794,12 +794,14 @@ function jhbj:settle(info)
             own_card = v.out_card,
             last_index = v.out_index,
             score = score,
+            give_up = v.give_up,
         }
         local u = {
             index = k,
             ready = v.ready,
             score = rc,
             out_index = v.out_index,
+            give_up = v.give_up,
             show_card = sc,
         }
         detail.user[k].show_card = sc
@@ -948,7 +950,7 @@ function jhbj:give_up(id, msg)
         local user = {index=index, pass=true}
         broadcast({user}, nil, self._role, id)
         return session_msg(info, {
-            {index=index, pass=true, out_index=out_index},
+            {index=index, pass=true, give_up=give_up},
         })
     end
 end
