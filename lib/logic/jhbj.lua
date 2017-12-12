@@ -939,6 +939,8 @@ function jhbj:give_up(id, msg)
     if info.give_up then
         error{code = error_code.ALREADY_GIVE_UP}
     end
+    info.give_up = true
+    self._give_up = self._give_up + 1
     local record_action = self._detail.action
     record_action[#record_action+1] = {
         index = index,
