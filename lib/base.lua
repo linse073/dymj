@@ -16,6 +16,7 @@ local base = {
     P13_ROLE_CARD = 13,
     P13_COLOR = 4,
     PBJ_ROLE_CARD = 9,
+    PBJ_FIVE = 5,
 
     MJ_OP_CHI = 1,
     MJ_OP_PENG = 2,
