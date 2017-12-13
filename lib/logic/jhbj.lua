@@ -689,7 +689,6 @@ function jhbj:settle(info)
     local index = info.index
     local id = info.id
     local count = self._rule.user
-    local extra = self._rule.extra
     local role = self._role
     local scores = {0, 0, 0, 0, 0}
     if self._give_up < count then
@@ -708,9 +707,6 @@ function jhbj:settle(info)
                     temp[j][len] = {i, rt[j]}
                 end
                 ng[len] = r
-                local temp_own = util.clone(r.deal_card)
-                table.sort(temp_own, func.sort_poker_value)
-                r.out_index = special(extra, temp_own, r.type_card)
             end
         end
         local gt = (count - 1) * self._give_up
@@ -915,6 +911,8 @@ function jhbj:bj_out(id, msg)
     end
     info.out_card = card
     info.type_card = type_card
+    table.sort(temp_own, func.sort_poker_value)
+    info.out_index = special(self._rule.extra, temp_own, type_card)
     local record_action = self._detail.action
     record_action[#record_action+1] = {
         index = index,
@@ -926,7 +924,7 @@ function jhbj:bj_out(id, msg)
     else
         local user = {index=index, pass=true}
         broadcast({user}, nil, self._role, id)
-        return session_msg(info, {user})
+        return session_msg(info, {index=index, pass=true, out_index=info.out_index})
     end
 end
 
