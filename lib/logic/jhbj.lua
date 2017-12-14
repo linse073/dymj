@@ -611,10 +611,13 @@ local function special(extra, card, type_card)
             vcount = vcount + 1
         end
     end
-    local count3, ths = 0, 0
+    local count3, ths, has_zhadan = 0, 0, false
     for k, v in ipairs(type_card) do
         if v.pt == base.PBJ_TYPE_SANTIAO then
             count3 = count3 + 1
+            if value[v.comp[1].v] == 4 then
+                has_zhadan = true
+            end
         elseif v.pt == base.PBJ_TYPE_TONGHUASHUN then
             ths = ths + 1
         end
@@ -637,13 +640,13 @@ local function special(extra, card, type_card)
         if count3 == 3 then
             return base.PBJ_SPECIAL_QUANSANTIAO
         end
-        if count3 == 1 and nv[4] == 1 then
+        if has_zhadan then
             return base.PBJ_SPECIAL_ZHADAN
         end
         if ths == 3 then
             return base.PBJ_SPECIAL_SANTONGHUASHUN
         end
-        if type_card[1].pt >= base.PBJ_TYPE_TONGHUASHUN then
+        if type_card[1].pt >= base.PBJ_TYPE_TONGHUA then
             return base.PBJ_SPECIAL_SANQING
         end
         if type_card[2].pt == base.PBJ_TYPE_SANTIAO 
