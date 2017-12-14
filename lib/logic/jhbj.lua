@@ -691,7 +691,7 @@ function jhbj:settle(info)
         for i = 1, count do
             local r = role[i]
             if r.give_up then
-                scores[i] = gscore
+                scores[i] = scores[i] + gscore
             else
                 len = len + 1
                 local rt = r.type_card
