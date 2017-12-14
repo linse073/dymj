@@ -975,14 +975,10 @@ function jhbj:start()
         v.out_card = nil
         v.out_index = 0
         v.type_card = nil
-        v.key = nil
         v.give_up = false
         local deal_card = {}
         for i = 1, base.PBJ_ROLE_CARD do
             local c = card[(i-1)*rule.user+j]
-            if c == rule.key then
-                v.key = true
-            end
             deal_card[i] = c
         end
         left = left - base.PBJ_ROLE_CARD
