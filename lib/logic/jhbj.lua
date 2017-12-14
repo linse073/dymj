@@ -964,6 +964,7 @@ function jhbj:start()
     self._card = card
     self._status = base.CHESS_STATUS_START
     self._old_banker = nil
+    self._give_up = 0
     local left = #card
     local role = self._role
     local record_user = {}
