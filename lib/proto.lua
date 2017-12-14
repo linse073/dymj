@@ -40,6 +40,7 @@ local type_msg = {
         "test_update_day",
         "jd13_card",
         "dy13_card",
+        "jhbj_card",
     },
 
     [2300] = {
