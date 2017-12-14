@@ -576,15 +576,7 @@ local function comp_2(l, r)
             return lv > rv
         end
     end
-    return true
-end
-
-local function comp_3(l, r)
-    if comp_2(l, r) then
-        return 1, l.pt
-    else
-        return -1, r.pt
-    end
+    return false
 end
 
 local function comp_1(l, r)
@@ -924,7 +916,7 @@ function jhbj:bj_out(id, msg)
     else
         local user = {index=index, pass=true}
         broadcast({user}, nil, self._role, id)
-        return session_msg(info, {index=index, pass=true, out_index=info.out_index})
+        return session_msg(info, {{index=index, pass=true, out_index=info.out_index}})
     end
 end
 

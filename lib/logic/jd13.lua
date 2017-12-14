@@ -589,7 +589,7 @@ local function comp_1(l, r)
             return lv > rv
         end
     end
-    return true
+    return false
 end
 
 local function comp_2(l, r)
@@ -603,7 +603,7 @@ local function comp_2(l, r)
             return lv > rv
         end
     end
-    return true
+    return false
 end
 
 local function comp_3(l, r)
