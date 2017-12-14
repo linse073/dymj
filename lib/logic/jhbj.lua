@@ -937,6 +937,9 @@ function jhbj:give_up(id, msg)
     if info.give_up then
         error{code = error_code.ALREADY_GIVE_UP}
     end
+    if not self._rule.give_up then
+        error{code = error_code.ERROR_OPERATION}
+    end
     info.give_up = true
     self._give_up = self._give_up + 1
     local record_action = self._detail.action
