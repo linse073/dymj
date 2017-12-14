@@ -945,7 +945,7 @@ function jhbj:give_up(id, msg)
         local user = {index=index, pass=true}
         broadcast({user}, nil, self._role, id)
         return session_msg(info, {
-            {index=index, pass=true, give_up=give_up},
+            {index=index, pass=true, give_up=true},
         })
     end
 end
