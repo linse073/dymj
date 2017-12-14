@@ -727,7 +727,7 @@ function jhbj:settle(info)
                         total = total + score
                     end
                 end
-                local ri = v1.index
+                local ri = v.index
                 scores[ri] = scores[ri] + total
             end
         end
