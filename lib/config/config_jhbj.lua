@@ -9,8 +9,7 @@ config.server = {
 }
 
 config.gate = {
-    ip = "192.168.1.19",
-    -- ip = "192.168.1.202",
+    ip = "jhserver.dyzx7.cn",
     port = 10888,
     maxclient = 65535,
     servername = "gate01",
