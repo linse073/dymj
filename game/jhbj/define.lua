@@ -7,9 +7,9 @@ local define = {
         [32800] = 2050,
     },
 
-	share_reward = 20,
+	share_reward = 10,
 
-    syn_user_url = "http://jdhy.dyzx7.cn/jdhy/g/uinfo",
+    syn_user_url = "http://hahl.dyzx7.cn/hahl/g/uinfo",
 }
 
 return define
