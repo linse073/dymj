@@ -20,3 +20,4 @@ start_time = "2016-05-10 00:00:00"
 gm_level = 1
 log_dir = root.."jhbj_log/"
 database = "jhbj"
+debug = false

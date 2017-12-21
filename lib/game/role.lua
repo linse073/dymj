@@ -48,6 +48,7 @@ local iap_log_db
 local charge_log_db
 
 local web_sign = skynet.getenv("web_sign")
+local debug = (skynet.getenv("debug")=="true")
 
 skynet.init(function()
     error_code = share.error_code
@@ -410,7 +411,9 @@ function proc.enter_game(msg)
     timer.add_routine("save_role", role.save_routine, 300)
     timer.add_day_routine("update_day", role.update_day)
     skynet.call(role_mgr, "lua", "enter", data.info, skynet.self())
-    skynet.fork(syn_info, now)
+    if data.login_type == base.LOGIN_WEIXIN and not debug then
+        skynet.fork(syn_info, now)
+    end
     data.enter = true
     cz.finish()
     return "info_all", {user=ret, start_time=start_utc_time, code=code}

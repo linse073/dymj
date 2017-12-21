@@ -17,3 +17,4 @@ web = 8210
 web_sign = "7SgHmw7fg357mGrzp5320pD8P2w4IQ8H"
 start_time = "2016-05-10 00:00:00"
 gm_level = 1
+debug = true
