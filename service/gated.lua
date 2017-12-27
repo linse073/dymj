@@ -93,6 +93,7 @@ end
 function server.connect_handler(username, addr)
     local u = username_map[username]
     if u then
+        addr = addr:match("^(.*):")
         skynet.call(u.agent, "lua", "btk", addr)
     end
 end
