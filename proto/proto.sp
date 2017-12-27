@@ -64,6 +64,7 @@
     deal_end 25 : boolean
     pass 26 : boolean
     give_up 27 : boolean
+    location 28 : binary
 }
 
 .chess_info {
@@ -263,4 +264,8 @@
 
 .charge_ret {
     url 0 : string
+}
+
+.location_info {
+    location 0 : binary
 }

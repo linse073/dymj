@@ -123,6 +123,7 @@ local LOGIN_TYPE_STR = {
     "qq",
 }
 local function accept(conf, s, fd, addr, register_db)
+    addr = addr:match("^(.*):")
 	-- call slave auth
 	local ok, info, secret = skynet.call(s, "lua", fd, addr)
 	-- slave will accept(start) fd, so we can write to fd later
