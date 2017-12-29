@@ -618,7 +618,7 @@ function proc.invite_code(msg)
     local content = cjson.decode(content)
     if content.ret == "OK" then
         local p = update_user()
-        role.add_room_card(p, false, 50)
+        role.add_room_card(p, false, define.invite_reward)
         user.invite_code = code
         p.user.invite_code = code
         return "update_user", {update=p}

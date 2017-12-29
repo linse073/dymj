@@ -64,9 +64,9 @@ local function jhbj(rule)
     r.user = 6 - n
     assert(r.user>=2 and r.user<=5, string.format("jhbj error user: %d.", r.user))
     if c == 1 then
-        r.total_count, r.total_card, r.single_card = 8, r.user*10, 10
+        r.total_count, r.total_card, r.single_card = 12, r.user, 1
     else
-        r.total_count, r.total_card, r.single_card = 16, r.user*20, 20
+        r.total_count, r.total_card, r.single_card = 16, r.user, 1
     end
     r.extra = (e == 1)
     r.give_up = (g == 1)

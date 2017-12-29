@@ -8,6 +8,7 @@ local define = {
     },
 
 	share_reward = 10,
+    invite_reward = 50,
 
     syn_user_url = "http://web.dyzx7.cn/dy/g/uinfo",
 }
