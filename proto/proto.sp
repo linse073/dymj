@@ -182,10 +182,12 @@
 .new_chess {
     name 0 : string
     rule 1 : string
+    location 2 : binary
 }
 
 .join {
     number 0 : integer
+    location 1 : binary
 }
 
 .out_card {

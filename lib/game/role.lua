@@ -473,7 +473,7 @@ function proc.new_chess(msg)
     end
     local card = data[msg.name .. "_card"]
     local rmsg, info = skynet.call(chess_table, "lua", "init", 
-        msg.name, rule, data.info, skynet.self(), data.server_address, card)
+        msg.name, rule, data.info, skynet.self(), data.server_address, card, msg.location)
     if rmsg == "update_user" then
         data.chess_table = chess_table
     else
@@ -495,7 +495,7 @@ function proc.join(msg)
     end
     assert(not skynet.call(chess_mgr, "lua", "get", data.id), string.format("Chess mgr has %d.", data.id))
     local user = data.user
-    local rmsg, info = skynet.call(chess_table, "lua", "join", data.info, user.room_card, skynet.self())
+    local rmsg, info = skynet.call(chess_table, "lua", "join", data.info, user.room_card, skynet.self(), msg.location)
     if rmsg == "update_user" then
         data.chess_table = chess_table
     end

@@ -23,11 +23,11 @@ util.timer_wrap(CMD)
 
 local logic
 
-function CMD.init(name, rule, info, agent, server, card)
+function CMD.init(name, rule, info, agent, server, card, location)
     rand.init(floor(skynet.time()))
     logic = setmetatable({}, chess[name])
     logic:init(number, rule, rand, server, card)
-    return logic:enter(info, agent, 1)
+    return logic:enter(info, agent, 1, location)
 end
 
 function CMD.destroy()

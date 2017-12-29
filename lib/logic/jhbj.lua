@@ -249,11 +249,12 @@ function jhbj:pack(id, ip, agent)
     end
 end
 
-function jhbj:enter(info, agent, index)
+function jhbj:enter(info, agent, index, location)
     local role = self._role
     assert(not role[index], string.format("Seat %d already has role.", index))
     info.agent = agent
     info.index = index
+    info.location = location
     info.score = 0
     info.ready = false
     info.hu_count = 0
@@ -285,7 +286,7 @@ function jhbj:enter(info, agent, index)
     }}}
 end
 
-function jhbj:join(info, room_card, agent)
+function jhbj:join(info, room_card, agent, location)
     if self._status ~= base.CHESS_STATUS_READY then
         error{code = error_code.ERROR_OPERATION}
     end
@@ -308,7 +309,7 @@ function jhbj:join(info, room_card, agent)
     if i then
         error{code = error_code.ALREAD_IN_CHESS}
     end
-    local rmsg, rinfo = self:enter(info, agent, index)
+    local rmsg, rinfo = self:enter(info, agent, index, location)
     broadcast({info}, nil, role, info.id)
     return rmsg, rinfo
 end
