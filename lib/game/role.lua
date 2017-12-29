@@ -113,7 +113,7 @@ local function get_user()
 				logout_time = 0,
 				gm_level = gm_level,
 				create_time = now,
-				room_card = 50,
+				room_card = define.init_card,
 				nick_name = data.nick_name,
 				head_img = data.head_img,
                 openid = data.openid,
