@@ -189,6 +189,7 @@ function jhbj:pack(id, ip, agent)
                         status = info.status,
                         out_index = info.out_index,
                         give_up = info.give_up,
+                        location = info.location,
                     }
                     if info.out_card then
                         local show_card = {
@@ -233,6 +234,7 @@ function jhbj:pack(id, ip, agent)
                         top_score = info.top_score,
                         hu_count = info.hu_count,
                         status = info.status,
+                        location = info.location,
                         pass = info.out_card~=nil or info.give_up,
                     }
                     if info.id == id then
