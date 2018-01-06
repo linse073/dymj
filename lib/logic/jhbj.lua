@@ -560,6 +560,7 @@ local function analyze(card, ib, ie)
             shunzi = true
         elseif array[1] == 1 and array[2] == 2 and array[3] == 13 then
             shunzi = true
+            comp[1].v = 0
         end
     end
     local pt = base.PBJ_TYPE_NONE
