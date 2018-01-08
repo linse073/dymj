@@ -662,20 +662,23 @@ local function special(extra, card, type_card)
         if ths == 3 then
             return base.PBJ_SPECIAL_SANTONGHUASHUN
         end
-        if type_card[1].pt >= base.PBJ_TYPE_TONGHUA then
+        local pt1 = type_card[1].pt
+        if pt1 >= base.PBJ_TYPE_TONGHUA then
             return base.PBJ_SPECIAL_SANQING
         end
-        if type_card[2].pt == base.PBJ_TYPE_SANTIAO 
-            and type_card[3].pt == base.PBJ_TYPE_SANTIAO then
+        local pt2 = type_card[2].pt
+        local pt3 = type_card[3].pt
+        if pt2 == base.PBJ_TYPE_SANTIAO 
+            and pt3 == base.PBJ_TYPE_SANTIAO then
             return base.PBJ_SPECIAL_SHUANGSANTIAO
         end
-        if type_card[2].pt == base.PBJ_TYPE_TONGHUASHUN
-            and type_card[3].pt == base.PBJ_TYPE_TONGHUASHUN then
+        if pt2 == base.PBJ_TYPE_TONGHUASHUN
+            and pt3 == base.PBJ_TYPE_TONGHUASHUN then
             return base.PBJ_SPECIAL_SHUANGTONGHUASHUN
         end
-        if type_card[1].pt == base.PBJ_TYPE_SHUNZI
-            and type_card[2].pt == base.PBJ_TYPE_SHUNZI
-            and type_card[3].pt == base.PBJ_TYPE_SHUNZI then   
+        if (pt1 == base.PBJ_TYPE_SHUNZI or pt1 == base.PBJ_TYPE_TONGHUASHUN)
+            and (pt2 == base.PBJ_TYPE_SHUNZI or pt2 == base.PBJ_TYPE_TONGHUASHUN)
+            and (pt3 == base.PBJ_TYPE_SHUNZI or pt3 == base.PBJ_TYPE_TONGHUASHUN) then   
             return base.PBJ_SPECIAL_SANSHUNZI
         end
         local ncr, ncb = 0, 0
