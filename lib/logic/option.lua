@@ -59,7 +59,7 @@ end
 
 local function jhbj(rule)
     local r = {pack=rule}
-    local p, c, n, i, e, g = string.unpack("BBBBBB", rule)
+    local p, c, n, e, g, i = string.unpack("BBBBBB", rule)
     r.aa_pay = (p == 1)
     r.user = 6 - n
     assert(r.user>=2 and r.user<=5, string.format("jhbj error user: %d.", r.user))
@@ -70,9 +70,9 @@ local function jhbj(rule)
     else
         r.total_count, r.total_card, r.single_card = 16, r.user, 1
     end
-    r.ip = (i == 1)
     r.extra = (e == 1)
     r.give_up = (g == 1)
+    r.ip = (i == 1)
     return r
 end
 
