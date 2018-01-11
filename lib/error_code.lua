@@ -34,7 +34,7 @@ local type_code = {
         NO_CHESS="游戏不存在",
         NOT_IN_CHESS="不在房间中",
         ALREADY_READY="已经准备好了",
-        ERROR_CHESS_NUMBER="是不是记错门牌号了？",
+        ERROR_CHESS_NUMBER="房间不存在",
         ERROR_CHESS_NAME="游戏不匹配",
         NO_OUT_CARD="不存在这张牌",
         INVALID_CARD="错误牌",
@@ -51,6 +51,7 @@ local type_code = {
         NO_RECORD="战绩已删除",
         ALREADY_DEAL_END="已经发完牌",
         ROOM_CLOSE="房间已解散",
+        IP_LIMIT="IP限定，无法加入",
     },
 
     [4000] = {

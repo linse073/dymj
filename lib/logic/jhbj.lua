@@ -297,6 +297,14 @@ function jhbj:join(info, room_card, agent, location)
         error{code = error_code.ROOM_CARD_LIMIT}
     end
     local role = self._role
+    if rule.ip then
+        for i = 1, rule.user do
+            local r = role[i]
+            if r and r.ip == info.ip then
+                error{code = error_code.IP_LIMIT}
+            end
+        end
+    end
     local index
     for i = 1, rule.user do
         if not role[i] then
