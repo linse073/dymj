@@ -44,7 +44,7 @@ local function check_account(info)
         end
     else
         if info.register or not info.password then
-            local accountid = status.accountid * 10000 + 1000 + config.serverid
+            local accountid = status.accountid * 100 + 10 + config.serverid
             status.accountid = status.accountid + 1
             local account = {
                 key = namekey,
@@ -97,7 +97,7 @@ local function gen_func(k, v)
     return function(...)
         local key = v .. "id"
         local value = status[key]
-        local id = value * 10000 + k * 1000 + config.serverid
+        local id = value * 100 + k * 10 + config.serverid
         value = value + 1
         status[key] = value
         skynet.call(status_db, "lua", "update", {key=status_key}, {["$set"]={[key]=value}}, true)
