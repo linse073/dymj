@@ -17,18 +17,20 @@ local free_list = list()
 local function new_number()
     local number = rand.randi(20000, 99999)
     if number_list[number] then
+        local num = number
         repeat
-            number = number - 1
-            if not number_list[number] then
-                return number
+            num = num - 1
+            if not number_list[num] then
+                return num
             end
-        until number < 20000
+        until num < 20000
+        num = number
         repeat
-            number = number + 1
-            if not number_list[number] then
-                return number
+            num = num + 1
+            if not number_list[num] then
+                return num
             end
-        until number > 99999
+        until num > 99999
     else
         return number
     end
