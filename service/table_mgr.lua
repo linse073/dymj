@@ -18,8 +18,8 @@ local function new_number()
     local number = rand.randi(20000, 99999)
     if number_list[number] then
         local i = 1
-        local go_on = false
         repeat
+            local go_on = false
             local up = number - i
             if up >= 20000 then
                 if not number_list[up] then
@@ -34,6 +34,7 @@ local function new_number()
                 end
                 go_on = true
             end
+            i = i + 1
         until not go_on
     else
         return number
