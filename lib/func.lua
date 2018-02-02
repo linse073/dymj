@@ -44,8 +44,16 @@ function func.return_msg(ok, msg, info)
 end
 
 function func.poker_info(c)
-    local tc = c - 1
+    local tc = (c - 1) %  base.PBJ_WILDCARD_RATE
     return tc//base.POKER_VALUE+1, tc%base.POKER_VALUE+1
+end
+
+function func.restitute_poker_value(c)
+    if c>base.PBJ_WILDCARD_RATE then
+        return base.POKER_CARD + (c // base.PBJ_WILDCARD_RATE)
+    else
+        return c
+    end
 end
 
 function func.sort_poker_value(l, r)
