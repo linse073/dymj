@@ -17,18 +17,25 @@ local free_list = list()
 local function new_number()
     local number = rand.randi(20000, 99999)
     if number_list[number] then
+        local i = 1
         repeat
-            number = number - 1
-            if not number_list[number] then
-                return number
+            local go_on = false
+            local up = number - i
+            if up >= 20000 then
+                if not number_list[up] then
+                    return up
+                end
+                go_on = true
             end
-        until number < 20000
-        repeat
-            number = number + 1
-            if not number_list[number] then
-                return number
+            local down = number + i
+            if down <= 99999 then
+                if not number_list[down] then
+                    return down
+                end
+                go_on = true
             end
-        until number > 99999
+            i = i + 1
+        until not go_on
     else
         return number
     end
