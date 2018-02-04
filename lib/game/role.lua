@@ -231,11 +231,11 @@ local function btk(addr)
     end
 end
 function role.btk(addr)
+    cz.start()
     local data = game.data
     data.ip = addr
     data.user.ip = addr
     data.info.ip = addr
-    cz.start()
     if data.enter then
         skynet.fork(btk, addr)
     end
@@ -305,8 +305,8 @@ function role.charge(p, inform, ret)
 end
 
 function role.leave()
-    local data = game.data
     cz.start()
+    local data = game.data
     assert(data.chess_table, string.format("user %d not in chess.", data.id))
     skynet.error(string.format("user %d leave chess.", data.id))
     data.chess_table = nil
@@ -452,8 +452,8 @@ function proc.new_chess(msg)
     if not config then
         error{code = error_code.NO_CHESS}
     end
-    local data = game.data
     cz.start()
+    local data = game.data
     if data.chess_table then
         error{code = error_code.ALREAD_IN_CHESS}
     end
@@ -490,8 +490,8 @@ function proc.join(msg)
     if not chess_table then
         error{code = error_code.ERROR_CHESS_NUMBER}
     end
-    local data = game.data
     cz.start()
+    local data = game.data
     if data.chess_table then
         error{code = error_code.ALREAD_IN_CHESS}
     end
