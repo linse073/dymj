@@ -235,9 +235,11 @@ function role.btk(addr)
     data.ip = addr
     data.user.ip = addr
     data.info.ip = addr
+    cz.start()
     if data.enter then
         skynet.fork(btk, addr)
     end
+    cz.finish()
 end
 
 function role.repair(user, now)
