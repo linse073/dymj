@@ -18,6 +18,10 @@ local base = {
     PBJ_ROLE_CARD = 9,
     PBJ_FIVE = 5,
 
+    PBJ_SIX = 6,
+    POKER_CARD_FULL = 54,
+    PBJ_WILDCARD_RATE = 100,
+
     MJ_OP_CHI = 1,
     MJ_OP_PENG = 2,
     MJ_OP_GANG = 3,
