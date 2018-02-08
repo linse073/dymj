@@ -1855,13 +1855,13 @@ function jdmj:start()
         v.magic_index = {}
         local deal_card = {}
         for i = 1, base.JDMJ_ROLE_CARD do
-            local c = card[(i-1)*base.MJ_FOUR+j]
+            local c = card[left+1-((i-1)*base.MJ_FOUR+j)]
             type_card[c] = type_card[c] + 1
             deal_card[i] = c
         end
-        left = left - base.JDMJ_ROLE_CARD
         v.deal_card = deal_card
     end
+	left = left - base.MJ_FOUR * base.JDMJ_ROLE_CARD
     self._left = left
     self:deal(role[self._banker])
 end

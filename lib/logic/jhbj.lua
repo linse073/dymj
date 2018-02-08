@@ -1009,10 +1009,9 @@ function jhbj:start()
         v.give_up = false
         local deal_card = {}
         for i = 1, base.PBJ_ROLE_CARD do
-            local c = card[(i-1)*rule.user+j]
+            local c = card[left+1-((i-1)*rule.user+j)]
             deal_card[i] = c
         end
-        left = left - base.PBJ_ROLE_CARD
         v.deal_card = deal_card
         record_user[index] = {
             account = v.account,
@@ -1026,6 +1025,7 @@ function jhbj:start()
             own_card = deal_card,
         }
     end
+	-- left = left - rule.user * base.PBJ_ROLE_CARD
     self._detail = {
         info = {
             name = "jhbj",
