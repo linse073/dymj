@@ -823,7 +823,7 @@ local function is_shisanbuda(type_card, magic_count, magic_card)
     for k, v in ipairs(color_card) do
         local d = match_count[k] - #v
         if d > 0 then
-            if magic_count > d then
+            if magic_count >= d then
                 magic_count = magic_count - d
             else
                 return false
