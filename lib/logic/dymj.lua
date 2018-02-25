@@ -198,6 +198,7 @@ function dymj:pack(id, ip, agent)
                         top_score = info.top_score,
                         hu_count = info.hu_count,
                         status = info.status,
+                        location = info.location,
                     }
                     local type_card = info.type_card
                     if type_card then
@@ -260,6 +261,7 @@ function dymj:pack(id, ip, agent)
                     top_score = info.top_score,
                     hu_count = info.hu_count,
                     status = info.status,
+                    location = info.location,
                 }
                 local out_card = info.out_card
                 if out_card and #out_card > 0 then
