@@ -188,6 +188,7 @@ function dy13:pack(id, ip, agent)
                         hu_count = info.hu_count,
                         status = info.status,
                         out_index = info.out_index,
+                        location = info.location,
                     }
                     if info.out_card then
                         local show_card = {
@@ -231,6 +232,7 @@ function dy13:pack(id, ip, agent)
                         top_score = info.top_score,
                         hu_count = info.hu_count,
                         status = info.status,
+                        location = info.location,
                         pass = info.out_card~=nil,
                     }
                     if info.id == id then
