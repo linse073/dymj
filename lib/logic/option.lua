@@ -15,13 +15,14 @@ end
 
 local function dymj(rule)
     local r = {pack=rule}
-    local p, c = string.unpack("BB", rule)
+    local p, c, i = string.unpack("BBB", rule)
     r.aa_pay = (p ~= 1)
     if c == 1 then
         r.total_count, r.total_card, r.single_card = 6, 24, 6
     else
         r.total_count, r.total_card, r.single_card = 12, 48, 12
     end
+    r.ip = (i == 1)
     return r
 end
 
@@ -43,7 +44,7 @@ end
 
 local function dy13(rule)
     local r = {pack=rule}
-    local p, c, n, kt, k = string.unpack("BBBBB", rule)
+    local p, c, n, kt, k, i = string.unpack("BBBBBB", rule)
     r.aa_pay = (p ~= 1)
     r.user = 5 - n
     assert(r.user>=2 and r.user<=4, string.format("dy13 error user: %d.", r.user))
@@ -54,6 +55,7 @@ local function dy13(rule)
     end
     r.key_type = kt
     r.key = k
+    r.ip = (i == 1)
     return r
 end
 
