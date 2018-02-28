@@ -347,7 +347,7 @@ function dymj:join(info, room_card, agent, location)
     end
     local role = self._role
     if rule.ip then
-        for i = 1, rule.user do
+        for i = 1, base.MJ_FOUR do
             local r = role[i]
             if r and r.ip == info.ip then
                 error{code = error_code.IP_LIMIT}
