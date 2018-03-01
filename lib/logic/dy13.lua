@@ -169,6 +169,7 @@ function dy13:pack(id, ip, agent)
                 old_banker = self._old_banker,
                 close_index = self._close_index,
                 close_time = self._close_time,
+                record_id = self._record.id,
             }
             local user = {}
             for i = 1, rule.user do
@@ -213,6 +214,7 @@ function dy13:pack(id, ip, agent)
                 pause = self._pause,
                 close_index = self._close_index,
                 close_time = self._close_time,
+                record_id = self._record.id,
             }
             local user = {}
             for i = 1, rule.user do
