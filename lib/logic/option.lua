@@ -18,9 +18,9 @@ local function dymj(rule)
     local p, c, i = string.unpack("BBB", rule)
     r.aa_pay = (p ~= 1)
     if c == 1 then
-        r.total_count, r.total_card, r.single_card = 6, 24, 6
+        r.total_count, r.total_card, r.single_card = 6, 4, 1
     else
-        r.total_count, r.total_card, r.single_card = 12, 48, 12
+        r.total_count, r.total_card, r.single_card = 12, 8, 2
     end
     r.ip = (i == 1)
     return r
@@ -49,9 +49,9 @@ local function dy13(rule)
     r.user = 5 - n
     assert(r.user>=2 and r.user<=4, string.format("dy13 error user: %d.", r.user))
     if c == 1 then
-        r.total_count, r.total_card, r.single_card = 12, r.user*6, 6
+        r.total_count, r.total_card, r.single_card = 12, r.user, 1
     else
-        r.total_count, r.total_card, r.single_card = 24, r.user*12, 12
+        r.total_count, r.total_card, r.single_card = 24, r.user*2, 2
     end
     r.key_type = kt
     r.key = k
