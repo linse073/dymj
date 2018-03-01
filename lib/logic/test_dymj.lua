@@ -361,9 +361,9 @@ function dymj:enter(info, agent, index)
 end
 
 function dymj:join(info, room_card, agent)
-    if self._status ~= base.CHESS_STATUS_READY then
-        error{code = error_code.ERROR_OPERATION}
-    end
+    -- if self._status ~= base.CHESS_STATUS_READY then
+    --     error{code = error_code.ERROR_OPERATION}
+    -- end
     local rule = self._rule
     if rule.aa_pay and room_card < rule.single_card then
         error{code = error_code.ROOM_CARD_LIMIT}
