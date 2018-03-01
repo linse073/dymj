@@ -1,15 +1,15 @@
 
 local define = {
     shop_item = {
-        [600] = 30,
-        [3000] = 180,
-        [10800] = 540,
-        [32800] = 2050,
+        [600] = 4,
+        [3000] = 24,
+        [10800] = 90,
+        [32800] = 284,
     },
 
-	share_reward = 10,
-    invite_reward = 50,
-    init_card = 50,
+	share_reward = 2,
+    invite_reward = 5,
+    init_card = 5,
 
     syn_user_url = "http://web.dyzx7.cn/dy/g/uinfo",
 }
