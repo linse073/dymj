@@ -179,6 +179,7 @@ function dymj:pack(id, ip, agent)
                 old_banker = self._old_banker,
                 close_index = self._close_index,
                 close_time = self._close_time,
+                record_id = self._record.id,
             }
             local user = {}
             for i = 1, base.MJ_FOUR do
@@ -241,6 +242,7 @@ function dymj:pack(id, ip, agent)
                 close_time = self._close_time,
                 pass_status = self._pass_status,
                 can_out = self._can_out,
+                record_id = self._record.id,
             }
             local user = {}
             for i = 1, base.MJ_FOUR do
@@ -1429,10 +1431,12 @@ function dymj:conclude(id, msg)
     }
     skynet.call(record_detail_db, "lua", "safe_insert", detail)
     local sr = self._record
+    local record_id
     if sr.id then
         skynet.call(record_info_db, "lua", "update", {id=sr.id}, {["$push"]={record=record_detail}}, true)
     else
-        sr.id = skynet.call(self._server, "lua", "gen_record")
+        record_id = skynet.call(self._server, "lua", "gen_record")
+        sr.id = record_id
         local record_user = {}
         for k, v in ipairs(role) do
             record_user[k] = {
@@ -1444,14 +1448,14 @@ function dymj:conclude(id, msg)
                 ip = v.ip,
                 index = v.index,
             }
-            skynet.call(user_record_db, "lua", "update", {id=v.id}, {["$push"]={record=sr.id}}, true)
+            skynet.call(user_record_db, "lua", "update", {id=v.id}, {["$push"]={record=record_id}}, true)
         end
         sr.user = record_user
         sr.record = {record_detail}
         skynet.call(record_info_db, "lua", "safe_insert", sr)
     end
     local ci = {
-        status=self._status, count=self._count,
+        status=self._status, count=self._count, record_id=record_id,
     }
     broadcast(user, ci, role, id)
     if self._status == base.CHESS_STATUS_FINISH then
