@@ -9,7 +9,7 @@ config.server = {
 }
 
 config.gate = {
-    ip = "192.168.1.202",
+    ip = "dyserver.dyzx7.cn",
     port = 9888,
     maxclient = 65535,
     servername = "gate01",
