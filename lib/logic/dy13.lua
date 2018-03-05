@@ -1040,10 +1040,10 @@ local function special(card)
     for k, v in pairs(value) do
         nv[v] = nv[v] + 1
         if k >= 7 then
-            nb = nb + 1
+            nb = nb + v
         end
         if k <= 7 then
-            ns = ns + 1
+            ns = ns + v
         end
     end
     -- if nv[4] == 3 then
