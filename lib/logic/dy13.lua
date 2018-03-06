@@ -975,7 +975,7 @@ local function shunzi_check(v, ib, i1, i2, w)
         else
             for k1, v1 in ipairs(s) do
                 local o = v1[2]
-                o[#o+1] = v1[1]
+                o[#o+1] = v1
             end
             w[#w] = nil
             return false
