@@ -938,7 +938,7 @@ local function santonghua(color)
         local len = #v
         if len==3 or len==8 then
             c3 = k
-        else if len ~= 5 then
+        elseif len ~= 5 then
             return false
         end
     end
