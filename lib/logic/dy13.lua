@@ -957,10 +957,10 @@ local function shunzi_check(v, ib, i1, i2, w)
         end
     end
     local s = {}
-    for i = i1, i2 do
+    shunzi_switch(s, v[ib])
+    for i = i2, i1, -1 do
         shunzi_switch(s, v[i])
     end
-    shunzi_switch(s, v[ib])
     w[#w+1] = s
     local nb
     for i = ib, 1, -1 do
