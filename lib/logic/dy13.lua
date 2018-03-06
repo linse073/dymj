@@ -1024,15 +1024,19 @@ end
 local function special(card)
     local color = {}
     local value = {}
+    local color_value = {}
     local ccount, vcount = 0, 0
     for k, v in ipairs(card) do
         local cl, vl = func.poker_info(v)
         local ci = color[cl]
         if ci then
             ci[#ci+1] = vl
+            local cv = color_value[cl]
+            cv[#cv+1] = v
         else
             ci = {vl}
             color[cl] = ci
+            color_value[cl] = {v}
             ccount = ccount + 1
         end
         local vi = value[vl]
@@ -1100,20 +1104,26 @@ local function special(card)
     end
     local santh, c3 = santonghua(color)
     if santh then
-        table.sort(card, function(l, r)
-            local lc, lv = func.poker_info(l)
-            local rc, rv = func.poker_info(r)
-            if lc == rc then
-                return lv < rv
-            end
-            if lc == c3 then
+        local ac = {1, 2, 3, 4}
+        table.sort(ac, function(l, r)
+            if l == c3 then
                 return true
             end
-            if rc == c3 then
+            if r == c3 then
                 return false
             end
-            return lc < rc
+            return l < r
         end)
+        local si = 1
+        for k, v in ipairs(ac) do
+            local cv = color_value[v]
+            if cv then
+                for k1, v1 in ipairs(cv) do
+                    card[si] = v1
+                    si = si + 1
+                end
+            end
+        end
         return base.P13_SPECIAL_SANTONGHUA
     end
     local sansz, w = sanshunzi(value)
