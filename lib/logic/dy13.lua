@@ -933,59 +933,70 @@ local function sanjintiao(color)
     return true
 end
 local function santonghua(color)
+    local c3
     for k, v in pairs(color) do
         local len = #v
-        if not (len==3 or len==5 or len==8) then
+        if len==3 or len==8 then
+            c3 = k
+        else if len ~= 5 then
             return false
         end
     end
-    return true
+    return true, c3
+end
+local function shunzi_switch(s, vi)
+    local len = #vi
+    s[#s+1] = vi[len]
+    vi[len] = nil
 end
 local shunzi_find
-local function shunzi_check(v, ib, i1, i2)
+local function shunzi_check(v, ib, i1, i2, w)
     for i = i1, i2 do
-        if v[i] <= 0 then
+        if #v[i] == 0 then
             return false
         end
     end
+    local s = {}
     for i = i1, i2 do
-        v[i] = v[i] - 1
+        shunzi_switch(s, v[i])
     end
-    v[ib] = v[ib] - 1
+    shunzi_switch(s, v[ib])
+    w[#w+1] = s
     local nb
     for i = ib, 1, -1 do
-        if v[i] > 0 then
+        if #v[i] > 0 then
             nb = i
             break
         end
     end
     if nb then
-        if shunzi_find(v, nb) then
+        if shunzi_find(v, nb, w) then
             return true
         else
-            for i = i1, i2 do
-                v[i] = v[i] + 1
+            for k1, v1 in ipairs(s) do
+                local o = v1[2]
+                o[#o+1] = v1[1]
             end
-            v[ib] = v[ib] + 1
+            w[#w] = nil
             return false
         end
     else
         return true
     end
 end
-shunzi_find = function(v, ib)
+shunzi_find = function(v, ib, w)
     if ib == 13 then
-        if shunzi_check(v, ib, 1, 4) then
+        if shunzi_check(v, ib, 1, 4, w) then
             return true
         end
-        if shunzi_check(v, ib, 1, 2) then
+        if shunzi_check(v, ib, 1, 2, w) then
             return true
         end
     end
-    if ib >= 5 and shunzi_check(v, ib, ib-4, ib-1) then
+    if ib >= 5 and shunzi_check(v, ib, ib-4, ib-1, w) then
         return true
     end
-    if ib >= 3 and shunzi_check(v, ib, ib-2, ib-1) then
+    if ib >= 3 and shunzi_check(v, ib, ib-2, ib-1, w) then
         return true
     end
     return false
@@ -994,15 +1005,21 @@ local function sanshunzi(value)
     local ib
     local nv = {}
     for i = 1, base.POKER_VALUE do
+        local o = {}
         local v = value[i]
         if v then
-            nv[i] = v
+            for k1, v1 in ipairs(v) do
+                o[k1] = {v1, o}
+            end
             ib = i
-        else
-            nv[i] = 0
         end
+        nv[i] = o
     end
-    return shunzi_find(nv, ib)
+    local w = {}
+    return shunzi_find(nv, ib, w), w
+end
+local function sort_shunzi(l, r)
+    return #l < #r
 end
 local function special(card)
     local color = {}
@@ -1020,9 +1037,10 @@ local function special(card)
         end
         local vi = value[vl]
         if vi then
-            value[vl] = vi + 1
+            vi[#vi+1] = v
         else
-            value[vl] = 1
+            vi = {v}
+            value[vl] = vi
             vcount = vcount + 1
         end
     end
@@ -1038,12 +1056,13 @@ local function special(card)
     local nv = {0, 0, 0, 0}
     local nb, ns = 0, 0
     for k, v in pairs(value) do
-        nv[v] = nv[v] + 1
+        local len = #v
+        nv[len] = nv[len] + 1
         if k >= 7 then
-            nb = nb + v
+            nb = nb + len
         end
         if k <= 7 then
-            ns = ns + v
+            ns = ns + len
         end
     end
     -- if nv[4] == 3 then
@@ -1079,10 +1098,34 @@ local function special(card)
     if nv[3] == 4 then
         return base.P13_SPECIAL_SISANTIAO
     end
-    if santonghua(color) then
+    local santh, c3 = santonghua(color)
+    if santh then
+        table.sort(card, function(l, r)
+            local lc, lv = func.poker_info(l)
+            local rc, rv = func.poker_info(r)
+            if lc == rc then
+                return lv < rv
+            end
+            if lc == c3 then
+                return true
+            end
+            if rc == c3 then
+                return false
+            end
+            return lc < rc
+        end)
         return base.P13_SPECIAL_SANTONGHUA
     end
-    if sanshunzi(value) then
+    local sansz, w = sanshunzi(value)
+    if sansz then
+        table.sort(w, sort_shunzi)
+        local si = 1
+        for k, v in ipairs(w) do
+            for k1, v1 in ipairs(v) do
+                card[si] = v1[1]
+                si = si + 1
+            end
+        end
         return base.P13_SPECIAL_SANSHUNZI
     end
     return 0
