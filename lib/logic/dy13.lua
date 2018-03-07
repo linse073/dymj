@@ -1096,7 +1096,7 @@ local function special(card)
     -- if count2 == 5 and nv[3] == 1 then
     --     return base.P13_SPECIAL_WUDUIYIKE
     -- end
-    if (nv[1]==1 and nv[3]==0) or (nv[1]==0 and nv[3]==1) then
+    if nv[1] + nv[3] == 1 then
         return base.P13_SPECIAL_LIUDUIBAN
     end
     if nv[3] == 4 then
