@@ -18,9 +18,9 @@ local function dymj(rule)
     local p, c, i = string.unpack("BBB", rule)
     r.aa_pay = (p ~= 1)
     if c == 1 then
-        r.total_count, r.total_card, r.single_card = 6, 4, 1
+        r.total_count, r.total_card, r.single_card = 8, 4, 1
     else
-        r.total_count, r.total_card, r.single_card = 12, 8, 2
+        r.total_count, r.total_card, r.single_card = 16, 8, 2
     end
     r.ip = (i == 1)
     return r
