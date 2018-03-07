@@ -580,7 +580,7 @@ function proc.iap(msg)
         else
             local num = string.match(receipt.product_id, "store_(%d+)")
             local p = update_user()
-            role.add_room_card(p, false, tonumber(num))
+            role.add_room_card(p, false, assert(define.shop_item[tonumber(num)*100]))
             return "update_user", {update=p, iap_index=msg.index}
         end
     else
