@@ -145,7 +145,7 @@ end
 function role.init()
 	local data = game.data
     data.heart_beat = 0
-    timer.add_routine("heart_beat", role.heart_beat, 300)
+    timer.add_routine("heart_beat", role.heart_beat, 86400)
     local server_mgr = skynet.queryservice("server_mgr")
     data.server = skynet.call(server_mgr, "lua", "get", data.serverid)
 	local now = floor(skynet.time())
