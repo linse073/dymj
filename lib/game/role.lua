@@ -281,10 +281,10 @@ function role.charge(p, inform, ret)
             {query={id=trade_id, status=false}, update={["$set"]={status=true}}})
         if r.lastErrorObject.updatedExisting then
             local cashFee = r.value.num
-            local num = define.shop_item[cashFee]
             local user = game.data.user
+            local num
             if user.invite_code > 0 then
-                num = num * 2
+                num = define.shop_item_2[cashFee]
                 local first_charge = user.first_charge
                 local feeStr = tostring(cashFee)
                 if not first_charge[feeStr] then
@@ -294,6 +294,8 @@ function role.charge(p, inform, ret)
                         num = num * 2
                     end
                 end
+            else
+                num = define.shop_item[cashFee]
             end
             role.add_room_card(p, inform, num)
         else

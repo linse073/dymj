@@ -7,6 +7,13 @@ local define = {
         [32800] = 2050,
     },
 
+    shop_item_2 = {
+        [600] = 70,
+        [3000] = 360,
+        [10800] = 1080,
+        [32800] = 4100,
+    },
+
 	share_reward = 20,
     invite_reward = 50,
     init_card = 50,
