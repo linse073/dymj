@@ -119,4 +119,11 @@ base.PBJ_SPECIAL_SCORE = {
     [base.PBJ_SPECIAL_SHUANGZHADAN] = 20,
 }
 
+base.ACTIVITY_STATUS = {
+    FINISH = "d", -- 完成
+    UNDO = "n", -- 未完成
+    PROGRESSING = "p", -- 审核处理中
+    MISS = "m",-- 错失、过期、失效
+}
+
 return base

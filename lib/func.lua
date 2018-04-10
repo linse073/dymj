@@ -82,4 +82,14 @@ function func.p13_special_score(i)
     return 6
 end
 
+function func.is_today(datetime)
+    if not datetime then
+        return false
+    end
+    local now = os.date("*t")
+    local diff = datetime-os.time({year=now.year,month=now.month,day=now.day,hour=0})
+    -- return diff >= 0 and diff<24*60*60
+    return diff >=0 and diff < 86400 
+end
+
 return func

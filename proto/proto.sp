@@ -148,6 +148,7 @@
 .update_user {
     update 0 : user_all
     iap_index 1 : integer
+    roulette_index 2 : integer
 }
 
 .heart_beat {
@@ -270,4 +271,45 @@
 
 .location_info {
     location 0 : binary
+}
+
+.invited_user_detail {
+    name 0 : string
+    play_count 1 : integer
+    invite_time 2 : string
+}
+
+.invite_record {
+    index 0 : integer
+    status 1 : string
+}
+
+.invite_info {
+    done_times 0 : integer
+    curr_times 1 : integer
+    record_detail 2 : *invited_user_detail
+    award_diamond 3 : integer
+
+    mine_done 4 : string
+    reward_off 5 : boolean
+    invite_count 6: integer
+    pay_total 7:integer
+    reward_invite_r 8: *invite_record
+    reward_pay_r 9: *invite_record
+
+    roulette_cur 10:integer
+    roulette_total 11 :integer
+    roulette_r 12: *invite_record
+
+    mine_play 13:integer
+}
+
+.reward_award{
+    diamond_award 0 : integer
+}
+
+.reward_money {
+    award_type 0 : string
+    award_idx 1 : integer
+    award_num 2 : integer
 }

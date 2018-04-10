@@ -46,6 +46,9 @@ local record_info_db
 local record_detail_db
 local iap_log_db
 local charge_log_db
+local invite_info_db
+local invite_user_detail_db
+local activity_mgr
 
 local web_sign = skynet.getenv("web_sign")
 local debug = (skynet.getenv("debug")=="true")
@@ -62,6 +65,9 @@ skynet.init(function()
     table_mgr = skynet.queryservice("table_mgr")
     chess_mgr = skynet.queryservice("chess_mgr")
     webclient = skynet.queryservice("webclient")
+
+    activity_mgr = skynet.queryservice("activity_mgr")
+
 	local master = skynet.queryservice("mongo_master")
     user_db = skynet.call(master, "lua", "get", "user")
     info_db = skynet.call(master, "lua", "get", "info")
@@ -70,6 +76,9 @@ skynet.init(function()
     record_detail_db = skynet.call(master, "lua", "get", "record_detail")
     iap_log_db = skynet.call(master, "lua", "get", "iap_log")
     charge_log_db = skynet.call(master, "lua", "get", "charge_log")
+    
+    invite_info_db = skynet.call(master, "lua", "get", "invite_info")
+    invite_user_detail_db = skynet.call(master, "lua", "get", "invite_user_detail")
 end)
 
 function role.init_module()
@@ -136,7 +145,9 @@ local function get_user()
 				ip = user.ip,
 			}
 			skynet.call(info_db, "lua", "safe_insert", info)
-			data.info = info
+            data.info = info
+            
+            skynet.send(activity_mgr, "lua", "reg_invite_user", info)
 		end
     end
 	cz.finish()
@@ -145,7 +156,7 @@ end
 function role.init()
 	local data = game.data
     data.heart_beat = 0
-    timer.add_routine("heart_beat", role.heart_beat, 300)
+    timer.add_routine("heart_beat", role.heart_beat, 86400)
     local server_mgr = skynet.queryservice("server_mgr")
     data.server = skynet.call(server_mgr, "lua", "get", data.serverid)
 	local now = floor(skynet.time())
@@ -281,10 +292,10 @@ function role.charge(p, inform, ret)
             {query={id=trade_id, status=false}, update={["$set"]={status=true}}})
         if r.lastErrorObject.updatedExisting then
             local cashFee = r.value.num
-            local num = define.shop_item[cashFee]
             local user = game.data.user
+            local num
             if user.invite_code > 0 then
-                num = num * 2
+                num = define.shop_item_2[cashFee]
                 local first_charge = user.first_charge
                 local feeStr = tostring(cashFee)
                 if not first_charge[feeStr] then
@@ -294,6 +305,8 @@ function role.charge(p, inform, ret)
                         num = num * 2
                     end
                 end
+            else
+                num = define.shop_item[cashFee]
             end
             role.add_room_card(p, inform, num)
         else
@@ -663,6 +676,206 @@ function proc.charge(msg)
     }
     local url = msg.url .. "?" .. util.url_query(query)
     return "charge_ret", {url=url}
+end
+
+function proc.reward_award(msg)
+    local data = game.data
+    local p = update_user()
+    if ((not msg) or msg.diamond_award<=0) then
+        skynet.error(string.format("user %d has invalidate request parms to reward_award.", data.id))
+    end
+
+    local invite_info = skynet.call(activity_mgr, "lua", "get_invite_info", proc.getActivityParamUser(data))
+    local num = invite_info.award_diamond
+    if num and num>0 then
+        invite_info.award_diamond = 0
+        skynet.call(invite_info_db, "lua", "update", {id=data.id}, {["$inc"]={award_diamond=num*-1}}, false)
+        -- skynet.call(invite_info_db, "lua", "findAndModify", 
+        --     {query={_id=invite_info._id}, update={["$int"]={award_diamond=num*-1}}})       
+
+        --添加用户砖石
+        local user = game.data.user
+        user.room_card = user.room_card + num
+        p.user.room_card = user.room_card
+    else
+        skynet.error(string.format("user %d has no diamond to reward_award.", data.id))
+    end
+    
+    return "update_user", {update=p}
+end
+
+
+function proc.invite_share(msg)
+    -- invite_user_detail_db = skynet.call(master, "lua", "get", "invite_user_detail")
+    -- invite_info_db = skynet.call(master, "lua", "get", "invite_info")        
+    local data = game.data
+    local invite_info = skynet.call(activity_mgr, "lua", "get_invite_info", proc.getActivityParamUser(data))
+    local p = update_user()
+
+    if (invite_info.share_done_times and invite_info.share_done_times>define.activity_maxtrix.share2invite_max) then
+        skynet.error(string.format("user %d had finished share activity of inviting.", data.id))
+    else
+        if  not func.is_today(invite_info.share_done_date) then -- 今天第一次,
+            invite_info.share_done_times = invite_info.share_done_times+1
+            invite_info.share_done_date = floor(skynet.time())
+
+            local user = game.data.user
+            local count_per_share=define.activity_maxtrix.diamond[invite_info.share_done_times] or 0 --分享一次加n砖石
+            user.room_card = user.room_card + count_per_share --
+            p.user.room_card = user.room_card
+
+            skynet.call(invite_info_db, "lua", "update", {id=data.id},
+                {["$set"]={share_done_times=invite_info.share_done_times,share_done_date=invite_info.share_done_date}}, false)
+
+            -- skynet.call(invite_info_db, "lua", "findAndModify", 
+            --     {query={_id=invite_info._id}, update={["$set"]={share_done_times=invite_info.share_done_times,share_done_date=invite_info.share_done_date}}})
+
+        end
+    end
+
+    return "update_user", {update=p}
+end
+
+function proc.invite_assemble(invite_info)
+    local info = {done_times=0,curr_times=1}
+    if invite_info then
+        local done_times = (invite_info.share_done_times or 0)
+        local curr_times = done_times
+        if (done_times<define.activity_maxtrix.share2invite_max) then
+            if not func.is_today(invite_info.share_done_date) then
+                --最近的邀请时间非今天
+                curr_times = curr_times +1
+            end
+        end
+        info = {
+            done_times=done_times,
+            curr_times=curr_times,
+            award_diamond=invite_info.award_diamond
+        }
+    end
+    return info
+end
+
+function proc.invite_query(msg)
+    local data = game.data
+    local invite_info = skynet.call(activity_mgr, "lua", "get_invite_info", proc.getActivityParamUser(data))
+    local info = proc.invite_assemble(invite_info)
+    info.record_detail = proc.my_invite_user_detail_query()
+    return "invite_info", info
+end
+
+function proc.my_invite_user_detail_query()
+    local data = game.data
+    local result = {}
+    -- local cursor = skynet.call(user_db, "lua", "find", nil,{"id"})
+    -- local i =0
+    -- while cursor:hasNext() do
+    --     i = i+1
+    --     if (i>25) then break end
+    --     local r = cursor:next()
+    --     result[#result+1] = {name=r.nick_name or r.id,play_count=r.play_total_count or 0, invite_time=r.invited_date}
+    -- end
+
+    local r = skynet.call(invite_user_detail_db, "lua", "findOne", {belong_id=id})
+    result[1]={name=r.nick_name or r.id,play_count=r.play_total_count or 0, invite_time=r.invited_date}
+    return result
+end
+
+function proc.invite_money_query(msg)  --邀请红包查询
+    local data = game.data
+    local invite_info = skynet.call(activity_mgr, "lua", "get_invite_info", proc.getActivityParamUser(data))
+    
+    local info = {mine_done=invite_info.mine_done,
+            invite_count = invite_info.invite_count,
+            pay_total = invite_info.pay_total,
+            reward_off=invite_info.reward_off}
+
+    local detail_info = skynet.call(activity_mgr,"lua","get_invite_user_detail",data.id)
+    if (detail_info) then
+        info.mine_play = detail_info.play_total_count or 0
+    end
+
+    local reward_invite_r = {}
+    local reward_pay_r = {}
+
+    if invite_info.reward_invite_r then
+        for k,v in pairs(define.activity_maxtrix.money_invite) do
+            local status = invite_info.reward_invite_r[k .. ""]
+            if (status) then
+                reward_invite_r[#reward_invite_r+1] = {index=k,status=status}
+            end 
+        end
+    end
+
+    if invite_info.reward_pay_r then
+        for k,v in pairs(define.activity_maxtrix.money_pay) do
+            local status = invite_info.reward_pay_r[k .. ""]
+            if (status) then
+                reward_pay_r[#reward_pay_r+1] = {index=k,status=status}
+            end
+        end
+    end
+    
+    info.reward_invite_r = reward_invite_r
+    info.reward_pay_r = reward_pay_r
+
+    local detail_info = skynet.call(invite_user_detail_db, "lua", "findOne", {id=data.id})
+    if (detail_info) then
+        info.mine_play =  detail_info.play_total_count or 0
+    end
+
+    return "invite_info", info
+end
+
+function proc.reward_money(msg)
+    if (msg) then
+        local data = game.data
+        skynet.call(activity_mgr, "lua", "reward_money", proc.getActivityParamUser(data), msg)
+    end
+    return proc.invite_money_query()
+end
+
+function proc.getActivityParamUser(data)
+    return {id=data.info.id,account=data.info.account,create_time=data.user.create_time}
+end
+
+function proc.roulette_query(msg)
+    local data = game.data
+    local invite_info = skynet.call(activity_mgr, "lua", "get_invite_info", proc.getActivityParamUser(data))
+
+    local info ={roulette_cur=invite_info.roulette_cur,roulette_total=invite_info.roulette_total}
+    local roulette_r = {}
+
+    if (invite_info.roulette_r) then
+        for k,v in pairs(define.activity_maxtrix.roulette.conditions) do
+            local status = invite_info.roulette_r[k .. ""]
+            if (status) then
+                roulette_r[#reward_pay_r+1] = {index=k,status=status}
+            end
+        end            
+    end    
+
+    info.roulette_r = roulette_r
+
+    return "invite_info", info
+end
+
+function proc.roulette_reward(msg)
+    local p = update_user()
+    local roulette_index = -1
+    if (msg) then
+        local data = game.data
+        local prize = skynet.call(activity_mgr, "lua", "roulette_reward", proc.getActivityParamUser(data), msg)
+        if prize then
+            roulette_index = prize.idx
+            if ( prize.t == "d") then
+                local user = game.data.user
+                user.room_card = user.room_card + prize.v --随机砖石
+                p.user.room_card = user.room_card
+            end
+        end
+    end
+    return "update_user", {update=p,roulette_index=roulette_index}
 end
 
 return role
