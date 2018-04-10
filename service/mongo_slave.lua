@@ -19,7 +19,9 @@ skynet.start(function()
         if session == 0 then
             f(...)
         else
-            skynet.retpack(f(...))
+            local r = f(...)
+            dump(r)
+            skynet.retpack(r)
         end
 	end)
 end)
