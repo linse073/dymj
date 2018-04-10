@@ -18,13 +18,13 @@ local CMD = {}
 function CMD.test_broadcast()
     local master = skynet.queryservice("mongo_master")
     local user_db = skynet.call(master, "lua", "get", "user")
-    local db = skynet.call(user_db, "lua", "get")
-    local cursor = db:find()
-    -- local cursor = skynet.call(user_db, "lua", "find")
-    while cursor:hasNext() do
-        local r = cursor:next()
-        util.dump(r)
-    end
+    skynet.call(user_db, "lua", "get")
+    -- local cursor = db:find()
+    -- -- local cursor = skynet.call(user_db, "lua", "find")
+    -- while cursor:hasNext() do
+    --     local r = cursor:next()
+    --     util.dump(r)
+    -- end
 end
 
 skynet.start(function()

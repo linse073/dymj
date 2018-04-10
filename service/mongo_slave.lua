@@ -18,7 +18,12 @@ end
 
 function CMD.get()
     util.dump(db)
-    return db
+    local cursor = db:find()
+    util.dump(cursor)
+    while cursor:hasNext() do
+        local r = cursor:next()
+        util.dump(r)
+    end
 end
 
 skynet.start(function()
