@@ -20,7 +20,7 @@ skynet.start(function()
             f(...)
         else
             local r = f(...)
-            dump(r)
+            util.dump(r)
             skynet.retpack(r)
         end
 	end)
