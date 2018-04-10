@@ -18,10 +18,13 @@ end
 
 function CMD.get()
     util.dump(db)
+    print(type(db))
     local cursor = db:find()
+    print(type(cursor))
     util.dump(cursor)
     while cursor:hasNext() do
         local r = cursor:next()
+        print(type(r))
         util.dump(r)
     end
 end
