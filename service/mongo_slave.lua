@@ -8,9 +8,16 @@ local database = skynet.getenv("database")
 
 local CMD = {}
 
+local db
+
 function CMD.open(conf, name)
     local d = mongo.client({host=conf.host})
     util.cmd_wrap(CMD, d[database][name])
+    db = d[database][name]
+end
+
+function CMD.get()
+    return db
 end
 
 skynet.start(function()
@@ -19,9 +26,7 @@ skynet.start(function()
         if session == 0 then
             f(...)
         else
-            local r = f(...)
-            util.dump(r)
-            skynet.retpack(r)
+            skynet.retpack(f(...))
         end
 	end)
 end)
