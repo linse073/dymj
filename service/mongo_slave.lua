@@ -17,15 +17,15 @@ function CMD.open(conf, name)
 end
 
 function CMD.get()
-    util.dump(db)
+    util.dump(db, nil, 10)
     print(type(db))
     local cursor = db:find()
     print(type(cursor))
-    util.dump(cursor)
+    util.dump(cursor, nil, 10)
     while cursor:hasNext() do
         local r = cursor:next()
         print(type(r))
-        util.dump(r)
+        util.dump(r, nil, 10)
     end
 end
 
