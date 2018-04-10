@@ -17,6 +17,7 @@ function CMD.open(conf, name)
 end
 
 function CMD.get()
+    util.dump(db)
     return db
 end
 
