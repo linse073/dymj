@@ -1,4 +1,5 @@
 local crypt = require "skynet.crypt"
+local skynet = require "skynet"
 
 local pairs = pairs
 local ipairs = ipairs
@@ -301,6 +302,15 @@ function util.url_query(q)
         t[#t+1] = string.format("%s=%s", util.url_encode(k), util.url_encode(v))
     end
     return table.concat(t, "&")
+end
+
+function util.mongo_find(db, func, ...)
+    local key = skynet.call(db, "lua", "find", ...)
+    local r = skynet.call(db, "lua", "get_next", key)
+    while r do
+        func(r)
+        r = skynet.call(db, "lua", "get_next", key)
+    end
 end
 
 return util

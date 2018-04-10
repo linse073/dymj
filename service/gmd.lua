@@ -1,6 +1,5 @@
 local skynet = require "skynet"
 local util = require "util"
-local mongo_find = require "mongo_find"
 
 local dump = util.dump
 local print = print
@@ -19,12 +18,9 @@ local CMD = {}
 function CMD.test_broadcast()
     local master = skynet.queryservice("mongo_master")
     local user_db = skynet.call(master, "lua", "get", "user")
-    local cursor = mongo_find(user_db)
-    local r = cursor()
-    while r do
+    util.mongo_find(user_db, function(r)
         util.dump(r)
-        r = cursor()
-    end
+    end)
 end
 
 skynet.start(function()
