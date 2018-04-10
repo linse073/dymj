@@ -776,8 +776,14 @@ function proc.my_invite_user_detail_query()
     --     result[#result+1] = {name=r.nick_name or r.id,play_count=r.play_total_count or 0, invite_time=r.invited_date}
     -- end
 
-    local r = skynet.call(invite_user_detail_db, "lua", "findOne", {belong_id=id})
-    result[1]={name=r.nick_name or r.id,play_count=r.play_total_count or 0, invite_time=r.invited_date}
+    util.mongo_find(invite_user_detail_db, function(r)
+        -- cs(add, r.id, module, func, ...)
+        result[#result+1]={name=r.nick_name or r.id,play_count=r.play_total_count or 0, invite_time=r.invited_date}
+    end, {belong_id=data.id}, {_id=false})   
+
+    -- local r = skynet.call(invite_user_detail_db, "lua", "findOne", {belong_id=data.id})
+    -- result[1]={name=r.nick_name or r.id,play_count=r.play_total_count or 0, invite_time=r.invited_date}
+
     return result
 end
 
