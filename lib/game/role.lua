@@ -34,6 +34,7 @@ local define
 local game_day
 local role_mgr
 local offline_mgr
+local club_mgr
 local table_mgr
 local chess_mgr
 local webclient
@@ -62,6 +63,7 @@ skynet.init(function()
     game_day = func.game_day
     role_mgr = skynet.queryservice("role_mgr")
     offline_mgr = skynet.queryservice("offline_mgr")
+    club_mgr = skynet.queryservice("club_mgr")
     table_mgr = skynet.queryservice("table_mgr")
     chess_mgr = skynet.queryservice("chess_mgr")
     webclient = skynet.queryservice("webclient")
@@ -111,6 +113,11 @@ local function get_user()
                 unionid = user.unionid,
 				ip = user.ip,
 			}
+            data.offline = skynet.call(offline_mgr, "lua", "get", data.id)
+            local club = user.club
+            if club and #club > 0 then
+                data.club = skynet.call(club_mgr, "lua", "login", club)
+            end
 		else
 			local now = floor(skynet.time())
 			local user = {
@@ -131,6 +138,7 @@ local function get_user()
                 day_card = false,
                 invite_code = 0,
                 first_charge = {},
+                club = {},
 			}
 			skynet.call(user_db, "lua", "safe_insert", user)
 			data.user = user
@@ -263,6 +271,9 @@ function role.repair(user, now)
     if not user.first_charge then
         user.first_charge = {}
     end
+    if not user.club then
+        user.club = {}
+    end
 end
 
 function role.add_room_card(p, inform, num)
@@ -384,13 +395,14 @@ function proc.enter_game(msg)
         end
     end
     local ret = {user=user}
-    local om = skynet.call(offline_mgr, "lua", "get", user.id)
+    local om = data.offline
     if om then
         local p = update_user()
         for k, v in ipairs(om) do
             table.insert(v, 3, p)
             game.one(table.unpack(v))
         end
+        data.offline = nil
     end
     local pack = game.iter_ret("pack_all")
     for _, v in ipairs(pack) do
@@ -404,6 +416,7 @@ function proc.enter_game(msg)
     if #first_charge > 0 then
         ret.first_charge = first_charge
     end
+    ret.club = data.club
     local chess_table = skynet.call(chess_mgr, "lua", "get", user.id)
     local code
     if chess_table then

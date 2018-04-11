@@ -39,6 +39,9 @@ config.mongo = {
         "charge_log",
         "invite_info",
         "invite_user_detail",
+        "club",
+        "club_info",
+        "club_offline",
     },
     index = {
         {"account", {"key", unique=true}},
@@ -56,6 +59,10 @@ config.mongo = {
         {"invite_info", {"id", unique=true}},
         {"invite_user_detail", {"id", unique=true}},
         {"invite_user_detail", {"belong_id"}},
+        {"club", {"id", unique=true}},
+        {"club_info", {"id", unique=true}},
+        {"club_info", {"name", unique=true}},
+        {"club_offline", {"id", unique=true}},
     },
 }
 

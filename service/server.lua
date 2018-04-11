@@ -21,6 +21,7 @@ local id_key = {
     "record",
     "record_detail",
     "charge",
+    "club",
 }
 
 local CMD = {}

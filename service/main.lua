@@ -56,6 +56,7 @@ skynet.start(function()
     skynet.call(table_mgr, "lua", "open")
     skynet.uniqueservice("agent_mgr")
     skynet.uniqueservice("webd", skynet.getenv("web"))
+    -- skynet.uniqueservice("club_mgr")
 
 	local loginserver = skynet.newservice("logind")
     local gate = skynet.newservice("gated", loginserver)
