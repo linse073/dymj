@@ -5,6 +5,8 @@ local util = require "util"
 local ipairs = ipairs
 local assert = assert
 local tonumber = tonumber
+local pack = table.pack
+local unpack = table.unpack
 
 local offline_db
 local user_db
@@ -36,13 +38,9 @@ local function get(id)
 end
 
 function CMD.broadcast(module, func, ...)
-    -- local cursor = skynet.call(user_db, "lua", "find", nil, {"id"})
-    -- while cursor:hasNext() do
-    --     local r = cursor:next()
-    --     cs(add, r.id, module, func, ...)
-    -- end
+    local arg = pack(...)
     util.mongo_find(user_db, function(r)
-        cs(add, r.id, module, func, ...)
+        cs(add, r.id, module, func, unpack(arg))
     end, nil, {id=true, _id=false})
 end
 

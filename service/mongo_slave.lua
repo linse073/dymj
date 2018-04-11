@@ -3,6 +3,7 @@ local mongo = require "skynet.db.mongo"
 local util = require "util"
 
 local assert = assert
+local tostring = tostring
 
 local database = skynet.getenv("database")
 

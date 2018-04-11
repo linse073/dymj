@@ -18,9 +18,7 @@ local CMD = {}
 function CMD.test_broadcast()
     local master = skynet.queryservice("mongo_master")
     local user_db = skynet.call(master, "lua", "get", "user")
-    util.mongo_find(user_db, function(r)
-        dump(r)
-    end, nil, {id=true, _id=false})
+    util.mongo_find(user_db, dump, nil, {id=true, _id=false})
 end
 
 skynet.start(function()
