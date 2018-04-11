@@ -20,6 +20,7 @@ local record_detail_db
 local table_mgr
 local chess_mgr
 local offline_mgr
+local activity_mgr
 
 skynet.init(function()
     base = share.base
@@ -31,6 +32,8 @@ skynet.init(function()
     table_mgr = skynet.queryservice("table_mgr")
     chess_mgr = skynet.queryservice("chess_mgr")
     offline_mgr = skynet.queryservice("offline_mgr")
+
+    activity_mgr = skynet.queryservice("activity_mgr")
 end)
 
 local function valid_card(c)
@@ -69,6 +72,27 @@ local function broadcast(chess_user, chess_info, role, ...)
         for k, v in pairs(role) do
             send(v, chess_user, chess_info)
         end
+    end
+end
+
+local function play(role) --完成一牌局
+    local id = {}
+    for k, v in pairs(role) do
+        id[k] = v.id
+    end
+
+    skynet.send(activity_mgr, "lua", "play", id)
+end
+
+local function play_winner(role, winner) --大赢家
+    local id = {}
+    for k, v in pairs(role) do
+        id[k] = v.id
+    end
+
+    local w = id[winner]
+    if (w) then --大赢家
+        skynet.send(activity_mgr, "lua", "top_win", w)
     end
 end
 
@@ -123,6 +147,13 @@ local function finish()
 end
 function dy13:finish()
     local role = self._role
+
+    -- 大赢家
+    if (self.win_idx) then
+        play_winner(role, self.win_idx)
+    end
+    self.win_idx = nil
+
     self._role = {}
     self._id = {}
     for i = 1, self._rule.user do
@@ -134,6 +165,7 @@ function dy13:finish()
             end
         end
     end
+
     skynet.fork(finish)
 end
 
@@ -522,6 +554,8 @@ function dy13:consume_card()
         local count = -rule.total_card
         skynet.call(offline_mgr, "lua", "add", id, "role", "add_room_card", count)
     end
+
+    skynet.send(activity_mgr, "lua", "consume_room_succ", {self._role[1].id,}) --有效创建房间
 end
 
 local function compare(l, r)
@@ -839,9 +873,14 @@ function dy13:settle(info)
         record_id = record_id,
         win = win,
     }
+    self.win_idx = win
+
+    play(role) -- 完成一牌局
+
     broadcast(user, ci, role, id)
     if self._status == base.CHESS_STATUS_FINISH then
         self:finish()
+       
     end
     return session_msg(info, user, ci)
 end

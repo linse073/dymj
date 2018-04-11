@@ -10,7 +10,7 @@ config.server = {
 
 config.gate = {
     ip = "dyserver.dyzx7.cn",
-    port = 9888,
+    port = 9888,   
     maxclient = 65535,
     servername = "gate01",
 }
@@ -37,6 +37,8 @@ config.mongo = {
         "record_detail",
         "iap_log",
         "charge_log",
+        "invite_info",
+        "invite_user_detail",
     },
     index = {
         {"account", {"key", unique=true}},
@@ -51,6 +53,9 @@ config.mongo = {
         {"record_detail", {"expire", expireAfterSeconds=8*24*60*60}},
         {"iap_log", {"transaction_id", unique=true}},
         {"charge_log", {"id", unique=true}},
+        {"invite_info", {"id", unique=true}},
+        {"invite_user_detail", {"id", unique=true}},
+        {"invite_user_detail", {"belong_id"}},
     },
 }
 

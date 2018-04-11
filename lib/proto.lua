@@ -26,6 +26,14 @@ local type_msg = {
         "chess_record",
         "record_info",
         "record_all",
+        "invite_query",
+        "invite_share",
+        "invite_info",
+        "reward_award",
+        "invite_money_query",
+        "reward_money",
+        "roulette_query",
+        "roulette_reward",
     },
 
     [2100] = {

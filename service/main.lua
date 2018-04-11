@@ -49,6 +49,8 @@ skynet.start(function()
     skynet.uniqueservice("routine")
     skynet.uniqueservice("role_mgr")
     skynet.uniqueservice("offline_mgr")
+
+    skynet.uniqueservice("activity_mgr")
     -- TODO: server shutdown time
     local table_mgr = skynet.uniqueservice("table_mgr")
     skynet.call(table_mgr, "lua", "open")
