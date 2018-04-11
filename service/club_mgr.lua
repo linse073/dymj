@@ -1,4 +1,5 @@
 local skynet = require "skynet"
+local queue = require "skynet.queue"
 
 local assert = assert
 local pcall = pcall
@@ -10,6 +11,7 @@ local club_list = {}
 
 local id_club = {}
 local name_club = {}
+local cs = queue()
 
 local club_info_db
 
@@ -100,15 +102,19 @@ function CMD.logout(club)
     for k, v in ipairs(club) do
         local c = id_club[v]
         if c then
+            if skynet.call(c.address, "lua", "logout", id) then
+
+            end
         else
+
         end
     end
 end
 
 function CMD.get_info(name)
-    local club = name_club[name]
-    if club then
-        return skynet.call(club.address, "lua", "get_info")
+    local c = name_club[name]
+    if c then
+        return skynet.call(c.address, "lua", "get_info")
     else
         return skynet.call(club_info_db, "lua", "findOne", {name=name})
     end
@@ -121,6 +127,6 @@ skynet.start(function()
 
 	skynet.dispatch("lua", function(session, source, command, ...)
 		local f = assert(CMD[command])
-        skynet.retpack(f(...))
+        skynet.retpack(cs(f, ...))
 	end)
 end)

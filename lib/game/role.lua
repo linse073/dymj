@@ -63,7 +63,7 @@ skynet.init(function()
     game_day = func.game_day
     role_mgr = skynet.queryservice("role_mgr")
     offline_mgr = skynet.queryservice("offline_mgr")
-    club_mgr = skynet.queryservice("club_mgr")
+    -- club_mgr = skynet.queryservice("club_mgr")
     table_mgr = skynet.queryservice("table_mgr")
     chess_mgr = skynet.queryservice("chess_mgr")
     webclient = skynet.queryservice("webclient")
