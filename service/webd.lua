@@ -18,10 +18,12 @@ local mode = ...
 if mode == "agent" then
     local offline_mgr
     local role_mgr
+    local activity_mgr
 
     skynet.init(function()
         offline_mgr = skynet.queryservice("offline_mgr")
         role_mgr = skynet.queryservice("role_mgr")
+        activity_mgr = skynet.queryservice("activity_mgr")
     end)
 
     local process = {
@@ -54,6 +56,9 @@ if mode == "agent" then
             local info = skynet.call(role_mgr, "lua", "get_info", id)
             if info then
                 skynet.call(offline_mgr, "lua", "add", id, "role", "charge", q)
+
+                local cashFee = tonumber(q.cashFee)
+                skynet.send(activity_mgr, "lua", "pay", {id},cashFee)
                 return {ret="OK"}
             else
                 return {error="no player"}
@@ -64,6 +69,15 @@ if mode == "agent" then
             local info = skynet.call(role_mgr, "lua", "get_info", id)
             if info then
                 skynet.call(offline_mgr, "lua", "add", id, "role", "unlink")
+                return {ret="OK"}
+            else
+                return {error="no player"}
+            end
+        end},
+        approval = {{"id","tf", "time"}, function(q)
+            local id = tonumber(q.id)
+            local info = skynet.call(activity_mgr, "lua", "approval", id,tf)
+            if info then
                 return {ret="OK"}
             else
                 return {error="no player"}
