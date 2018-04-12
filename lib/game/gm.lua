@@ -127,4 +127,19 @@ function proc.test_update_day(msg)
     return role.test_update_day()
 end
 
+function proc.act_pay(msg)
+    if game.data.user.gm_level == 0 then
+        error{code = error_code.ROLE_NO_PERMIT}
+    end
+
+    local id = msg.id
+    local fen = msg.num
+    if not id then 
+        id = game.data.id
+    end
+    --activity_mgr = skynet.queryservice("activity_mgr")
+    skynet.send(skynet.queryservice("activity_mgr"), "lua", "pay", {id},fen)
+    return "response", ""
+end
+
 return gm

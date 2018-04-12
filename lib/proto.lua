@@ -34,6 +34,7 @@ local type_msg = {
         "reward_money",
         "roulette_query",
         "roulette_reward",
+        "act_pay",
     },
 
     [2100] = {
