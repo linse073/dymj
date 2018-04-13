@@ -556,7 +556,7 @@ function proc.get_record(msg)
             if count ~= len then
                 util.reverse(nr)
                 if count == 0 then
-                    skynet.call(user_record_db, "lua", "update", {id=data.id}, {["$unset"]={record=0}}, true)
+                    skynet.call(user_record_db, "lua", "update", {id=data.id}, {["$unset"]={record=true}}, true)
                 else
                     skynet.call(user_record_db, "lua", "update", {id=data.id}, {["$set"]={record=nr}}, true)
                 end
