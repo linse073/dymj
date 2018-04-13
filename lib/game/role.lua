@@ -763,7 +763,8 @@ function proc.invite_assemble(invite_info)
         info = {
             done_times=done_times,
             curr_times=curr_times,
-            award_diamond=invite_info.award_diamond
+            award_diamond=invite_info.award_diamond,
+            reward_off=invite_info.reward_off,
         }
     end
     return info
@@ -807,7 +808,7 @@ function proc.invite_money_query(msg)  --邀请红包查询
     local info = {mine_done=invite_info.mine_done,
             invite_count = invite_info.invite_count,
             pay_total = invite_info.pay_total,
-            reward_off=invite_info.reward_off}
+            reward_off=invite_info.reward_off,bind_gzh=invite_info.bind_gzh}
 
     local detail_info = skynet.call(activity_mgr,"lua","get_invite_user_detail",data.id)
     if (detail_info) then
@@ -862,7 +863,8 @@ function proc.roulette_query(msg)
     local data = game.data
     local invite_info = skynet.call(activity_mgr, "lua", "get_invite_info", proc.getActivityParamUser(data))
 
-    local info ={roulette_cur=invite_info.roulette_cur,roulette_total=invite_info.roulette_total}
+    local info ={roulette_cur=invite_info.roulette_cur,roulette_total=invite_info.roulette_total,bind_gzh=invite_info.bind_gz,
+        reward_off=invite_info.reward_off}
     local roulette_r = {}
 
     if (invite_info.roulette_r) then

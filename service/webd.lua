@@ -76,13 +76,22 @@ if mode == "agent" then
         end},
         approval = {{"id","tf", "time"}, function(q)
             local id = tonumber(q.id)
-            local info = skynet.call(activity_mgr, "lua", "approval", id,tf)
+            local info = skynet.call(activity_mgr, "lua", "approval", id,q.tf)
             if info then
                 return {ret="OK"}
             else
                 return {error="no player"}
             end
         end},
+        bind_gzh = {{"id", "time"}, function(q)
+            local id = tonumber(q.id)
+            local info = skynet.call(activity_mgr, "lua", "wx_binding", id)
+            if info then
+                return {ret="OK"}
+            else
+                return {error="no player"}
+            end
+        end},        
     }
 
     local function response(id, ...)

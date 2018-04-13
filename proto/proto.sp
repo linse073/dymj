@@ -302,6 +302,7 @@
     roulette_r 12: *invite_record
 
     mine_play 13:integer
+    bind_gzh 14 : boolean
 }
 
 .reward_award{
