@@ -1,5 +1,7 @@
 local skynet = require "skynet"
 local util = require "util"
+local cjson = require "cjson"
+local md5 = require "md5"
 
 local sharedata = require "skynet.sharedata"
 local random = require "random"
@@ -7,6 +9,8 @@ local random = require "random"
 local ipairs = ipairs
 local assert = assert
 local tonumber = tonumber
+local error = error
+local floor = math.floor
 
 local user_db
 -- local update_user = util.update_user
@@ -16,12 +20,15 @@ local invite_user_detail_db
 
 local base
 local define
+local error_code
 local rand
 
 local webclient
+local web_sign = skynet.getenv("web_sign")
 
 local CMD = {}
 
+local approval_type_roulette= "roulette_reward"  -- 抽奖现金审批类型
 
 
 local function is_today(datetime)
@@ -57,6 +64,74 @@ local function roulette_calculate(id, roulette_idx) --抽奖计算 id,条件cond
             end
         end
     end    
+end
+
+local function probabilityRandom(probability)
+    local randMax = 10000
+    local rand = rand.randi(1, randMax)
+    local idx = 0
+    for i=#probability-1,1,-1 do 
+        if (probability[i]<rand) then
+            idx = i
+            break
+        end
+    end
+    return idx+1    
+end
+
+-- uid,unionid 用户id,unionid
+-- type, 正常情况下为审核通过后，更新的mongo字段
+-- fee_fen 红包,单位为分
+local function approval_money(uid,unionid,type,fee_fen)
+     -- client invoke by unionid
+    -- TOFIX
+    unionid = "wiwuek"
+
+    if unionid then
+        local now = floor(skynet.time())
+        local str = table.concat(
+            {
+                define.intercommunion.sys_id,
+                uid,
+                unionid,
+                type,
+                fee_fen, 
+                now, 
+                web_sign
+            }, "&")
+        local sign = md5.sumhexa(str)
+        local result, content = skynet.call(webclient, "lua", "request", define.intercommunion.activity_approval_url, 
+            {
+                gid=define.intercommunion.sys_id,
+                id=uid,
+                unionid=unionid,
+                tf = type,
+                fee = fee_fen,
+                time=now, 
+                sign=sign
+            }
+        )
+        if not result then
+            -- error{code = error_code.INTERNAL_ERROR}
+            skynet.error(string.format("approval money user [%d]  %s %s.",uid, type,result))
+        else
+            -- local ret,content = pcall(cjson.decode,content)
+            content = cjson.decode(content)
+            -- if (ret) then
+                if content.ret == "OK" then
+                    if type ~= approval_type_roulette then --非抽奖
+                        skynet.call(invite_info_db, "lua", "update", {id=uid}, {["$set"]={[type]=base.ACTIVITY_STATUS.PROGRESSING}}, false)
+                    end
+                else
+                    -- error{code = error_code.INTERNAL_ERROR}
+                    skynet.error(string.format("approval money user [%d] %s  %s.",uid, type,content.error))
+                    error{code = error_code.INTERNAL_ERROR}
+                end
+            -- else
+            --     error{code = error_code.INTERNAL_ERROR}             
+            -- end
+        end
+    end
 end
 
 function CMD.get_invite_info(info) ---- 返回非空对象
@@ -109,23 +184,14 @@ end
 function CMD.roulette_reward(info,msg)
     local invite_info = CMD.get_invite_info(info)
     if invite_info.roulette_cur>0 then 
-        local probability = nil
         
+        local probability = nil
         if invite_info.roulette_total==0 then
             probability = define.activity_maxtrix.roulette.probability_1
         else
             probability = define.activity_maxtrix.roulette.probability_2
         end
-        local randMax = 10000
-        local rand = rand.randi(1, randMax)
-        local idx = 0
-        for i=#probability-1,1,-1 do 
-            if (probability[i]<rand) then
-                idx = i
-                break
-            end
-        end
-        idx = idx +1
+        local idx = probabilityRandom(probability)
 
         -- skynet.error(string.format("the %d prize is roulette", idx))
 
@@ -133,6 +199,7 @@ function CMD.roulette_reward(info,msg)
         local p = {t=prize.t, v= prize.v,idx=idx}
         if p.t== "m" then
             -- cash client
+            approval_money(info.id,info.unionid,approval_type_roulette,prize)
         else
 
         end
@@ -150,61 +217,47 @@ function CMD.reward_money(info, msg)
     local award_num = msg.award_num or 0
     
     local yuan = 0
+    local type = nil 
     if (award_type == "play_done") then --个人领取
         if (not invite_info.mine_done)
             or mine_done == base.ACTIVITY_STATUS.UNDO then
-            skynet.call(invite_info_db, "lua", "update", {id=info.id}, {["$set"]={mine_done=base.ACTIVITY_STATUS.PROGRESSING}}, false)
+            -- skynet.call(invite_info_db, "lua", "update", {id=info.id}, {["$set"]={mine_done=base.ACTIVITY_STATUS.PROGRESSING}}, false)
             --随机红包
-            local probability = define.activity_maxtrix.play_probability
-            local randMax = 10000
-            local rand = rand.randi(1, randMax)
-            local idx = 0
-            for i=#probability-1,1,-1 do 
-                if (probability[i]<rand) then
-                    idx = i
-                    break
-                end
-            end
-            idx = idx +1
+            local idx = probabilityRandom(define.activity_maxtrix.play_probability)
             -- skynet.error(string.format("the %d prize is roulette", idx))
-            yuan = define.activity_maxtrix.play_prize[idx]            
+            yuan = define.activity_maxtrix.play_prize[idx]
+            type = "mine_done"          
         end
     elseif award_type == "money_invite" then
-        
+        local status = nil
         if invite_info.reward_invite_r then
-            -- for k,v in pairs(define.activity_maxtrix.money_invite) do
-                local status = invite_info.reward_invite_r[award_num .. ""]
-                if  (not status) or status==base.ACTIVITY_STATUS.UNDO then
-                    local field = "reward_invite_r." .. award_num
-                    skynet.call(invite_info_db, "lua", "update", {id=info.id}, {["$set"]={field=base.ACTIVITY_STATUS.PROGRESSING}}, false)
-
-                    yuan = define.activity_maxtrix.money_invite[award_num]            
-                end 
-            -- end
+            status = invite_info.reward_invite_r[award_num .. ""]
         end
-
+        if  (not status) or status==base.ACTIVITY_STATUS.UNDO then
+            local field = "reward_invite_r." .. award_num
+            type = field
+            -- skynet.call(invite_info_db, "lua", "update", {id=info.id}, {["$set"]={[field]=base.ACTIVITY_STATUS.PROGRESSING}}, false)
+            yuan = define.activity_maxtrix.money_invite[award_num]            
+        end 
     elseif award_type == "money_pay" then
-
+        local status = nil
         if invite_info.reward_pay_r then
-            -- for k,v in pairs(define.activity_maxtrix.money_pay) do
-                local status = invite_info.reward_pay_r[award_num .. ""]
-                if  (not status) or status==base.ACTIVITY_STATUS.UNDO then
-                    local field = "reward_pay_r." .. award_num
-                    skynet.call(invite_info_db, "lua", "update", {id=info.id}, {["$set"]={field=base.ACTIVITY_STATUS.PROGRESSING}}, false)
+            status = invite_info.reward_pay_r[award_num .. ""]
 
-                    yuan = define.activity_maxtrix.money_pay[award_num]                    
-                end
-            -- end
         end
+        if  (not status) or status==base.ACTIVITY_STATUS.UNDO then
+            local field = "reward_pay_r." .. award_num
+            type = field
+            -- skynet.call(invite_info_db, "lua", "update", {id=info.id}, {["$set"]={[field]=base.ACTIVITY_STATUS.PROGRESSING}}, false)
+            yuan = define.activity_maxtrix.money_pay[award_num]                    
+        end        
 
     end
 
     --- 请求client 
-    if (yuan>0) then
-
+    if (yuan>0 and type) then
+        approval_money(info.id,info.unionid,type,yuan * 100)
     end
-    -- local info = msg
-    -- return invite_info
 end
 
 function CMD.get_invite_user_detail(id)
@@ -226,12 +279,14 @@ function CMD.get_invite_user_detail(id)
     return detail_info
 end
 
-function CMD.approval()
-    -- local award_type = msg.award_type or ""
-    -- local award_idx = msg.award_idx or 0
-    -- local award_num = msg.award_num or 0
-    -- 设置自己奖励为完成
-    -- skynet.call(invite_info_db, "lua", "update", {id=id}, {["$inc"]={mine_done=base.ACTIVITY_STATUS.FINISH}}, false)
+function CMD.approval(id, tf) -- 审核结果
+    if (id and tf) then
+        if tf ~= approval_type_roulette then --非抽奖类
+            -- 设置自己奖励为完成
+            skynet.call(invite_info_db, "lua", "update", {id=id}, {["$set"]={[tf]=base.ACTIVITY_STATUS.FINISH}}, false)
+        end
+    end
+    return 1
 end
 
 function CMD.play(roles) --统计邀请者累计人数，自己玩的局数
@@ -259,10 +314,10 @@ function CMD.play(roles) --统计邀请者累计人数，自己玩的局数
     end
 end
 
-function CMD.pay(roles, money) --统计邀请者累计支付，自己的支付
-    if (roles and money>0) then
+function CMD.pay(roles, fee_fen) --统计邀请者累计支付，自己的支付
+    if (roles and fee_fen>0) then
         -- 支付金额
-        local yuan = money // 100        
+        local yuan = fee_fen // 100        
         for i,v in ipairs(roles) do
             local id = v
 
@@ -278,7 +333,6 @@ function CMD.pay(roles, money) --统计邀请者累计支付，自己的支付
             end
         end
     end
- 
 end
 
 function CMD.consume_room_succ(roles) -- 消费房卡: 有效创建房间次数
@@ -295,11 +349,42 @@ function CMD.top_win(id) --成为大赢家
 end
 
 function CMD.reg_invite_user(user) --新用户,关联邀请人
-    --FIXED
+    
     -- if (user and user.unionid) then
         local unionid = user.unionid
+        local uid = nil
+ 
         -- client invoke by unionid
-        local uid = 111
+        -- TOFIX
+        unionid = "sksdksf"
+        if unionid then
+            local now = floor(skynet.time())
+            local str = table.concat({define.intercommunion.sys_id,user.id, unionid, now, web_sign}, "&")
+            local sign = md5.sumhexa(str)
+            local result, content = skynet.call(webclient, "lua", "request", 
+                define.intercommunion.query_invite_url, {gid=define.intercommunion.sys_id,id=user.id, unionid=unionid, time=now, sign=sign})
+            if not result then
+                -- error{code = error_code.INTERNAL_ERROR}
+                skynet.error(string.format("query invite user [%d]  %s.",user.id, result))
+            else
+                local ret,content = pcall(cjson.decode,content)
+                if ret then
+                    if content.ret == "OK" then
+                        uid = content.guid
+                    else
+                        -- error{code = error_code.INTERNAL_ERROR}
+                        skynet.error(string.format("query invite user [%d]  %s.",user.id, content.error))
+                    end               
+                else
+                    skynet.error(string.format("query invite user [%d]  %s.",user.id, content))
+                end
+                                 
+            end
+        end        
+        
+        --TOFIX
+        if (user.id ~= 111) then uid = 111 end
+
         local detail_info = {
             account = user.account,
             id = user.id,  --
@@ -317,6 +402,7 @@ end
 
 skynet.start(function()
     local master = skynet.queryservice("mongo_master")
+    -- web_sign = skynet.getenv("web_sign")
 
     user_db = skynet.call(master, "lua", "get", "user")
     invite_info_db = skynet.call(master, "lua", "get", "invite_info")
@@ -324,6 +410,7 @@ skynet.start(function()
 
     base = sharedata.query("base")
     define = sharedata.query("define")
+    error_code = sharedata.query("error_code")
     rand = random()
 
     webclient = skynet.queryservice("webclient")

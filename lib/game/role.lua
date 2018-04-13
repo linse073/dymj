@@ -855,7 +855,7 @@ function proc.reward_money(msg)
 end
 
 function proc.getActivityParamUser(data)
-    return {id=data.info.id,account=data.info.account,create_time=data.user.create_time}
+    return {id=data.info.id,account=data.info.account,unionid=data.user.unionid,create_time=data.user.create_time}
 end
 
 function proc.roulette_query(msg)
@@ -869,7 +869,7 @@ function proc.roulette_query(msg)
         for k,v in pairs(define.activity_maxtrix.roulette.conditions) do
             local status = invite_info.roulette_r[k .. ""]
             if (status) then
-                roulette_r[#reward_pay_r+1] = {index=k,status=status}
+                roulette_r[#roulette_r+1] = {index=k,status=status}
             end
         end            
     end    

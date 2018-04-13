@@ -313,3 +313,7 @@
     award_idx 1 : integer
     award_num 2 : integer
 }
+.act_pay {
+    id 0:integer
+    num 1:integer
+}
