@@ -313,4 +313,7 @@ function util.mongo_find(db, func, ...)
     end
 end
 
+function util.number_key(t, key)
+end
+
 return util
