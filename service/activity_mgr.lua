@@ -30,7 +30,6 @@ local CMD = {}
 
 local approval_type_roulette= "roulette_reward"  -- 抽奖现金审批类型
 
-
 local function is_today(datetime)
     if not datetime then
         return false
@@ -140,6 +139,7 @@ function CMD.get_invite_info(info) ---- 返回非空对象
         invite_info = {
             account = info.account,
             id = info.id,  --
+            --bind_gzh, 是否已经绑定红包公众号
             award_diamond = 0, --邀请好友成功的待领取钻石数
             share_done_times = 0, --分享完成数
             -- share_done_date = floor(os.time()), --分享完成时间
@@ -154,7 +154,7 @@ function CMD.get_invite_info(info) ---- 返回非空对象
             roulette_cur=0,--当日抽奖数
             roulette_total=0,--总的已抽象数
             roulette_r={}, -- 抽奖条件记录[index]=value patterm:[[1]=8,[2]=10,[3]=6]
-            -- roulette_date=nil,--上次抽奖日期
+            -- roulette_date=nil,--抽奖日期
         }
         skynet.call(invite_info_db, "lua", "safe_insert", invite_info)
     end
@@ -174,10 +174,17 @@ function CMD.get_invite_info(info) ---- 返回非空对象
             invite_info.roulette_cur =0
             invite_info.roulette_r = nil
             skynet.call(invite_info_db, "lua", "update", {id=info.id},
-                {["$unset"]={roulette_r=1},["$set"]={roulette_cur=0}}, false)
+                {["$unset"]={roulette_r=1},["$set"]={roulette_cur=0,roulette_date=os.time()}}, false)
         end
     end    
     
+
+    
+    local reward_off = skynet.call(invite_info_db, "lua", "findOne", {id=-1})
+    if (reward_off) then
+        invite_info.reward_off = reward_off.off
+    end
+
     return invite_info
 end
 
@@ -199,7 +206,7 @@ function CMD.roulette_reward(info,msg)
         local p = {t=prize.t, v= prize.v,idx=idx}
         if p.t== "m" then
             -- cash client
-            approval_money(info.id,info.unionid,approval_type_roulette,prize)
+            approval_money(info.id,info.unionid,approval_type_roulette,prize.v)
         else
 
         end
@@ -398,6 +405,12 @@ function CMD.reg_invite_user(user) --新用户,关联邀请人
         }
         skynet.call(invite_user_detail_db, "lua", "safe_insert", detail_info)
     -- end
+end
+
+function CMD.wx_binding(id)
+    skynet.call(invite_info_db, "lua", "update", {id=id},
+        {["$set"]={bind_gzh=true}}, false)
+    return 1
 end
 
 skynet.start(function()
