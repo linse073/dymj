@@ -22,7 +22,7 @@ local define = {
     intercommunion={
       sys_id = "dymj", --本游戏标识
       query_invite_url = "http://web.dyzx7.cn/act/god/invite", --查询邀请者
-      activity_approval_url = "http://web.dyzx7.cn/act/god/uinfo", --活动审批(领取红包)
+      activity_approval_url = "http://web.dyzx7.cn/act/god/approval", --活动审批(领取红包)      
     },    
 
     
