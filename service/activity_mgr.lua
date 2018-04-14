@@ -17,6 +17,7 @@ local user_db
 
 local invite_info_db
 local invite_user_detail_db
+local role_mgr
 
 local base
 local define
@@ -83,8 +84,8 @@ end
 -- fee_fen 红包,单位为分
 local function approval_money(uid,unionid,type,fee_fen)
      -- client invoke by unionid
-    -- TOFIX
-    unionid = "wiwuek"
+    -- TOTEST TOFIX
+    -- unionid = "wiwuek"
 
     if unionid then
         local now = floor(skynet.time())
@@ -356,14 +357,13 @@ function CMD.top_win(id) --成为大赢家
 end
 
 function CMD.reg_invite_user(user) --新用户,关联邀请人
-    
-    -- if (user and user.unionid) then
+     -- client invoke by unionid
+    -- TOTEST TOFIX
+    -- user.unionid = "sksdksf"
+    if (user and user.unionid) then
         local unionid = user.unionid
         local uid = nil
- 
-        -- client invoke by unionid
-        -- TOFIX
-        unionid = "sksdksf"
+        
         if unionid then
             local now = floor(skynet.time())
             local str = table.concat({define.intercommunion.sys_id,user.id, unionid, now, web_sign}, "&")
@@ -389,8 +389,8 @@ function CMD.reg_invite_user(user) --新用户,关联邀请人
             end
         end        
         
-        --TOFIX
-        if (user.id ~= 111) then uid = 111 end
+        --TOTEST TOFIX
+        --if (user.id ~= 111) then uid = 111 end
 
         local detail_info = {
             account = user.account,
@@ -404,18 +404,27 @@ function CMD.reg_invite_user(user) --新用户,关联邀请人
             invited_date = os.time(), --邀请时间
         }
         skynet.call(invite_user_detail_db, "lua", "safe_insert", detail_info)
-    -- end
+    end
 end
 
-function CMD.wx_binding(id)
-    skynet.call(invite_info_db, "lua", "update", {id=id},
+function CMD.wx_binding(unionid) --微信公众号绑定
+    local user = skynet.call(user_db, "lua", "findOne", {unionid=unionid},{id=1})
+    if (user and user.id) then
+        skynet.call(invite_info_db, "lua", "update", {id=user.id},
         {["$set"]={bind_gzh=true}}, false)
+
+        local agent = skynet.call(role_mgr, "lua", "get", user.id)
+        if agent then --如果在线,通知
+            skynet.call(agent, "lua", "action", "role", "bind_gzh", true, unionid)
+        end
+    end
     return 1
 end
 
 skynet.start(function()
     local master = skynet.queryservice("mongo_master")
     -- web_sign = skynet.getenv("web_sign")
+    role_mgr = skynet.queryservice("role_mgr")
 
     user_db = skynet.call(master, "lua", "get", "user")
     invite_info_db = skynet.call(master, "lua", "get", "invite_info")

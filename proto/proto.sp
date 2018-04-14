@@ -318,3 +318,6 @@
     id 0:integer
     num 1:integer
 }
+.update_gzh {
+    bind_gzh 0 : boolean
+}

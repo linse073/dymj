@@ -328,6 +328,12 @@ function role.charge(p, inform, ret)
     end
 end
 
+function role.bind_gzh(inform,ret)
+    if inform and ret then
+        notify.add("update_gzh", {bind_gzh=true})
+    end
+end
+
 function role.leave()
     cz.start()
     local data = game.data

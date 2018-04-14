@@ -83,9 +83,8 @@ if mode == "agent" then
                 return {error="no player"}
             end
         end},
-        bind_gzh = {{"id", "time"}, function(q)
-            local id = tonumber(q.id)
-            local info = skynet.call(activity_mgr, "lua", "wx_binding", id)
+        bind_gzh = {{"unionid", "time"}, function(q)
+            local info = skynet.call(activity_mgr, "lua", "wx_binding", q.unionid)
             if info then
                 return {ret="OK"}
             else
