@@ -869,7 +869,7 @@ function proc.roulette_query(msg)
     local data = game.data
     local invite_info = skynet.call(activity_mgr, "lua", "get_invite_info", proc.getActivityParamUser(data))
 
-    local info ={roulette_cur=invite_info.roulette_cur,roulette_total=invite_info.roulette_total,bind_gzh=invite_info.bind_gz,
+    local info ={roulette_cur=invite_info.roulette_cur,roulette_total=invite_info.roulette_total,bind_gzh=invite_info.bind_gzh,
         reward_off=invite_info.reward_off}
     local roulette_r = {}
 

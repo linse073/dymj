@@ -396,7 +396,7 @@ function CMD.reg_invite_user(user) --新用户,关联邀请人
             account = user.account,
             id = user.id,  --
             nick_name = user.nick_name,
-            belong_id = uid,
+            belong_id = tonumber(uid),
 
             play_total_count =0, --完成局数
             pay_money_count=0, --支付总数
