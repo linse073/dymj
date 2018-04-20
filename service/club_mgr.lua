@@ -1,11 +1,12 @@
 local skynet = require "skynet"
-local queue = require "skynet.queue"
 local util = require "util"
+local random = require "random"
 
 local assert = assert
 local pcall = pcall
 local string = string
 local ipairs = ipairs
+local floor = math.floor
 
 local free_list = {}
 local club_list = {}
@@ -13,8 +14,8 @@ local club_list = {}
 local id_club = {}
 local key_club = {}
 local server_list
-local club_info_db
-local cs = queue()
+local club_db
+local rand
 
 local function new_club(num)
     local t = {}
@@ -55,8 +56,8 @@ local function get()
         club = free_list[l]
         free_list[l] = nil
         club_list[club] = 0
-        if l <= 10 then
-            skynet.fork(new_club, 10)
+        if l <= 2 then
+            skynet.fork(new_club, 2)
         end
     else
         club = skynet.newservice("club")
@@ -70,98 +71,109 @@ local function free(club)
         local l = #free_list + 1
         free_list[l] = club
         club_list[club] = l
-        if l >= 150 then
-            skynet.fork(del_club, 50)
+        if l >= 15 then
+            skynet.fork(del_club, 5)
         end
     end
 end
 
 local CMD = {}
 
-function CMD.login(roleid, clubid)
-    local c = id_club[clubid]
-    if c then
-        local club = skynet.call(c.address, "lua", "login", roleid)
-        club.address = c.address
-        return club
-    else
-        local address = get()
-        local club = skynet.call(address, "lua", "open", clubid, roleid)
-        if club then
-            club.address = address
-            local key = club.key
-            c = {
-                address = address,
-                key = key,
-                id = clubid,
-            }
-            id_club[clubid] = c
-            key_club[key] = c
-            return club
-        else
-            free(address)
-        end
+function CMD.add(name, severid)
+    local key = util.gen_key(serverid, name)
+    if not key_club[key] then
+        -- NOTICE: set key_club first
+        local c = {key=key}
+        key_club[key] = c
+        local id = skynet.call(server_list[serverid], "lua", "gen_club")
+        c.id = id
+        local addr = get()
+        c.addr = addr
+        id_club[id] = c
+        return c
     end
 end
 
-function CMD.logout(roleid, clubid)
-    local c = id_club[clubid]
+function CMD.delete(id)
+    local c = id_club[id]
     if c then
-        if skynet.call(c.address, "lua", "logout", roleid) then
-            free(c.address)
-            id_club[clubid] = nil
-            key_club[c.key] = nil
-        end
-    end
-end
-
-function CMD.create(club)
-    local address = get()
-    local key = club.key
-    local c = {
-        address = address,
-        key = key,
-        id = club.id,
-    }
-    id_club[clubid] = c
-    key_club[key] = c
-    return address
-end
-
-function CMD.disband(clubid)
-    local c = id_club[clubid]
-    if c then
-        free(c.address)
-        id_club[clubid] = nil
+        id_club[id] = nil
         key_club[c.key] = nil
-        return true
+        free(c.addr)
+    else
+        skynet.error(string.format("Delete club %d error.", id))
     end
 end
 
-function CMD.get_info(name)
+function CMD.get_by_id(id)
+    local c = id_club[id]
+    if c then
+        return c.addr
+    end
+end
+
+function CMD.get_by_name(name)
     for k, v in pairs(server_list) do
         local key = util.gen_key(k, name)
         local c = key_club[key]
         if c then
-            return skynet.call(c.address, "lua", "get_info")
-        else
-            local club = skynet.call(club_info_db, "lua", "findOne", {key=key})
-            if club then
-                return club
-            end
+            return c.addr
         end
     end
 end
 
+function CMD.shutdown()
+    for k, v in pairs(id_club) do
+        skynet.call(v.addr, "lua", "shutdown")
+    end
+end
+
 skynet.start(function()
+    rand = random()
+    rand.init(floor(skynet.time()))
     local master = skynet.queryservice("mongo_master")
-    club_info_db = skynet.call(master, "lua", "get", "club_info")
+    club_db = skynet.call(master, "lua", "get", "club")
+    local club_role = skynet,queryservice("club_role")
+    util.mongo_find(club_db, function(r)
+        util.number_key(r, "member")
+        util.number_key(r, "apply")
+        -- NOTICE: repair
+        local m = {}
+        local member = r.member
+        for k, v in pairs(member) do
+            v.online = false
+            m[#m+1] = v.id
+        end
+        local a = {}
+        for k, v in pairs(r.apply) do
+            if not member[v.id] then
+                a[k] = v
+            else
+                skynet.error(string.format("Apply role %d already in club %d.", v.id, r.id))
+            end
+        end
+        r.apply = a
+        local club = skynet.newservice("club")
+        skynet.call(club, "lua", "open", r, rand.randi(1, 300))
+        local c = {
+            id = r.id,
+            key = r.key,
+            addr = club,
+        }
+        id_club[r.id] = c
+        key_club[r.key] = c
+        skynet.call(club_role, "lua", "batch_add", m, r.id, club)
+    end, nil, {_id=false})
     local server_mgr = skynet.queryservice("server_mgr")
     server_list = skynet.call(server_mgr, "lua", "get_all")
-    new_club(100)
+    new_club(10)
 
 	skynet.dispatch("lua", function(session, source, command, ...)
 		local f = assert(CMD[command])
-        skynet.retpack(cs(f, ...))
+        if session == 0 then
+            f(...)
+        else
+            skynet.retpack(f(...))
+        end
 	end)
 end)

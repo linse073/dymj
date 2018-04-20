@@ -147,7 +147,7 @@ function util.dump(value, desciption, nesting)
     end
 
     local tb = util.split(traceback("", 2), "\n")
-    print("dump from: " .. util.trim(tb[3]))
+    skynet.error("dump from: " .. util.trim(tb[3]))
 
     local function _dump(value, desciption, indent, nest, keylen)
         desciption = desciption or "<var>"
@@ -193,7 +193,7 @@ function util.dump(value, desciption, nesting)
     _dump(value, desciption, "- ", 1)
 
     for i, line in ipairs(result) do
-        print(line)
+        skynet.error(line)
     end
 end
 
@@ -314,6 +314,11 @@ function util.mongo_find(db, func, ...)
 end
 
 function util.number_key(t, key)
+    local temp = {}
+    for k, v in ipairs(t[key]) do
+        temp[tonumber(k)] = v
+    end
+    t[key] = temp
 end
 
 return util

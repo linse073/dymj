@@ -58,6 +58,19 @@ local type_code = {
         ALREADY_OUT="已经摆牌",
         ALREADY_GIVE_UP="已经弃牌",
     },
+
+    [5000] = {
+        NO_CLUB="俱乐部不存在",
+        CLUB_FOUND_LIMIT="创建俱乐部已达上限",
+        CLUB_LIMIT="俱乐部已达上限",
+        CLUB_NAME_EXIST="俱乐部名字已存在",
+        ALREADY_IN_CLUB="已经在这个俱乐部",
+        ALREADY_APPLY_CLUB="已经申请这个俱乐部",
+        NOT_APPLY_CLUB="没有申请这个俱乐部",
+        CLUB_PERMIT_LIMIT="俱乐部权限不够",
+        NOT_IN_CLUB="不是这个俱乐部成员",
+        TARGET_NOT_IN_CLUB="对方不是这个俱乐部成员",
+    },
 }
 
 local code = {}

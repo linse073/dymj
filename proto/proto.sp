@@ -133,10 +133,20 @@
     record 0 : *chess_record
 }
 
+.club_info {
+    id 0 : integer
+    name 1 : integer
+    notify 2 : string
+    chief_id 3 : integer
+    chief 4 : integer
+    pos 5 : integer
+}
+
 .user_all {
     user 0 : user_info
     chess 1 : chess_all
     first_charge 2 : *integer
+    club 3 : *club_info
 }
 
 .info_all {
@@ -273,6 +283,90 @@
     location 0 : binary
 }
 
+.query_club {
+    id 0 : integer
+}
+
+.found_club {
+    name 0 : string
+    notify 1 : string
+}
+
+.apply_club {
+    id 0 : integer
+}
+
+.accept_club_apply {
+    id 0 : integer
+    roleid 1 : integer
+}
+
+.accept_club_apply_ret {
+    id 0 : integer
+    roleid 1 : integer
+}
+
+.refuse_club_apply {
+    id 0 : integer
+    roleid 1 : integer
+}
+
+.refuse_club_apply_ret {
+    id 0 : integer
+    roleid 1 : integer
+}
+
+.club_apply {
+    id 0 : integer
+    name 1 : string
+    head_img 2 : string
+    time 3 : integer
+}
+
+.query_club_apply {
+    id 0 : integer
+}
+
+.club_apply_list {
+    id 0 : integer
+    apply 1 : *club_apply
+}
+
+.club_member {
+    id 0 : integer
+    name 1 : string
+    head_img 2 : string
+    pos 3 : integer
+    time 4 : integer
+}
+
+.query_club_member {
+    id 0 : integer
+}
+
+.club_membmer_list {
+    id 0 : integer
+    apply 1 : *club_member
+}
+
+.club_top {
+    id 0 : integer
+}
+
+.club_top_ret {
+    id 0 : integer
+}
+
+.remove_club_member {
+    id 0 : integer
+    roleid 1 : integer
+}
+
+.remove_club_member_ret {
+    id 0 : integer
+    roleid 1 : integer
+}
+
 .invited_user_detail {
     name 0 : string
     play_count 1 : integer
@@ -314,10 +408,12 @@
     award_idx 1 : integer
     award_num 2 : integer
 }
+
 .act_pay {
     id 0:integer
     num 1:integer
 }
+
 .update_gzh {
     bind_gzh 0 : boolean
 }

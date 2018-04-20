@@ -13,7 +13,6 @@ local gen_key = util.gen_key
 local cs = queue()
 local status_db
 local account_db
-local club_info_db
 local status_key
 local status
 local config
@@ -63,28 +62,11 @@ local function check_account(info)
     end
 end
 
-local function check_club(name)
-    local namekey = gen_key(config.serverid, name)
-    local club = skynet.call(club_info_db, "lua", "findOne", {key=namekey}, {id=true})
-    if not club then
-        local clubid = status.clubid * 100 + 50 + config.serverid
-        status.clubid = status.clubid + 1
-        local club = {
-            key = namekey,
-            name = name,
-            id = clubid,
-        }
-        skynet.call(club_info_db, "lua", "safe_insert", club)
-        return club
-    end
-end
-
 function CMD.open(conf, gatename)
     config = conf
     local master = skynet.queryservice("mongo_master")
     status_db = skynet.call(master, "lua", "get", "status")
     account_db = skynet.call(master, "lua", "get", "account")
-    club_info_db = skynet.call(master, "lua", "get", "club_info")
     status_key = gen_key(conf.serverid, "status")
     status = skynet.call(status_db, "lua", "findOne", {key=status_key})
     if not status then
@@ -111,14 +93,6 @@ function CMD.gen_account(info)
 		skynet.call(status_db, "lua", "update", {key=status_key}, {["$set"]={accountid=status.accountid}}, true)
     end
     return new, account, errmsg
-end
-
-function CMD.gen_club(name)
-    local club = cs(check_club, name)
-    if club then
-		skynet.call(status_db, "lua", "update", {key=status_key}, {["$set"]={clubid=status.clubid}}, true)
-    end
-    return club
 end
 
 local function gen_func(k, v)

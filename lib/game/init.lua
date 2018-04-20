@@ -4,7 +4,7 @@ local util = require "util"
 local proc = {}
 local game = {proc = proc}
 
-local name = {"role", "gm"}
+local name = {"role", "gm", "club"}
 local module = {}
 local name_module = {}
 for k, v in ipairs(name) do

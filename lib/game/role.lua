@@ -35,6 +35,7 @@ local game_day
 local role_mgr
 local offline_mgr
 local club_mgr
+local club_role
 local table_mgr
 local chess_mgr
 local webclient
@@ -63,7 +64,8 @@ skynet.init(function()
     game_day = func.game_day
     role_mgr = skynet.queryservice("role_mgr")
     offline_mgr = skynet.queryservice("offline_mgr")
-    -- club_mgr = skynet.queryservice("club_mgr")
+    club_mgr = skynet.queryservice("club_mgr")
+    club_role = skynet.queryservice("club_role")
     table_mgr = skynet.queryservice("table_mgr")
     chess_mgr = skynet.queryservice("chess_mgr")
     webclient = skynet.queryservice("webclient")
@@ -87,6 +89,10 @@ function role.init_module()
 	game = require "game"
 end
 
+local function sort_club(l, r)
+    return l.index < r.index
+end
+
 local function get_user()
 	cz.start()
 	local data = game.data
@@ -94,7 +100,8 @@ local function get_user()
         if not data.sex or data.sex == 0 then
             data.sex = rand.randi(1, 2)
         end
-		local user = skynet.call(user_db, "lua", "findOne", {id=data.id})
+        local id = data.id
+		local user = skynet.call(user_db, "lua", "findOne", {id=id})
 		if user then
 			user.nick_name = data.nick_name
 			user.head_img = data.head_img
@@ -105,7 +112,7 @@ local function get_user()
 			data.user = user
 			data.info = {
 				account = user.account,
-				id = user.id,
+				id = id,
 				sex = user.sex,
 				nick_name = user.nick_name,
 				head_img = user.head_img,
@@ -113,10 +120,45 @@ local function get_user()
                 unionid = user.unionid,
 				ip = user.ip,
 			}
-            data.offline = skynet.call(offline_mgr, "lua", "get", data.id)
-            local club = user.club
-            if club and #club > 0 then
-                data.club = skynet.call(club_mgr, "lua", "login", club)
+            data.offline = skynet.call(offline_mgr, "lua", "get", id)
+            local rc = skynet.call(club_role, "lua", "get", id)
+            if rc then
+                local id_club = {}
+                local club_info = {}
+                local club_found = 0
+                for k, v in pairs(rc) do
+                    local ci, pos = skynet.call(v, "lua", "login", id)
+                    if ci then
+                        ci.pos = pos
+                        ci.index = base.MAX_CLUB
+                        id_club[ci.id] = ci
+                        club_info[#club_info+1] = ci
+                        if pos == base.CLUB_POS_CHIEF then
+                            club_found = club_found + 1
+                        end
+                    end
+                end
+                for k, v in ipairs(user.club) do
+                    local ci = id_club[v]
+                    if ci then
+                        ci.index = k
+                    end
+                end
+                table.sort(club_info, sort_club)
+                local club = {}
+                for k, v in ipairs(club_info) do
+                    v.index = k
+                    club[k] = v.id
+                end
+                user.club = club
+                data.club_info = club_info
+                data.id_club = id_club
+                data.club_found = club_found
+            else
+                user.club = {}
+                date.club_info = {}
+                data.id_club = {}
+                date.club_found = 0
             end
 		else
 			local now = floor(skynet.time())
@@ -154,6 +196,9 @@ local function get_user()
 			}
 			skynet.call(info_db, "lua", "safe_insert", info)
             data.info = info
+            data.club_info = {}
+            data.id_club = {}
+            data.club_found = 0
             
             skynet.send(activity_mgr, "lua", "reg_invite_user", info)
 		end
@@ -233,8 +278,12 @@ end
 function role.afk()
     local data = game.data
     local chess_table = data.chess_table
+    local id = data.id
     if chess_table then
-        skynet.call(chess_table, "lua", "status", data.id, base.USER_STATUS_LOST)
+        skynet.call(chess_table, "lua", "status", id, base.USER_STATUS_LOST)
+    end
+    for k, v in ipairs(data.club_info) do
+        skynet.call(v.addr, "lua", "online", id, false)
     end
 end
 
@@ -247,6 +296,9 @@ local function btk(addr)
         local p = update_user()
         p.user.ip = addr
         notify.add("update_user", {update=p})
+    end
+    for k, v in ipairs(data.club_info) do
+        skynet.call(v.addr, "lua", "online", id, true)
     end
 end
 function role.btk(addr)
@@ -268,7 +320,9 @@ function role.repair(user, now)
     if not user.invite_code then
         user.invite_code = 0
     end
-    if not user.first_charge then
+    if user.first_charge then
+        util.number_key(user, "first_charge")
+    else
         user.first_charge = {}
     end
     if not user.club then
@@ -308,9 +362,8 @@ function role.charge(p, inform, ret)
             if user.invite_code > 0 then
                 num = define.shop_item_2[cashFee]
                 local first_charge = user.first_charge
-                local feeStr = tostring(cashFee)
-                if not first_charge[feeStr] then
-                    first_charge[feeStr] = true
+                if not first_charge[cashFee] then
+                    first_charge[cashFee] = true
                     p.first_charge = {cashFee}
                     if cashFee == 600 then
                         num = num * 2
@@ -417,12 +470,15 @@ function proc.enter_game(msg)
     local first_charge = {}
     -- NOTICE: the type of mongo map key is string
     for k, v in pairs(user.first_charge) do
-        first_charge[#first_charge+1] = tonumber(k)
+        first_charge[#first_charge+1] = k
     end
     if #first_charge > 0 then
         ret.first_charge = first_charge
     end
-    ret.club = data.club
+    local club_info = data.club_info
+    if #club_info then
+        ret.club = club_info
+    end
     local chess_table = skynet.call(chess_mgr, "lua", "get", user.id)
     local code
     if chess_table then
