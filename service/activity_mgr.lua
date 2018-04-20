@@ -377,7 +377,9 @@ function CMD.reg_invite_user(user) --新用户,关联邀请人
                 local ret,content = pcall(cjson.decode,content)
                 if ret then
                     if content.ret == "OK" then
-                        uid = content.guid
+                        if content.guid then
+                            uid = tonumber(content.guid)
+                        end
                     else
                         -- error{code = error_code.INTERNAL_ERROR}
                         skynet.error(string.format("query invite user [%d]  %s.",user.id, content.error))
