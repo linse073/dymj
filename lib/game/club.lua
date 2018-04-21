@@ -69,16 +69,38 @@ local function leave(clubid)
         end
         data.id_club[clubid] = nil
         skynet.call(club_role, "lua", "del", data.id, clubid)
-        local u = {id=clubid, leave=true}
+        local u = {id=clubid, del=true}
         notify.add("update_user", {update={club={u}}})
     else
-        skynet.error(string.format("Role %d not in club %d.", data.id, club.id))
+        skynet.error(string.format("Role %d not in club %d when leave.", data.id, club.id))
     end
 end
 function club.leave(clubid)
     cz.start()
     leave(clubid)
     cz.finish()
+end
+
+function club.promote(clubid)
+    local data = game.data
+    local info = data.id_club[clubid]
+    if info then
+        info.pos = base.CLUB_POS_ADMIN
+        notify.add("club_all", {id=clubid, member={{id=data.id, pos=info.pos}}})
+    else
+        skynet.error(string.format("Role %d not in club %d when promote.", data.id, club.id))
+    end
+end
+
+function club.demote(clubid)
+    local data = game.data
+    local info = data.id_club[clubid]
+    if info then
+        info.pos = base.CLUB_POS_NONE
+        notify.add("club_all", {id=clubid, member={{id=data.id, pos=info.pos}}})
+    else
+        skynet.error(string.format("Role %d not in club %d when demote.", data.id, club.id))
+    end
 end
 
 --------------------------protocol process-----------------------
@@ -193,6 +215,18 @@ function proc.accept_club_apply(msg)
     return skynet.call(club.addr, "lua", "accept", data.id, msg.roleid)
 end
 
+function proc.accept_all_club_apply(msg)
+    local data = game.data
+    local club = data.id_club[msg.id]
+    if not club then
+        error{code = error_code.NOT_IN_CLUB}
+    end
+    if club.pos < base.CLUB_POS_ADMIN then
+        error{code = error_code.CLUB_PERMIT_LIMIT}
+    end
+    return skynet.call(club.addr, "lua", "accept_all", data.id)
+end
+
 function proc.refuse_club_apply(msg)
     local data = game.data
     local club = data.id_club[msg.id]
@@ -202,7 +236,19 @@ function proc.refuse_club_apply(msg)
     if club.pos < base.CLUB_POS_ADMIN then
         error{code = error_code.CLUB_PERMIT_LIMIT}
     end
-    return skynet.call(club.addr, "lua", "accept", data.id, msg.roleid)
+    return skynet.call(club.addr, "lua", "refuse", data.id, msg.roleid)
+end
+
+function proc.refuse_all_club_apply(msg)
+    local data = game.data
+    local club = data.id_club[msg.id]
+    if not club then
+        error{code = error_code.NOT_IN_CLUB}
+    end
+    if club.pos < base.CLUB_POS_ADMIN then
+        error{code = error_code.CLUB_PERMIT_LIMIT}
+    end
+    return skynet.call(club.addr, "lua", "refuse_all", data.id)
 end
 
 function proc.query_club_apply(msg)
@@ -292,8 +338,85 @@ function proc.leave_club(msg)
     end
     skynet.call(club_role, "lua", "del", data.id, club.id)
     cz.finish()
-    p.club = {{id=club.id, leave=true}}
+    p.club = {{id=club.id, del=true}}
     return "update_user", {update=p}
+end
+
+function proc.charge_club(msg)
+    local data = game.data
+    local club = data.id_club[msg.id]
+    if not club then
+        error{code = error_code.NOT_IN_CLUB}
+    end
+    if club.pos ~= base.CLUB_POS_CHIEF then
+        error{code = error_code.CLUB_PERMIT_LIMIT}
+    end
+    cz.start()
+    local user = date.user
+    if user.room_card < msg.room_card then
+        error{code = error_code.ROOM_CARD_LIMIT}
+    end
+    local p = updater_user()
+    role.add_room_card(p, false, msg.room_card)
+    local room_card = skynet.call(club.addr, "lua", "charge", data.id, msg.room_card)
+    if room_card then
+        p.club_update = {id=club.id, room_card=room_card}
+    end
+    cz.finish()
+    return "update_user", {update=p}
+end
+
+function proc.club_detail(msg)
+    local data = game.data
+    local club = data.id_club[msg.id]
+    if not club then
+        error{code = error_code.NOT_IN_CLUB}
+    end
+    return skynet.call(club.addr, "lua", "detail", data.id)
+end
+
+function proc.club_name(msg)
+    local data = game.data
+    local club = data.id_club[msg.id]
+    if not club then
+        error{code = error_code.NOT_IN_CLUB}
+    end
+    if club.pos ~= base.CLUB_POS_CHIEF then
+        error{code = error_code.CLUB_PERMIT_LIMIT}
+    end
+    cz.start()
+    if skynet.call(club_mgr, "lua", "change_name", club.id, msg.name, data.serverid) then
+        skynet.call(club.addr, "lua", "change_name", data.id, msg.name)
+        club.name = msg.name
+    else
+        error{code = error_code.CLUB_NAME_EXIST}
+    end
+    cz.finish()
+    return "club_all", {id=club.id, name=msg.name}
+end
+
+function proc.promote_club_member(msg)
+    local data = game.data
+    local club = data.id_club[msg.id]
+    if not club then
+        error{code = error_code.NOT_IN_CLUB}
+    end
+    if club.pos ~= base.CLUB_POS_CHIEF then
+        error{code = error_code.CLUB_PERMIT_LIMIT}
+    end
+    return skynet.call(club.addr, "lua", "promote", data.id, msg.roleid)
+end
+
+function proc.demote_club_member(msg)
+    local data = game.data
+    local club = data.id_club[msg.id]
+    if not club then
+        error{code = error_code.NOT_IN_CLUB}
+    end
+    if club.pos ~= base.CLUB_POS_CHIEF then
+        error{code = error_code.CLUB_PERMIT_LIMIT}
+    end
+    return skynet.call(club.addr, "lua", "demote", data.id, msg.roleid)
 end
 
 return club

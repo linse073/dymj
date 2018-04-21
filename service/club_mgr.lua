@@ -105,6 +105,21 @@ function CMD.delete(id)
     end
 end
 
+function CMD.change_name(id, name, serverid)
+    local c = id_club[id]
+    if c then
+        local key = util.gen_key(serverid, name)
+        if not key_club[key] then
+            key_club[c.key] = nil
+            c.key = key
+            key_club[key] = c
+            return true
+        end
+    else
+        skynet.error(string.format("Change club %d name error.", id))
+    end
+end
+
 function CMD.get_by_id(id)
     local c = id_club[id]
     if c then

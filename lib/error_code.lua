@@ -70,6 +70,8 @@ local type_code = {
         CLUB_PERMIT_LIMIT="俱乐部权限不够",
         NOT_IN_CLUB="不是这个俱乐部成员",
         TARGET_NOT_IN_CLUB="对方不是这个俱乐部成员",
+        ALREADY_CLUB_ADMIN="已经是俱乐部管理员",
+        NOT_CLUB_ADMIN="不是俱乐部管理员",
     },
 }
 

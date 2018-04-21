@@ -140,6 +140,38 @@
     chief_id 3 : integer
     chief 4 : integer
     pos 5 : integer
+    del 6 : boolean
+}
+
+.club_member {
+    id 0 : integer
+    name 1 : string
+    head_img 2 : string
+    pos 3 : integer
+    time 4 : integer
+    del 5 : boolean
+}
+
+.club_apply {
+    id 0 : integer
+    name 1 : string
+    head_img 2 : string
+    time 3 : integer
+    del 4 : boolean
+}
+
+.club_all {
+    id 0 : integer
+    name 1 : integer
+    notify 2 : string
+    chief_id 3 : integer
+    chief 4 : integer
+    time 5 : integer
+    room_card 6 : integer
+    member 7 : *club_member
+    apply 8 : *club_apply
+    refresh_member 9 : boolean
+    refresh_apply 10 : boolean
 }
 
 .user_all {
@@ -147,6 +179,7 @@
     chess 1 : chess_all
     first_charge 2 : *integer
     club 3 : *club_info
+    club_update 4 : club_all
 }
 
 .info_all {
@@ -301,52 +334,17 @@
     roleid 1 : integer
 }
 
-.accept_club_apply_ret {
-    id 0 : integer
-    roleid 1 : integer
-}
-
 .refuse_club_apply {
     id 0 : integer
     roleid 1 : integer
-}
-
-.refuse_club_apply_ret {
-    id 0 : integer
-    roleid 1 : integer
-}
-
-.club_apply {
-    id 0 : integer
-    name 1 : string
-    head_img 2 : string
-    time 3 : integer
 }
 
 .query_club_apply {
     id 0 : integer
 }
 
-.club_apply_list {
-    id 0 : integer
-    apply 1 : *club_apply
-}
-
-.club_member {
-    id 0 : integer
-    name 1 : string
-    head_img 2 : string
-    pos 3 : integer
-    time 4 : integer
-}
-
 .query_club_member {
     id 0 : integer
-}
-
-.club_membmer_list {
-    id 0 : integer
-    apply 1 : *club_member
 }
 
 .club_top {
@@ -362,9 +360,26 @@
     roleid 1 : integer
 }
 
-.remove_club_member_ret {
+.charge_club {
     id 0 : integer
-    roleid 1 : integer
+    room_card 1 : integer
+}
+
+.club_detail {
+    id 0 : integer
+}
+
+.club_name {
+    id 0 : integer
+    name 1 : string
+}
+
+.promote_club_member {
+    id 0 : integer
+}
+
+.demote_club_member {
+    id 0 : integer
 }
 
 .invited_user_detail {

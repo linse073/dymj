@@ -93,6 +93,34 @@ function CMD.disband(roleid)
     end
 end
 
+function CMD.charge(roleid, room_card)
+    if club then
+        local m = club.member[roleid]
+        if m and m.pos == base.CLUB_POS_CHIEF then
+            club.room_card = club.room_card + room_card
+            return club.room_card
+        else
+            skynet.error(string.format("Role %d charge club %d, room_card %d error.", roleid, club.id, room_card))
+        end
+    else
+        skynet.error(string.format("Role %d charge club, room_card %d error.", roleid, room_card))
+    end
+end
+
+function CMD.change_name(roleid, name)
+    if club then
+        local m = club.member[roleid]
+        if m and m.pos == base.CLUB_POS_CHIEF then
+            club.name = name
+            club_info.name = name
+        else
+            skynet.error(string.format("Role %d change club %d name %d error.", roleid, club.id, name))
+        end
+    else
+        skynet.error(string.format("Role %d change club name %d error.", roleid, name))
+    end
+end
+
 function CMD.get_info()
     return club_info
 end
@@ -166,7 +194,7 @@ function MSG.accept(adminid, roleid)
             a.online = true
             club.member[roleid] = a
             club.apply[roleid] = nil
-            return "accept_club_apply_ret", {id=club.id, roleid=roleid}
+            return "club_all", {id=club.id, member={a}}
         else
             error{code = error_code.CLUB_LIMIT}
         end
@@ -180,9 +208,50 @@ function MSG.accept(adminid, roleid)
             a.online = false
             club.member[roleid] = a
             club.apply[roleid] = nil
-            return "accept_club_apply_ret", {id=club.id, roleid=roleid}
+            return "club_all", {id=club.id, member={a}}
         end
     end
+end
+
+function MSG.accept_all(adminid)
+    if not club then
+        error{code = error_code.NO_CLUB}
+    end
+    local admin = club.member[adminid]
+    if not admin then
+        error{code = error_code.NOT_IN_CLUB}
+    end
+    if admin.pos < base.CLUB_POS_ADMIN then
+        error{code = error_code.CLUB_PERMIT_LIMIT}
+    end
+    local member = club.member
+    local m = {}
+    local now = floor(skynet.time())
+    for k, v in pairs(club.apply) do
+        if not member[v.id] then
+            local role = skynet.call(role_mgr, "lua", "get", v.id)
+            if role then
+                if skynet.call(role, "lua", "action", "club", "join", club_info) then
+                    v.time = now
+                    v.pos = base.CLUB_POS_NONE
+                    v.online = true
+                    member[v.id] = v
+                    m[#m+1] = v
+                end
+            else
+                if skynet.call(club_role, "lua", "count", v.id) < base.MAX_CLUB then
+                    skynet.call(club_role, "lua", "add", v.id, club.id, skynet.self())
+                    v.time = now
+                    v.pos = base.CLUB_POS_NONE
+                    v.online = false
+                    member[v.id] = v
+                    m[#m+1] = v
+                end
+            end
+        end
+    end
+    club.apply = {}
+    return "club_all", {id=club.id, member=m, refush_apply=true}
 end
 
 function MSG.refuse(adminid, roleid)
@@ -200,7 +269,22 @@ function MSG.refuse(adminid, roleid)
         error{code = error_code.NOT_APPLY_CLUB}
     end
     club.apply[roleid] = nil
-    return "refuse_club_apply_ret", {id=club.id, roleid=roleid}
+    return "club_all", {id=club.id, apply={{id=roleid, del=true}}}
+end
+
+function MSG.refuse_all(adminid)
+    if not club then
+        error{code = error_code.NO_CLUB}
+    end
+    local admin = club.member[adminid]
+    if not admin then
+        error{code = error_code.NOT_IN_CLUB}
+    end
+    if admin.pos < base.CLUB_POS_ADMIN then
+        error{code = error_code.CLUB_PERMIT_LIMIT}
+    end
+    club.apply = {}
+    return "club_all", {id=club.id, refush_apply=true}
 end
 
 function MSG.query_apply(adminid)
@@ -218,7 +302,7 @@ function MSG.query_apply(adminid)
     for k, v in pairs(club.apply) do
         a[#a+1] = v
     end
-    return "club_apply_list", a
+    return "club_all", {id=club.id, refush_apply=true, apply=a}
 end
 
 function MSG.query_member(adminid)
@@ -233,7 +317,27 @@ function MSG.query_member(adminid)
     for k, v in pairs(club.member) do
         m[#m+1] = v
     end
-    return "club_member_list", m
+    return "club_all", {id=club.id, refresh_member=true, member=m}
+end
+
+function MSG.detail(roleid)
+    if not club then
+        error{code = error_code.NO_CLUB}
+    end
+    local role = club.member[roleid]
+    if not role then
+        error{code = error_code.NOT_IN_CLUB}
+    end
+    local info = {
+        id = club.id,
+        name = club.name,
+        notify = club.notify,
+        chief_id = club.chief_id,
+        chief = club.chief,
+        time = club.time,
+        room_card = club.room_card,
+    }
+    return "club_all", info
 end
 
 function MSG.remove_member(adminid, roleid)
@@ -255,12 +359,63 @@ function MSG.remove_member(adminid, roleid)
     if agent then
         skynet.call(agent, "action", "club", "leave", club.id)
         club.member[roleid] = nil
-        return "remove_club_member_ret", {id=club.id, roleid=roleid}
     else
         skynet.call(club_role, "del", roleid, club.id)
         club.member[roleid] = nil
-        return "remove_club_member_ret", {id=club.id, roleid=roleid}
     end
+    return "club_all", {id=club.id, member={{id=roleid, del=true}}}
+end
+
+function MSG.promote(adminid, roleid)
+    if not club then
+        error{code = error_code.NO_CLUB}
+    end
+    local admin = club.member[adminid]
+    if not admin then
+        error{code = error_code.NOT_IN_CLUB}
+    end
+    if admin.pos ~= base.CLUB_POS_CHIEF then
+        error{code = error_code.CLUB_PERMIT_LIMIT}
+    end
+    local role = club.member[roleid]
+    if not role then
+        error{code = error_code.TARGET_NOT_IN_CLUB}
+    end
+    if role.pos == base.CLUB_POS_ADMIN then
+        error{code = error_code.ALREADY_CLUB_ADMIN}
+    end
+    local agent = skynet.call(role_mgr, "lua", "get", roleid)
+    if agent then
+        skynet.call(agent, "lua", "promote", club.id)
+    end
+    role.pos = base.CLUB_POS_ADMIN
+    return "club_all", {id=club.id, member={{id=roleid, pos=role.pos}}}
+end
+
+function MSG.demote(adminid, roleid)
+    if not club then
+        error{code = error_code.NO_CLUB}
+    end
+    local admin = club.member[adminid]
+    if not admin then
+        error{code = error_code.NOT_IN_CLUB}
+    end
+    if admin.pos ~= base.CLUB_POS_CHIEF then
+        error{code = error_code.CLUB_PERMIT_LIMIT}
+    end
+    local role = club.member[roleid]
+    if not role then
+        error{code = error_code.TARGET_NOT_IN_CLUB}
+    end
+    if role.pos == base.CLUB_POS_NONE then
+        error{code = error_code.NOT_CLUB_ADMIN}
+    end
+    local agent = skynet.call(role_mgr, "lua", "get", roleid)
+    if agent then
+        skynet.call(agent, "lua", "demote", club.id)
+    end
+    role.pos = base.CLUB_POS_NONE
+    return "club_all", {id=club.id, member={{id=roleid, pos=role.pos}}}
 end
 
 for k, v in pairs(MSG) do
