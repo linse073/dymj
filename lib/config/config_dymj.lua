@@ -59,7 +59,6 @@ config.mongo = {
         {"invite_user_detail", {"id", unique=true}},
         {"invite_user_detail", {"belong_id"}},
         {"club", {"id", unique=true}},
-        {"club_charge", {"id", unique=true}},
         {"club_charge", {"club_id"}},
     },
 }

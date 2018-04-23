@@ -12,6 +12,7 @@ local error_code
 local base
 
 local club_db
+local club_charge_db
 local club
 local club_info
 local club_role
@@ -98,6 +99,13 @@ function CMD.charge(roleid, room_card)
         local m = club.member[roleid]
         if m and m.pos == base.CLUB_POS_CHIEF then
             club.room_card = club.room_card + room_card
+            local log = {
+                club_id = club.id,
+                num = room_card,
+                balance = club.room_card,
+                time = floor(skynet.time())
+            }
+            skynet.call(club_charge_db, "lua", "safe_insert", log)
             return club.room_card
         else
             skynet.error(string.format("Role %d charge club %d, room_card %d error.", roleid, club.id, room_card))
@@ -132,6 +140,13 @@ end
 function CMD.consume_card(room_card)
     if club then
         club.room_card = club.room_card - room_card
+        local log = {
+            club_id = club.id,
+            num = room_card,
+            balance = club.room_card,
+            time = floor(skynet.time())
+        }
+        skynet.call(club_charge_db, "lua", "safe_insert", log)
     else
         skynet.error("Consume club room card error.") 
     end
@@ -446,6 +461,7 @@ skynet.start(function()
 
     local master = skynet.queryservice("mongo_master")
     club_db = skynet.call(master, "lua", "get", "club")
+    club_charge_db = skynet.call(master, "lua", "get", "club_charge")
     club_role = skynet.queryservice("club_role")
     role_mgr = skynet.queryservice("role_mgr")
 
