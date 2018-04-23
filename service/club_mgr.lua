@@ -143,7 +143,7 @@ function CMD.shutdown()
     end
 end
 
-skynet.start(function()
+function CMD.open()
     rand = random()
     rand.init(floor(skynet.time()))
     local master = skynet.queryservice("mongo_master")
@@ -182,7 +182,9 @@ skynet.start(function()
     local server_mgr = skynet.queryservice("server_mgr")
     server_list = skynet.call(server_mgr, "lua", "get_all")
     new_club(10)
+end
 
+skynet.start(function()
 	skynet.dispatch("lua", function(session, source, command, ...)
 		local f = assert(CMD[command])
         if session == 0 then
