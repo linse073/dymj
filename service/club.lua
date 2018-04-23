@@ -34,7 +34,7 @@ local function del_timer()
 end
 
 local CMD = {}
-util.time_wrap(CMD)
+util.timer_wrap(CMD)
 
 function CMD.exit()
 	skynet.exit()
