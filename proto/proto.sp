@@ -227,6 +227,7 @@
     name 0 : string
     rule 1 : string
     location 2 : binary
+    club 3 : integer
 }
 
 .join {

@@ -547,13 +547,27 @@ function proc.new_chess(msg)
     end
     local rule = config(msg.rule)
     local user = data.user
-    if rule.aa_pay then
-        if user.room_card < rule.single_card then
-            error{code = error_code.ROOM_CARD_LIMIT}
+    if msg.club then
+        local c = data.id_club[msg.club]
+        if not c then
+            error{code = error_code.NOT_IN_CLUB}
+        end
+        local rc = skynet.call(c.addr, "lua", "get_room_card")
+        if not rc then
+            error{code = error_code.NO_CLUB}
+        end
+        if rc < rule.total_card then
+            error{code = error_code.CLUB_ROOM_CARD_LIMIT}
         end
     else
-        if user.room_card < rule.total_card then
-            error{code = error_code.ROOM_CARD_LIMIT}
+        if rule.aa_pay then
+            if user.room_card < rule.single_card then
+                error{code = error_code.ROOM_CARD_LIMIT}
+            end
+        else
+            if user.room_card < rule.total_card then
+                error{code = error_code.ROOM_CARD_LIMIT}
+            end
         end
     end
     assert(not skynet.call(chess_mgr, "lua", "get", data.id), string.format("Chess mgr has %d.", data.id))
@@ -563,7 +577,7 @@ function proc.new_chess(msg)
     end
     local card = data[msg.name .. "_card"]
     local rmsg, info = skynet.call(chess_table, "lua", "init", 
-        msg.name, rule, data.info, skynet.self(), data.server_address, card, msg.location)
+        msg.name, rule, data.info, skynet.self(), data.server_address, card, msg.location, msg.club)
     if rmsg == "update_user" then
         data.chess_table = chess_table
     else

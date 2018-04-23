@@ -121,6 +121,22 @@ function CMD.change_name(roleid, name)
     end
 end
 
+function CMD.get_room_card()
+    if club then
+        return club.room_card
+    else
+        skynet.error("Get club room card error.")
+    end
+end
+
+function CMD.consume_card(room_card)
+    if club then
+        club.room_card = club.room_card - room_card
+    else
+        skynet.error("Consume club room card error.") 
+    end
+end
+
 function CMD.get_info()
     return club_info
 end

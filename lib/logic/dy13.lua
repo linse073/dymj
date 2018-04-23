@@ -20,6 +20,7 @@ local record_detail_db
 local table_mgr
 local chess_mgr
 local offline_mgr
+local club_mgr
 local activity_mgr
 
 skynet.init(function()
@@ -32,6 +33,7 @@ skynet.init(function()
     table_mgr = skynet.queryservice("table_mgr")
     chess_mgr = skynet.queryservice("chess_mgr")
     offline_mgr = skynet.queryservice("offline_mgr")
+    club_mgr = skynet.queryservice("club_mgr")
 
     activity_mgr = skynet.queryservice("activity_mgr")
 end)
@@ -98,12 +100,13 @@ end
 
 local dy13 = {}
 
-function dy13:init(number, rule, rand, server, card)
+function dy13:init(number, rule, rand, server, card, club)
     self._number = number
     self._rule = rule
     self._rand = rand
     self._server = server
     self._custom_card = card
+    self._club = club
     self._banker = 1
     self._status = base.CHESS_STATUS_READY
     self._role = {}
@@ -544,15 +547,22 @@ end
 
 function dy13:consume_card()
     local rule = self._rule
-    if rule.aa_pay then
-        local count = -rule.single_card
-        for k, v in ipairs(self._role) do
-            skynet.call(offline_mgr, "lua", "add", v.id, "role", "add_room_card", count)
+    if self._club then
+        local club = skynet.call(club_mgr, "lua", "get_by_id", self._club)
+        if club then
+            skynet.call(club, "lua", "consume_card", rule.total_card)
         end
     else
-        local id = self._role[1].id
-        local count = -rule.total_card
-        skynet.call(offline_mgr, "lua", "add", id, "role", "add_room_card", count)
+        if rule.aa_pay then
+            local count = -rule.single_card
+            for k, v in ipairs(self._role) do
+                skynet.call(offline_mgr, "lua", "add", v.id, "role", "add_room_card", count)
+            end
+        else
+            local id = self._role[1].id
+            local count = -rule.total_card
+            skynet.call(offline_mgr, "lua", "add", id, "role", "add_room_card", count)
+        end
     end
 
     skynet.send(activity_mgr, "lua", "consume_room_succ", {self._role[1].id,}) --有效创建房间
