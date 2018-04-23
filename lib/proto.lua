@@ -66,6 +66,28 @@ local type_msg = {
         "charge_ret",
     },
 
+    [2400] = {
+        "club_info",
+        "club_member",
+        "club_apply",
+        "club_all",
+        "query_club",
+        "found_club",
+        "apply_club",
+        "accept_club_apply",
+        "refuse_club_apply",
+        "query_club_apply",
+        "query_club_member",
+        "club_top",
+        "club_top_ret",
+        "remove_club_member",
+        "charge_club",
+        "club_detail",
+        "club_name",
+        "promote_club_member",
+        "demote_club_member",
+    }
+
     [20000] = {
         "ready",
         "deal_end",
