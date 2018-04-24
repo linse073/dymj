@@ -86,6 +86,10 @@ local type_msg = {
         "club_name",
         "promote_club_member",
         "demote_club_member",
+        "room_user",
+        "room_info",
+        "club_room",
+        "query_club_room",
     }
 
     [20000] = {

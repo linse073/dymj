@@ -123,6 +123,17 @@ function dymj:init(number, rule, rand, server, card, club)
             rule = rule.pack,
         },
     }
+    if club then
+        local c = skynet.call(club_mgr, "lua", "get_by_id", club)
+        if c then
+            skynet.call(c, "lua", "add_room", {
+                name = "dymj",
+                number = number,
+                rule = rule.pack,
+                user = base.MJ_FOUR,
+            })
+        end
+    end
 end
 
 function dymj:status(id, status, addr)
@@ -177,6 +188,12 @@ function dymj:finish()
             if v.agent then
                 skynet.call(v.agent, "lua", "action", "role", "leave")
             end
+        end
+    end
+    if self._club then
+        local club = skynet.call(club_mgr, "lua", "get_by_id", self._club)
+        if club then
+            skynet.call(club, "lua", "del_room", self._number)
         end
     end
     skynet.fork(finish)
@@ -352,6 +369,16 @@ function dymj:enter(info, agent, index, location)
     role[index] = info
     self._id[info.id] = info
     skynet.call(chess_mgr, "lua", "add", info.id, skynet.self())
+    if self._club then
+        local club = skynet.call(club_mgr, "lua", "get_by_id", self._club)
+        if club then
+            skynet.call(club, "lua", "enter_room", self._number, {
+                id = info.id,
+                name = info.nick_name or info.account,
+                head_img = info.head_img,
+            })
+        end
+    end
     local user = {}
     for i = 1, base.MJ_FOUR do
         user[#user+1] = role[i] -- role[i] can be nil
@@ -378,8 +405,10 @@ function dymj:join(info, room_card, agent, location)
     --     error{code = error_code.ERROR_OPERATION}
     -- end
     local rule = self._rule
-    if rule.aa_pay and room_card < rule.single_card then
-        error{code = error_code.ROOM_CARD_LIMIT}
+    if not self._club then
+        if rule.aa_pay and room_card < rule.single_card then
+            error{code = error_code.ROOM_CARD_LIMIT}
+        end
     end
     local role = self._role
     if rule.ip then
@@ -456,6 +485,12 @@ function dymj:leave(id, msg)
         skynet.call(chess_mgr, "lua", "del", id)
         if info.agent then
             skynet.call(info.agent, "lua", "action", "role", "leave")
+        end
+        if self._club then
+            local club = skynet.call(club_mgr, "lua", "get_by_id", self._club)
+            if club then
+                skynet.call(club, "lua", "leave_room", self._number, id)
+            end
         end
         local cu = {
             {index=index, action=base.MJ_OP_LEAVE},

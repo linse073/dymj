@@ -121,6 +121,17 @@ function dy13:init(number, rule, rand, server, card, club)
             rule = rule.pack,
         },
     }
+    if club then
+        local c = skynet.call(club_mgr, "lua", "get_by_id", club)
+        if c then
+            skynet.call(c, "lua", "add_room", {
+                name = "dy13",
+                number = number,
+                rule = rule.pack,
+                user = rule.user,
+            })
+        end
+    end
 end
 
 function dy13:status(id, status, addr)
@@ -168,7 +179,12 @@ function dy13:finish()
             end
         end
     end
-
+    if self._club then
+        local club = skynet.call(club_mgr, "lua", "get_by_id", self._club)
+        if club then
+            skynet.call(club, "lua", "del_room", self._number)
+        end
+    end
     skynet.fork(finish)
 end
 
@@ -300,6 +316,16 @@ function dy13:enter(info, agent, index, location)
     role[index] = info
     self._id[info.id] = info
     skynet.call(chess_mgr, "lua", "add", info.id, skynet.self())
+    if self._club then
+        local club = skynet.call(club_mgr, "lua", "get_by_id", self._club)
+        if club then
+            skynet.call(club, "lua", "enter_room", self._number, {
+                id = info.id,
+                name = info.nick_name or info.account,
+                head_img = info.head_img,
+            })
+        end
+    end
     local user = {}
     local rule = self._rule
     for i = 1, rule.user do
@@ -327,8 +353,10 @@ function dy13:join(info, room_card, agent, location)
     --     error{code = error_code.ERROR_OPERATION}
     -- end
     local rule = self._rule
-    if rule.aa_pay and room_card < rule.single_card then
-        error{code = error_code.ROOM_CARD_LIMIT}
+    if not self._club then
+        if rule.aa_pay and room_card < rule.single_card then
+            error{code = error_code.ROOM_CARD_LIMIT}
+        end
     end
     local role = self._role
     if rule.ip then
@@ -404,6 +432,12 @@ function dy13:leave(id, msg)
         skynet.call(chess_mgr, "lua", "del", id)
         if info.agent then
             skynet.call(info.agent, "lua", "action", "role", "leave")
+        end
+        if self._club then
+            local club = skynet.call(club_mgr, "lua", "get_by_id", self._club)
+            if club then
+                skynet.call(club, "lua", "leave_room", self._number, id)
+            end
         end
         local cu = {
             {index=index, action=base.P13_OP_LEAVE},

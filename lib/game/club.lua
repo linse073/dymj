@@ -161,6 +161,8 @@ function proc.found_club(msg)
         time = now,
     }
     club.member = {member}
+    club.member_count = 1
+    club.online_count = 1
     club.apply = {}
     skynet.call(club.addr, "lua", "open", club, rand.randi(1, 300))
     skynet.call(club_role, "lua", "add", user.id, club.id, club.addr)
@@ -417,6 +419,15 @@ function proc.demote_club_member(msg)
         error{code = error_code.CLUB_PERMIT_LIMIT}
     end
     return skynet.call(club.addr, "lua", "demote", data.id, msg.roleid)
+end
+
+function proc.query_club_room(msg)
+    local data = game.data
+    local club = data.id_club[msg.id]
+    if not club then
+        error{code = error_code.NOT_IN_CLUB}
+    end
+    return skynet.call(club.addr, "lua", "query_room", data.id, msg.num)
 end
 
 return club

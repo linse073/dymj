@@ -383,6 +383,31 @@
     id 0 : integer
 }
 
+.room_user {
+    id 0 : integer
+    name 1 : string
+    head_img 2 : string
+}
+
+.room_info {
+    name 0 : string
+    number 1 : integer
+    rule 2 : string
+    role 3 : *room_user
+}
+
+.club_room {
+    id 0 : integer
+    member_count 1 : integer
+    online_count 2 : integer
+    room 3 : room_info
+}
+
+.query_club_room {
+    id 0 : integer
+    num 1 : integer
+}
+
 .invited_user_detail {
     name 0 : string
     play_count 1 : integer
