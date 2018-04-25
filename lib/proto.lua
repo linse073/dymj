@@ -90,7 +90,7 @@ local type_msg = {
         "room_info",
         "club_room",
         "query_club_room",
-    }
+    },
 
     [20000] = {
         "ready",
