@@ -156,9 +156,9 @@ local function get_user()
                 data.club_found = club_found
             else
                 user.club = {}
-                date.club_info = {}
+                data.club_info = {}
                 data.id_club = {}
-                date.club_found = 0
+                data.club_found = 0
             end
 		else
 			local now = floor(skynet.time())
