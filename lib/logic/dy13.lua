@@ -128,7 +128,6 @@ function dy13:init(number, rule, rand, server, card, club)
                 name = "dy13",
                 number = number,
                 rule = rule.pack,
-                user = rule.user,
             })
         end
     end

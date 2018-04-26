@@ -400,7 +400,7 @@
     id 0 : integer
     member_count 1 : integer
     online_count 2 : integer
-    room 3 : room_info
+    room 3 : *room_info
 }
 
 .query_club_room {

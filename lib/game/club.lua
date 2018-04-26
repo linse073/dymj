@@ -427,7 +427,7 @@ function proc.query_club_room(msg)
     if not club then
         error{code = error_code.NOT_IN_CLUB}
     end
-    return skynet.call(club.addr, "lua", "query_room", data.id, msg.num)
+    return skynet.call(club.addr, "lua", "query_room", data.id)
 end
 
 return club

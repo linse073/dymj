@@ -130,7 +130,6 @@ function dymj:init(number, rule, rand, server, card, club)
                 name = "dymj",
                 number = number,
                 rule = rule.pack,
-                user = base.MJ_FOUR,
             })
         end
     end

@@ -176,24 +176,10 @@ function CMD.del_room(number)
     end
 end
 
-local function room_user(room)
-    if room.role_index then
-        role_room[room.role_index][room.number] = nil
-    end
-    local index = room.user - room.enter_user
-    if index == 1 or index == 2 then
-        room.role_index = index
-        role_room[index][room.number] = room
-    else
-        room.role_index = nil
-    end
-end
 function CMD.enter_room(number, info)
     local room = room_list[number]
     if room then
         room.role[info.id] = info
-        room.enter_user = room.enter_user + 1
-        room_user(room)
     else
         skynet.error(string.format("Role %d enter room %d error.", info.id, number))
     end
@@ -203,8 +189,6 @@ function CMD.leave_room(number, roleid)
     local room = room_list[number]
     if room then
         room.role[roleid] = nil
-        room.enter_user = room.enter_user - 1
-        room_user(room)
     else
         skynet.error(string.format("Role %d leave room %d error.", roleid, number))
     end
@@ -521,7 +505,7 @@ function MSG.demote(adminid, roleid)
     return "club_all", {id=club.id, member={{id=roleid, pos=role.pos}}}
 end
 
-function MSG.query_room(roleid, num)
+function MSG.query_room(roleid)
     if not club then
         error{code = error_code.NO_CLUB}
     end
@@ -529,14 +513,8 @@ function MSG.query_room(roleid, num)
     if not role then
         error{code = error_code.NOT_IN_CLUB}
     end
-    local r
-    if num == 1 or num == 2 then
-        r = role_room[num]
-    else
-        r = room_list
-    end
     local room = {}
-    for k, v in pairs(r) do
+    for k, v in pairs(room_list) do
         local info = {
             name = v.name,
             number = v.number,
