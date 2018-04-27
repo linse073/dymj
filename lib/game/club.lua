@@ -38,7 +38,6 @@ local function join(info)
     local data = game.data
     local club_info = data.club_info
     if #club_info < base.MAX_CLUB then
-        info.pos = base.CLUB_POS_NONE
         local index = #club_info + 1
         info.index = index
         club_info[index] = info
@@ -147,7 +146,6 @@ function proc.found_club(msg)
     local now = floor(skynet.time())
     club.time = now
     club.name = msg.name
-    club.notify = msg.notify or ""
     club.chief_id = user.id
     local uname = user.nick_name or user.account
     club.chief = uname
@@ -170,7 +168,6 @@ function proc.found_club(msg)
     local info = {
         id = club.id,
         name = club.name,
-        notify = club.notify,
         chief_id = club.chief_id,
         chief = club.chief,
         addr = club.addr,
@@ -368,16 +365,10 @@ function proc.charge_club(msg)
     return "update_user", {update=p}
 end
 
-function proc.club_detail(msg)
-    local data = game.data
-    local club = data.id_club[msg.id]
-    if not club then
-        error{code = error_code.NOT_IN_CLUB}
+function proc.config_club(msg)
+    if not msg.name` then
+        error{code = error_code.ERROR_ARGS}
     end
-    return skynet.call(club.addr, "lua", "detail", data.id)
-end
-
-function proc.club_name(msg)
     local data = game.data
     local club = data.id_club[msg.id]
     if not club then
@@ -387,14 +378,12 @@ function proc.club_name(msg)
         error{code = error_code.CLUB_PERMIT_LIMIT}
     end
     cz.start()
-    if skynet.call(club_mgr, "lua", "change_name", club.id, msg.name, data.serverid) then
-        skynet.call(club.addr, "lua", "change_name", data.id, msg.name)
-        club.name = msg.name
-    else
+    if not skynet.call(club_mgr, "lua", "change_name", club.id, msg.name, data.serverid) then
         error{code = error_code.CLUB_NAME_EXIST}
     end
+    skynet.call(club.addr, "lua", "config", data.id, msg)
     cz.finish()
-    return "club_all", {id=club.id, name=msg.name}
+    return "club_all", {id=msg.id, name=msg.name, day_card=msg.day_card, notify_card=msg.notify_card}
 end
 
 function proc.promote_club_member(msg)
@@ -428,6 +417,18 @@ function proc.query_club_room(msg)
         error{code = error_code.NOT_IN_CLUB}
     end
     return skynet.call(club.addr, "lua", "query_room", data.id)
+end
+
+function proc.config_quick_start(msg)
+    local data = game.data
+    local club = data.id_club[msg.id]
+    if not club then
+        error{code = error_code.NOT_IN_CLUB}
+    end
+    if club.pos ~= base.CLUB_POS_ADMIN then
+        error{code = error_code.CLUB_PERMIT_LIMIT}
+    end
+    return skynet.call(club.addr, "lua", "config_quick_start", msg.game, msg.rule)
 end
 
 return club

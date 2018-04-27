@@ -127,13 +127,12 @@ local function get_user()
                 local club_info = {}
                 local club_found = 0
                 for k, v in pairs(rc) do
-                    local ci, pos = skynet.call(v, "lua", "login", id)
+                    local ci = skynet.call(v, "lua", "login", id)
                     if ci then
-                        ci.pos = pos
                         ci.index = base.MAX_CLUB
                         id_club[ci.id] = ci
                         club_info[#club_info+1] = ci
-                        if pos == base.CLUB_POS_CHIEF then
+                        if ci.pos == base.CLUB_POS_CHIEF then
                             club_found = club_found + 1
                         end
                     end

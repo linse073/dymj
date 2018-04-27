@@ -14,10 +14,10 @@ local base
 local club_db
 local club_charge_db
 local club
-local club_info
 local club_role
 local role_mgr
 local room_list = {}
+local role_room = {}
 local role_room = {{}, {}}
 local cs = queue() 
 
@@ -44,14 +44,6 @@ end
 
 function CMD.open(info, delay)
     club = info
-    club_info = {
-        id = club.id,
-        name = club.name,
-        notify = club.notify,
-        chief_id = club.chief_id,
-        chief = club.chief,
-        addr = skynet.self(),
-    }
     time.add_once_routine("delay_save_club", delay_save, delay)
 end
 
@@ -88,7 +80,6 @@ function CMD.disband(roleid)
             end
             local room_card = club.room_card
             club = nil
-            club_info = nil
             del_timer()
             skynet.call(club_db, "lua", "delete", {id=club.id})
             return room_card
@@ -121,12 +112,14 @@ function CMD.charge(roleid, room_card)
     end
 end
 
-function CMD.change_name(roleid, name)
+function CMD.config(roleid, config)
     if club then
         local m = club.member[roleid]
         if m and m.pos == base.CLUB_POS_CHIEF then
-            club.name = name
-            club_info.name = name
+            club.name = config.name
+            club.day_card = config.day_card
+            club.notify_card = config.notify_card
+            -- TODO: notify member
         else
             skynet.error(string.format("Role %d change club %d name %d error.", roleid, club.id, name))
         end
@@ -159,18 +152,21 @@ function CMD.consume_card(room_card)
 end
 
 function CMD.add_room(room)
-    if room_list[room.number] then
-        skynet.error(string.format("Add room %d error.", room.number))
+    local number = room.number
+    if room_list[number] then
+        skynet.error(string.format("Add room %d error.", number))
     else
         room.role = {}
         room.enter_user = 0
-        room_list[room.number] = room
+        room_list[number] = room
+        role_room[number] = room
     end
 end
 
 function CMD.del_room(number)
     if room_list[number] then
         room_list[number] = nil
+        role_room[number] = nil
     else
         skynet.error(string.format("Del room %d error.", number))
     end
@@ -180,6 +176,10 @@ function CMD.enter_room(number, info)
     local room = room_list[number]
     if room then
         room.role[info.id] = info
+        room.enter_user = room.enter_user + 1
+        if room.enter_user >= room.user then
+            role_room[number] = nil
+        end
     else
         skynet.error(string.format("Role %d enter room %d error.", info.id, number))
     end
@@ -189,13 +189,21 @@ function CMD.leave_room(number, roleid)
     local room = room_list[number]
     if room then
         room.role[roleid] = nil
+        room.enter_user = room.enter_user - 1
+        role_room[number] = room
     else
         skynet.error(string.format("Role %d leave room %d error.", roleid, number))
     end
 end
 
 function CMD.get_info()
-    return club_info
+    return {
+        id = club.id,
+        name = club.name,
+        chief_id = club.chief_id,
+        chief = club.chief,
+        member_count = club.member_count,
+    }
 end
 
 function CMD.save()
@@ -211,7 +219,14 @@ function CMD.login(roleid)
     if club then
         local m = club.member[roleid]
         if m then
-            return club_info, m.pos
+            return {
+                id = club.id,
+                name = club.name,
+                chief_id = club.chief_id,
+                chief = club.chief,
+                pos = m.pos,
+                addr = skynet.self(),
+            }
         end
     end
 end
@@ -266,7 +281,15 @@ function MSG.accept(adminid, roleid)
     end
     local role = skynet.call(role_mgr, "lua", "get", roleid)
     if role then
-        if skynet.call(role, "lua", "action", "club", "join", club_info) then
+        local info = {
+            id = club.id,
+            name = club.name,
+            chief_id = club.chief_id,
+            chief = club.chief,
+            pos = base.CLUB_POS_NONE,
+            addr = skynet.self(),
+        }
+        if skynet.call(role, "lua", "action", "club", "join", info) then
             a.time = floor(skynet.time())
             a.pos = base.CLUB_POS_NONE
             a.online = true
@@ -312,7 +335,15 @@ function MSG.accept_all(adminid)
         if not member[v.id] then
             local role = skynet.call(role_mgr, "lua", "get", v.id)
             if role then
-                if skynet.call(role, "lua", "action", "club", "join", club_info) then
+                local info = {
+                    id = club.id,
+                    name = club.name,
+                    chief_id = club.chief_id,
+                    chief = club.chief,
+                    pos = base.CLUB_POS_NONE,
+                    addr = skynet.self(),
+                }
+                if skynet.call(role, "lua", "action", "club", "join", info) then
                     v.time = now
                     v.pos = base.CLUB_POS_NONE
                     v.online = true
@@ -336,7 +367,7 @@ function MSG.accept_all(adminid)
     end
     club.apply = {}
     return "club_all", {id=club.id, member=m, refush_apply=true}
-end
+endCMD
 
 function MSG.refuse(adminid, roleid)
     if not club then
@@ -402,26 +433,6 @@ function MSG.query_member(adminid)
         m[#m+1] = v
     end
     return "club_all", {id=club.id, refresh_member=true, member=m}
-end
-
-function MSG.detail(roleid)
-    if not club then
-        error{code = error_code.NO_CLUB}
-    end
-    local role = club.member[roleid]
-    if not role then
-        error{code = error_code.NOT_IN_CLUB}
-    end
-    local info = {
-        id = club.id,
-        name = club.name,
-        notify = club.notify,
-        chief_id = club.chief_id,
-        chief = club.chief,
-        time = club.time,
-        room_card = club.room_card,
-    }
-    return "club_all", info
 end
 
 function MSG.remove_member(adminid, roleid)
@@ -514,7 +525,7 @@ function MSG.query_room(roleid)
         error{code = error_code.NOT_IN_CLUB}
     end
     local room = {}
-    for k, v in pairs(room_list) do
+    for k, v in pairs(role_room) do
         local info = {
             name = v.name,
             number = v.number,
@@ -527,12 +538,33 @@ function MSG.query_room(roleid)
         info.role = u
         room[#room+1] = info
     end
-    return "club_room", {
+    return "club_all", {
         id = club.id, 
+        name = club.name,
+        quick_game = club.quick_game,
+        quick_rule = club.quick_rule,
         member_count = club.member_count, 
         online_count = club.online_count,
+        time = club.time,
+        room_card = club.room_card,
         room = room,
     }
+end
+
+function MSG.config_quick_start(roleid, game, rule)
+    if not club then
+        error{code = error_code.NO_CLUB}
+    end
+    local role = club.member(roleid)
+    if not role then
+        error{code = error_code.NOT_IN_CLUB}
+    end
+    if role.pos < base.CLUB_POS_ADMIN then
+        error{code = error_code.CLUB_PERMIT_LIMIT}
+    end
+    club.quick_game = game
+    club.quick_rule = rule
+    return "club_all", {id=club.id, quick_game=club.quick_game, quick_rule=club.quick_rule}
 end
 
 for k, v in pairs(MSG) do

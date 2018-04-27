@@ -136,11 +136,10 @@
 .club_info {
     id 0 : integer
     name 1 : integer
-    notify 2 : string
-    chief_id 3 : integer
-    chief 4 : integer
-    pos 5 : integer
-    del 6 : boolean
+    chief_id 2 : integer
+    chief 3 : integer
+    pos 4 : integer
+    del 5 : boolean
 }
 
 .club_member {
@@ -160,18 +159,35 @@
     del 4 : boolean
 }
 
+.room_user {
+    id 0 : integer
+    name 1 : string
+    head_img 2 : string
+}
+
+.room_info {
+    name 0 : string
+    number 1 : integer
+    rule 2 : string
+    role 3 : *room_user
+}
+
 .club_all {
     id 0 : integer
     name 1 : integer
-    notify 2 : string
-    chief_id 3 : integer
-    chief 4 : integer
-    time 5 : integer
-    room_card 6 : integer
-    member 7 : *club_member
-    apply 8 : *club_apply
-    refresh_member 9 : boolean
-    refresh_apply 10 : boolean
+    chief_id 2 : integer
+    chief 3 : integer
+    time 4 : integer
+    room_card 5 : integer
+    member 6 : *club_member
+    apply 7 : *club_apply
+    refresh_member 8 : boolean
+    refresh_apply 9 : boolean
+    quick_game 10 : string
+    quick_rule 11 : string
+    member_count 12 : integer
+    online_count 13 : integer
+    room 14 : *room_info
 }
 
 .user_all {
@@ -323,7 +339,6 @@
 
 .found_club {
     name 0 : string
-    notify 1 : string
 }
 
 .apply_club {
@@ -366,13 +381,11 @@
     room_card 1 : integer
 }
 
-.club_detail {
-    id 0 : integer
-}
-
-.club_name {
+.config_club {
     id 0 : integer
     name 1 : string
+    day_card 2 : integer
+    notify_card 3 : integer
 }
 
 .promote_club_member {
@@ -383,29 +396,26 @@
     id 0 : integer
 }
 
-.room_user {
-    id 0 : integer
-    name 1 : string
-    head_img 2 : string
-}
-
-.room_info {
-    name 0 : string
-    number 1 : integer
-    rule 2 : string
-    role 3 : *room_user
-}
-
-.club_room {
-    id 0 : integer
-    member_count 1 : integer
-    online_count 2 : integer
-    room 3 : *room_info
-}
-
 .query_club_room {
     id 0 : integer
-    num 1 : integer
+}
+
+.config_quick_start {
+    id 0 : integer
+    game 1 : string
+    rule 2 : string
+}
+
+.accept_all_club_apply {
+    id 0 : integer
+}
+
+.refuse_all_club_apply {
+    id 0 : integer
+}
+
+.leave_club {
+    id 0 : integer
 }
 
 .invited_user_detail {

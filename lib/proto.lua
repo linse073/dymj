@@ -82,14 +82,15 @@ local type_msg = {
         "club_top_ret",
         "remove_club_member",
         "charge_club",
-        "club_detail",
-        "club_name",
+        "config_club",
         "promote_club_member",
         "demote_club_member",
         "room_user",
         "room_info",
-        "club_room",
         "query_club_room",
+        "config_quick_start",
+        "accept_all_club_apply",
+        "refuse_all_club_apply",
     },
 
     [20000] = {
