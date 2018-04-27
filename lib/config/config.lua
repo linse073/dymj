@@ -41,7 +41,6 @@ config.mongo = {
         "invite_info",
         "invite_user_detail",        
         "club",
-        "club_charge",
     },
     index = {
         {"account", {"key", unique=true}},
@@ -60,7 +59,6 @@ config.mongo = {
         {"invite_user_detail", {"id", unique=true}},
         {"invite_user_detail", {"belong_id"}},        
         {"club", {"id", unique=true}},
-        {"club_charge", {"club_id"}},
     },
 }
 
