@@ -69,7 +69,13 @@ local type_msg = {
     [2400] = {
         "club_info",
         "club_member",
+        "club_member_list",
+        "update_club_member",
         "club_apply",
+        "club_apply_list",
+        "update_club_apply",
+        "room_user",
+        "room_info",
         "club_all",
         "query_club",
         "found_club",
@@ -85,12 +91,11 @@ local type_msg = {
         "config_club",
         "promote_club_member",
         "demote_club_member",
-        "room_user",
-        "room_info",
         "query_club_room",
         "config_quick_start",
         "accept_all_club_apply",
         "refuse_all_club_apply",
+        "leave_club",
     },
 
     [20000] = {
