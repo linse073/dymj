@@ -138,8 +138,9 @@
     name 1 : integer
     chief_id 2 : integer
     chief 3 : integer
-    pos 4 : integer
-    del 5 : boolean
+    member_count 4 : integer
+    pos 5 : integer
+    del 6 : boolean
 }
 
 .club_member {
@@ -151,12 +152,32 @@
     del 5 : boolean
 }
 
+.club_member_list {
+    id 0 : integer
+    list 1 : *club_member
+}
+
+.update_club_member {
+    id 0 : integer
+    member 1 : club_member
+}
+
 .club_apply {
     id 0 : integer
     name 1 : string
     head_img 2 : string
     time 3 : integer
     del 4 : boolean
+}
+
+.club_apply_list {
+    id 0 : integer
+    list 1 : *club_apply
+}
+
+.update_club_apply {
+    id 0 : integer
+    apply 1 : club_apply
 }
 
 .room_user {
@@ -179,15 +200,11 @@
     chief 3 : integer
     time 4 : integer
     room_card 5 : integer
-    member 6 : *club_member
-    apply 7 : *club_apply
-    refresh_member 8 : boolean
-    refresh_apply 9 : boolean
-    quick_game 10 : string
-    quick_rule 11 : string
-    member_count 12 : integer
-    online_count 13 : integer
-    room 14 : *room_info
+    quick_game 6 : string
+    quick_rule 7 : string
+    member_count 8 : integer
+    online_count 9 : integer
+    room 10 : *room_info
 }
 
 .user_all {
@@ -195,7 +212,6 @@
     chess 1 : chess_all
     first_charge 2 : *integer
     club 3 : *club_info
-    club_update 4 : club_all
 }
 
 .info_all {

@@ -85,7 +85,7 @@ function club.promote(clubid)
     local info = data.id_club[clubid]
     if info then
         info.pos = base.CLUB_POS_ADMIN
-        notify.add("club_all", {id=clubid, member={{id=data.id, pos=info.pos}}})
+        notify.add("update_user", {update={club={{id=clubid, pos=info.pos}}}})
     else
         skynet.error(string.format("Role %d not in club %d when promote.", data.id, club.id))
     end
@@ -96,7 +96,7 @@ function club.demote(clubid)
     local info = data.id_club[clubid]
     if info then
         info.pos = base.CLUB_POS_NONE
-        notify.add("club_all", {id=clubid, member={{id=data.id, pos=info.pos}}})
+        notify.add("update_user", {update={club={{id=clubid, pos=info.pos}}}})
     else
         skynet.error(string.format("Role %d not in club %d when demote.", data.id, club.id))
     end
@@ -358,15 +358,15 @@ function proc.charge_club(msg)
     local p = updater_user()
     role.add_room_card(p, false, msg.room_card)
     local room_card = skynet.call(club.addr, "lua", "charge", data.id, msg.room_card)
-    if room_card then
-        p.club_update = {id=club.id, room_card=room_card}
-    end
     cz.finish()
+    if room_card then
+        notify.add("club_all", {id=club.id, room_card=room_card})
+    end
     return "update_user", {update=p}
 end
 
 function proc.config_club(msg)
-    if not msg.name` then
+    if not msg.name then
         error{code = error_code.ERROR_ARGS}
     end
     local data = game.data
@@ -381,6 +381,7 @@ function proc.config_club(msg)
     if not skynet.call(club_mgr, "lua", "change_name", club.id, msg.name, data.serverid) then
         error{code = error_code.CLUB_NAME_EXIST}
     end
+    -- NOTICE: there is problem if other can modify club name.
     skynet.call(club.addr, "lua", "config", data.id, msg)
     cz.finish()
     return "club_all", {id=msg.id, name=msg.name, day_card=msg.day_card, notify_card=msg.notify_card}

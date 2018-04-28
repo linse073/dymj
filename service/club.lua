@@ -282,7 +282,7 @@ function MSG.accept(adminid, roleid)
             club.member_count = club.member_count + 1
             club.online_count = club.online_count + 1
             club.apply[roleid] = nil
-            return "club_all", {id=club.id, member={a}}
+            return "update_club_apply", {id=club.id, apply={id=roleid, del=true}}
         else
             error{code = error_code.CLUB_LIMIT}
         end
@@ -297,7 +297,7 @@ function MSG.accept(adminid, roleid)
             club.member[roleid] = a
             club.member_count = club.member_count + 1
             club.apply[roleid] = nil
-            return "club_all", {id=club.id, member={a}}
+            return "update_club_apply", {id=club.id, apply={id=roleid, del=true}}
         end
     end
 end
@@ -351,8 +351,8 @@ function MSG.accept_all(adminid)
         end
     end
     club.apply = {}
-    return "club_all", {id=club.id, member=m, refush_apply=true}
-endCMD
+    return "club_apply_list", {id=club.id}
+end
 
 function MSG.refuse(adminid, roleid)
     if not club then
@@ -369,7 +369,7 @@ function MSG.refuse(adminid, roleid)
         error{code = error_code.NOT_APPLY_CLUB}
     end
     club.apply[roleid] = nil
-    return "club_all", {id=club.id, apply={{id=roleid, del=true}}}
+    return "update_club_apply", {id=club.id, apply={id=roleid, del=true}}
 end
 
 function MSG.refuse_all(adminid)
@@ -384,7 +384,7 @@ function MSG.refuse_all(adminid)
         error{code = error_code.CLUB_PERMIT_LIMIT}
     end
     club.apply = {}
-    return "club_all", {id=club.id, refush_apply=true}
+    return "club_apply_list", {id=club.id}
 end
 
 function MSG.query_apply(adminid)
@@ -402,7 +402,7 @@ function MSG.query_apply(adminid)
     for k, v in pairs(club.apply) do
         a[#a+1] = v
     end
-    return "club_all", {id=club.id, refush_apply=true, apply=a}
+    return "club_apply_list", {id=club.id, list=a}
 end
 
 function MSG.query_member(adminid)
@@ -417,7 +417,7 @@ function MSG.query_member(adminid)
     for k, v in pairs(club.member) do
         m[#m+1] = v
     end
-    return "club_all", {id=club.id, refresh_member=true, member=m}
+    return "club_member_list", {id=club.id, list=m}
 end
 
 function MSG.remove_member(adminid, roleid)
@@ -446,7 +446,7 @@ function MSG.remove_member(adminid, roleid)
     if role.online then
         club.online_count = club.online_count - 1
     end
-    return "club_all", {id=club.id, member={{id=roleid, del=true}}}
+    return "update_club_member", {id=club.id, member={id=roleid, del=true}}
 end
 
 function MSG.promote(adminid, roleid)
@@ -472,7 +472,7 @@ function MSG.promote(adminid, roleid)
         skynet.call(agent, "lua", "promote", club.id)
     end
     role.pos = base.CLUB_POS_ADMIN
-    return "club_all", {id=club.id, member={{id=roleid, pos=role.pos}}}
+    return "update_club_member", {id=club.id, member={id=roleid, pos=role.pos}}
 end
 
 function MSG.demote(adminid, roleid)
@@ -498,7 +498,7 @@ function MSG.demote(adminid, roleid)
         skynet.call(agent, "lua", "demote", club.id)
     end
     role.pos = base.CLUB_POS_NONE
-    return "club_all", {id=club.id, member={{id=roleid, pos=role.pos}}}
+    return "update_club_member", {id=club.id, member={id=roleid, pos=role.pos}}
 end
 
 function MSG.query_room(roleid)
@@ -526,11 +526,13 @@ function MSG.query_room(roleid)
     return "club_all", {
         id = club.id, 
         name = club.name,
+        chief_id = club.chief_id,
+        chief = club.chief,
+        time = club.time,
         quick_game = club.quick_game,
         quick_rule = club.quick_rule,
         member_count = club.member_count, 
         online_count = club.online_count,
-        time = club.time,
         room_card = club.room_card,
         room = room,
     }
