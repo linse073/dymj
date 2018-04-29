@@ -193,6 +193,11 @@
     role 3 : *room_user
 }
 
+.room_list {
+    id 0 : integer
+    room 1 : *room_info
+}
+
 .club_all {
     id 0 : integer
     name 1 : integer
@@ -431,6 +436,10 @@
 }
 
 .leave_club {
+    id 0 : integer
+}
+
+.query_club_all {
     id 0 : integer
 }
 

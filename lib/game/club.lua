@@ -420,6 +420,15 @@ function proc.query_club_room(msg)
     return skynet.call(club.addr, "lua", "query_room", data.id)
 end
 
+function proc.query_club_all(msg)
+    local data = game.data
+    local club = data.id_club[msg.id]
+    if not club then
+        error{code = error_code.NOT_IN_CLUB}
+    end
+    return skynet.call(club.addr, "lua", "query_all", data.id)
+end
+
 function proc.config_quick_start(msg)
     local data = game.data
     local club = data.id_club[msg.id]

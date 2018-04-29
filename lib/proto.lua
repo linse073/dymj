@@ -76,6 +76,7 @@ local type_msg = {
         "update_club_apply",
         "room_user",
         "room_info",
+        "room_list",
         "club_all",
         "query_club",
         "found_club",
@@ -96,6 +97,7 @@ local type_msg = {
         "accept_all_club_apply",
         "refuse_all_club_apply",
         "leave_club",
+        "query_club_all",
     },
 
     [20000] = {

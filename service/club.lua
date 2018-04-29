@@ -523,6 +523,34 @@ function MSG.query_room(roleid)
         info.role = u
         room[#room+1] = info
     end
+    return "room_list", {
+        id = club.id, 
+        room = room,
+    }
+end
+
+function MSG.query_all(roleid)
+    if not club then
+        error{code = error_code.NO_CLUB}
+    end
+    local role = club.member[roleid]
+    if not role then
+        error{code = error_code.NOT_IN_CLUB}
+    end
+    local room = {}
+    for k, v in pairs(role_room) do
+        local info = {
+            name = v.name,
+            number = v.number,
+            rule = v.rule,
+        }
+        local u = {}
+        for k1, v1 in pairs(v.role) do
+            u[#u+1] = v1
+        end
+        info.role = u
+        room[#room+1] = info
+    end
     return "club_all", {
         id = club.id, 
         name = club.name,
