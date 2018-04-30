@@ -190,7 +190,9 @@
     name 0 : string
     number 1 : integer
     rule 2 : string
-    role 3 : *room_user
+    user 3 : integer
+    role 4 : *room_user
+    time 5 : integer
 }
 
 .room_list {

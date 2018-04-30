@@ -143,6 +143,7 @@ function CMD.add_room(room)
     else
         room.role = {}
         room.enter_user = 0
+        room.time = floor(skynet.time())
         room_list[number] = room
         role_room[number] = room
     end
