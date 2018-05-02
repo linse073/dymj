@@ -468,6 +468,7 @@ function MSG.promote(adminid, roleid)
     if role.pos == base.CLUB_POS_ADMIN then
         error{code = error_code.ALREADY_CLUB_ADMIN}
     end
+    -- TODO: check admin number
     local agent = skynet.call(role_mgr, "lua", "get", roleid)
     if agent then
         skynet.call(agent, "lua", "promote", club.id)
