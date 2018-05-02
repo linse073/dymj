@@ -157,6 +157,7 @@ function proc.found_club(msg)
         head_img = user.head_img,
         online = true,
         time = now,
+        sex = user.sex,
     }
     club.member = {member}
     club.member_count = 1
@@ -198,6 +199,7 @@ function proc.apply_club(msg)
         name = uname,
         head_img = user.head_img,
         time = now,
+        sex = user.sex,
     }
     return skynet.call(addr, "lua", "apply", info)
 end
@@ -295,8 +297,7 @@ function proc.club_top(msg)
     cz.start()
     local club_info = data.club_info
     local uc = data.user.club
-    local index = club.index
-    for i = index-1, 1, -1 do
+    for i = club.index-1, 1, -1 do
         local j = i + 1
         local c = club_info[i]
         club_info[j] = c

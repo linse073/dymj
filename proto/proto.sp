@@ -413,10 +413,12 @@
 
 .promote_club_member {
     id 0 : integer
+    roleid 1 : integer
 }
 
 .demote_club_member {
     id 0 : integer
+    roleid 1 : integer
 }
 
 .query_club_room {
