@@ -149,7 +149,8 @@
     head_img 2 : string
     pos 3 : integer
     time 4 : integer
-    del 5 : boolean
+    sex 5 : integer
+    del 6 : boolean
 }
 
 .club_member_list {
@@ -167,7 +168,8 @@
     name 1 : string
     head_img 2 : string
     time 3 : integer
-    del 4 : boolean
+    sex 4 : integer
+    del 5 : boolean
 }
 
 .club_apply_list {
