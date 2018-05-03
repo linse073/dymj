@@ -145,6 +145,8 @@
 
 .get_club_record {
     id 0 : integer
+    begin_time 1 : integer
+    end_time 2 : integer
 }
 
 .club_record {

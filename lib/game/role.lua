@@ -681,6 +681,9 @@ function proc.get_club_user_record(msg)
 end
 
 function proc.get_club_record(msg)
+    if not msg.begin_time or msg.end_time then
+        error{code = error_code.ERROR_ARGS}
+    end
     local data = game.data
     local club = data.id_club[msg.id]
     if not club then
@@ -692,7 +695,7 @@ function proc.get_club_record(msg)
     local ret = {}
     util.mongo_find(record_info_db, function(r)
         ret[#ret+1] = r
-    end, {clubid=msg.id})
+    end, {clubid=msg.id, time={["$gte"]=msg.begin_time, ["$lte"]=msg.end_time}})
     return "club_record", {id=msg.id, record=ret}
 end
 
