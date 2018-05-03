@@ -220,6 +220,13 @@ end
 
 function CMD.reward_money(info, msg)
     local invite_info = CMD.get_invite_info(info)
+
+    local detail_info = skynet.call(invite_user_detail_db, "lua", "findOne", {id=info.id})
+    local mine_play = 0
+    if (detail_info) then
+        mine_play =  detail_info.play_total_count or 0
+    end  
+
     local award_type = msg.award_type or ""
     local award_idx = msg.award_idx or 0
     local award_num = msg.award_num or 0
@@ -229,12 +236,15 @@ function CMD.reward_money(info, msg)
     if (award_type == "play_done") then --个人领取
         if (not invite_info.mine_done)
             or mine_done == base.ACTIVITY_STATUS.UNDO then
-            -- skynet.call(invite_info_db, "lua", "update", {id=info.id}, {["$set"]={mine_done=base.ACTIVITY_STATUS.PROGRESSING}}, false)
-            --随机红包
-            local idx = probabilityRandom(define.activity_maxtrix.play_probability)
-            -- skynet.error(string.format("the %d prize is roulette", idx))
-            yuan = define.activity_maxtrix.play_prize[idx]
-            type = "mine_done"          
+
+            if mine_play>= define.activity_maxtrix.done_count then 
+                -- skynet.call(invite_info_db, "lua", "update", {id=info.id}, {["$set"]={mine_done=base.ACTIVITY_STATUS.PROGRESSING}}, false)
+                --随机红包
+                local idx = probabilityRandom(define.activity_maxtrix.play_probability)
+                -- skynet.error(string.format("the %d prize is roulette", idx))
+                yuan = define.activity_maxtrix.play_prize[idx]
+                type = "mine_done"          
+            end
         end
     elseif award_type == "money_invite" then
         local status = nil
@@ -242,10 +252,12 @@ function CMD.reward_money(info, msg)
             status = invite_info.reward_invite_r[award_num .. ""]
         end
         if  (not status) or status==base.ACTIVITY_STATUS.UNDO then
-            local field = "reward_invite_r." .. award_num
-            type = field
-            -- skynet.call(invite_info_db, "lua", "update", {id=info.id}, {["$set"]={[field]=base.ACTIVITY_STATUS.PROGRESSING}}, false)
-            yuan = define.activity_maxtrix.money_invite[award_num]            
+            if award_num<=invite_info.invite_count and mine_play>= define.activity_maxtrix.done_count*award_num then                
+                local field = "reward_invite_r." .. award_num
+                type = field
+                -- skynet.call(invite_info_db, "lua", "update", {id=info.id}, {["$set"]={[field]=base.ACTIVITY_STATUS.PROGRESSING}}, false)
+                yuan = define.activity_maxtrix.money_invite[award_num]            
+            end
         end 
     elseif award_type == "money_pay" then
         local status = nil
@@ -254,10 +266,12 @@ function CMD.reward_money(info, msg)
 
         end
         if  (not status) or status==base.ACTIVITY_STATUS.UNDO then
-            local field = "reward_pay_r." .. award_num
-            type = field
-            -- skynet.call(invite_info_db, "lua", "update", {id=info.id}, {["$set"]={[field]=base.ACTIVITY_STATUS.PROGRESSING}}, false)
-            yuan = define.activity_maxtrix.money_pay[award_num]                    
+            if (award_num<=invite_info.pay_total) then
+                local field = "reward_pay_r." .. award_num
+                type = field
+                -- skynet.call(invite_info_db, "lua", "update", {id=info.id}, {["$set"]={[field]=base.ACTIVITY_STATUS.PROGRESSING}}, false)
+                yuan = define.activity_maxtrix.money_pay[award_num]                    
+            end
         end        
 
     end
