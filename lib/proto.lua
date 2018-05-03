@@ -98,6 +98,11 @@ local type_msg = {
         "refuse_all_club_apply",
         "leave_club",
         "query_club_all",
+        "get_club_user_record",
+        "club_user_record",
+        "get_club_record",
+        "club_record",
+        "read_club_record",
     },
 
     [20000] = {
