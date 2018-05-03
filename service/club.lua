@@ -189,6 +189,7 @@ function CMD.get_info()
         chief_id = club.chief_id,
         chief = club.chief,
         member_count = club.member_count,
+        time = club.time,
     }
 end
 
@@ -212,6 +213,7 @@ function CMD.login(roleid)
                 chief = club.chief,
                 pos = m.pos,
                 addr = skynet.self(),
+                time = club.time,
             }
         end
     end
@@ -274,6 +276,7 @@ function MSG.accept(adminid, roleid)
             chief = club.chief,
             pos = base.CLUB_POS_NONE,
             addr = skynet.self(),
+            time = club.time,
         }
         if skynet.call(role, "lua", "action", "club", "join", info) then
             a.time = floor(skynet.time())
@@ -328,6 +331,7 @@ function MSG.accept_all(adminid)
                     chief = club.chief,
                     pos = base.CLUB_POS_NONE,
                     addr = skynet.self(),
+                    time = club.time,
                 }
                 if skynet.call(role, "lua", "action", "club", "join", info) then
                     v.time = now

@@ -160,11 +160,12 @@
 .club_info {
     id 0 : integer
     name 1 : integer
-    chief_id 2 : integer
-    chief 3 : integer
-    member_count 4 : integer
-    pos 5 : integer
-    del 6 : boolean
+    time 2 : integer
+    chief_id 3 : integer
+    chief 4 : integer
+    member_count 5 : integer
+    pos 6 : integer
+    del 7 : boolean
 }
 
 .club_member {

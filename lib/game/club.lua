@@ -174,6 +174,7 @@ function proc.found_club(msg)
         addr = club.addr,
         pos = base.CLUB_POS_CHIEF,
         index = index,
+        time = club.time,
     }
     club_info[index] = info
     data.id_club[club.id] = info
