@@ -127,10 +127,34 @@
     info 2 : chess_info
     user 3 : *chess_user
     record 4 : *record_detail
+    read 5 : boolean
 }
 
 .record_all {
     record 0 : *chess_record
+}
+
+.get_club_user_record {
+    id 0 : integer
+}
+
+.club_user_record {
+    id 0 : integer
+    record 1 : *chess_record
+}
+
+.get_club_record {
+    id 0 : integer
+}
+
+.club_record {
+    id 0 : integer
+    record 1 : *chess_record
+}
+
+.read_club_record {
+    id 0 : integer
+    read 2 : boolean
 }
 
 .club_info {

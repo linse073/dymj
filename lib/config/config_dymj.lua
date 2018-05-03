@@ -49,6 +49,7 @@ config.mongo = {
         {"status", {"key", unique=true}},
         {"user_record", {"id", unique=true}},
         {"record_info", {"id", unique=true}},
+        {"record_info", {"clubid", unique=true}},
         {"record_info", {"expire", expireAfterSeconds=7*24*60*60}},
         {"record_detail", {"id", unique=true}},
         {"record_detail", {"expire", expireAfterSeconds=8*24*60*60}},

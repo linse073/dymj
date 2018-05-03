@@ -608,7 +608,7 @@ end
 
 function proc.get_record(msg)
     local data = game.data
-    local ur = skynet.call(user_record_db, "lua", "findOne", {id=data.id})
+    local ur = skynet.call(user_record_db, "lua", "findOne", {id=data.id}, {record=true})
     local ret = {}
     if ur then
         local nr = {}
@@ -639,6 +639,87 @@ function proc.get_record(msg)
         end
     end
     return "record_all", {record=ret}
+end
+
+function proc.get_club_user_record(msg)
+    local data = game.data
+    local club = data.id_club[msg.id]
+    if not club then
+        error{code = error_code.NOT_IN_CLUB}
+    end
+    local ur = skynet.call(user_record_db, "lua", "findOne", {id=data.id}, {club_record=true})
+    local ret = {}
+    if ur then
+        local nr = {}
+        local record = ur.club_record
+        if record then
+            local len = #record
+            local count = 0
+            for i = len, 1, -1 do
+                local v = record[i]
+                local ri = skynet.call(record_info_db, "lua", "findOne", {id=v, clubid=msg.id})
+                if ri then
+                    count = count + 1
+                    ret[count] = ri
+                    nr[count] = v
+                    if count >= 12 then
+                        break
+                    end
+                end
+            end
+            if count ~= len then
+                util.reverse(nr)
+                if count == 0 then
+                    skynet.call(user_record_db, "lua", "update", {id=data.id}, {["$unset"]={club_record=true}}, true)
+                else
+                    skynet.call(user_record_db, "lua", "update", {id=data.id}, {["$set"]={club_record=nr}}, true)
+                end
+            end
+        end
+    end
+    return "club_user_record", {id=msg.id, record=ret}
+end
+
+function proc.get_club_record(msg)
+    local data = game.data
+    local club = data.id_club[msg.id]
+    if not club then
+        error{code = error_code.NOT_IN_CLUB}
+    end
+    if club.pos ~= base.CLUB_POS_CHIEF then
+        error{code = error_code.CLUB_PERMIT_LIMIT}
+    end
+    local ret = {}
+    util.mongo_find(record_info_db, function(r)
+        ret[#ret+1] = r
+    end, {clubid=msg.id})
+    return "club_record", {id=msg.id, record=ret}
+end
+
+function proc.read_club_record(msg)
+    if not msg.id or msg.read == nil then
+        error{code = error_code.ERROR_ARGS}
+    end
+    local ri = skynet.call(record_info_db, "lua", "findOne", {id=msg.id}, {clubid=true, read=true})
+    if not ri then
+        error{code = error_code.NO_RECORD}
+    end
+    if not ri.clubid then
+        error{code = error_code.NO_RECORD}
+    end
+    local data = game.data
+    local club = data.id_club[ri.clubid]
+    if not club then
+        error{code = error_code.NOT_IN_CLUB}
+    end
+    if club.pos ~= base.CLUB_POS_CHIEF then
+        error{code = error_code.CLUB_PERMIT_LIMIT}
+    end
+    if ri.read ~= msg.read then
+        ri.read = msg.read
+        skynet.call(record_info_db, "lua", "update", {id=msg.id}, {["$set"]={read=msg.read}})
+    end
+    return "response", ""
 end
 
 function proc.review_record(msg)

@@ -1109,9 +1109,15 @@ function dymj:hu(id, msg)
                 ip = v.ip,
                 index = v.index,
             }
-            skynet.call(user_record_db, "lua", "update", {id=v.id}, {["$push"]={record=record_id}}, true)
+            if self._club then
+                skynet.call(user_record_db, "lua", "update", {id=v.id}, {["$push"]={club_record=record_id}}, true)
+            else
+                skynet.call(user_record_db, "lua", "update", {id=v.id}, {["$push"]={record=record_id}}, true)
+            end
         end
         sr.user = record_user
+        sr.clubid = self._club
+        sr.read = false
         sr.record = {record_detail}
         skynet.call(record_info_db, "lua", "safe_insert", sr)
     end
@@ -1531,9 +1537,15 @@ function dymj:conclude(id, msg)
                 ip = v.ip,
                 index = v.index,
             }
-            skynet.call(user_record_db, "lua", "update", {id=v.id}, {["$push"]={record=record_id}}, true)
+            if self._club then
+                skynet.call(user_record_db, "lua", "update", {id=v.id}, {["$push"]={club_record=record_id}}, true)
+            else
+                skynet.call(user_record_db, "lua", "update", {id=v.id}, {["$push"]={record=record_id}}, true)
+            end
         end
         sr.user = record_user
+        sr.clubid = self._club
+        sr.read = false
         sr.record = {record_detail}
         skynet.call(record_info_db, "lua", "safe_insert", sr)
     end
