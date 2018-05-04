@@ -234,9 +234,9 @@
 
 .club_all {
     id 0 : integer
-    name 1 : integer
+    name 1 : string
     chief_id 2 : integer
-    chief 3 : integer
+    chief 3 : string
     time 4 : integer
     room_card 5 : integer
     quick_game 6 : string
