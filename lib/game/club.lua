@@ -105,7 +105,7 @@ end
 --------------------------protocol process-----------------------
 
 function proc.query_club(msg)
-    if not msg.name then
+    if not msg.id then
         error{code = error_code.ERROR_ARGS}
     end
     local club = skynet.call(club_mgr, "lua", "get_by_id", msg.id)

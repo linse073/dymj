@@ -112,7 +112,6 @@ function CMD.config(roleid, config)
             club.name = config.name
             club.day_card = config.day_card
             club.notify_card = config.notify_card
-            -- TODO: notify member
         else
             skynet.error(string.format("Role %d change club %d name %d error.", roleid, club.id, name))
         end
