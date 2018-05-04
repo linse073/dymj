@@ -226,7 +226,10 @@
 
 .room_list {
     id 0 : integer
-    room 1 : *room_info
+    name 1 : string
+    member_count 2 : integer
+    online_count 3 : integer
+    room 4 : *room_info
 }
 
 .club_all {
@@ -240,7 +243,7 @@
     quick_rule 7 : string
     member_count 8 : integer
     online_count 9 : integer
-    room 10 : *room_info
+    admin 10 : *club_member
 }
 
 .user_all {

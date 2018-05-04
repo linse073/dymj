@@ -13,11 +13,11 @@ local base
 
 local club_db
 local club
+local extra
 local club_role
 local role_mgr
 local room_list = {}
 local role_room = {}
-local role_room = {{}, {}}
 local cs = queue() 
 
 local function save()
@@ -41,8 +41,9 @@ function CMD.exit()
 	skynet.exit()
 end
 
-function CMD.open(info, delay)
+function CMD.open(info, ex, delay)
     club = info
+    extra = ex
     time.add_once_routine("delay_save_club", delay_save, delay)
 end
 
@@ -51,9 +52,9 @@ function CMD.leave(roleid)
         local m = club.member[roleid]
         if m and m.pos ~= base.CLUB_POS_CHIEF then
             club.member[roleid] = nil
-            club.member_count = club.member_count - 1
-            if club.online then
-                club.online_count = club.online_count - 1
+            extra.member_count = extra.member_count - 1
+            if m.online then
+                extra.online_count = extra.online_count - 1
             end
         else
             skynet.error(string.format("Role %d leave club %d error.", roleid, club.id))
@@ -188,7 +189,7 @@ function CMD.get_info()
         name = club.name,
         chief_id = club.chief_id,
         chief = club.chief,
-        member_count = club.member_count,
+        member_count = extra.member_count,
         time = club.time,
     }
 end
@@ -225,9 +226,9 @@ function CMD.online(roleid, online)
         if m and m.online ~= online then
             m.online = online
             if online then
-                club.online_count = club.online_count + 1
+                extra.online_count = extra.online_count + 1
             else
-                club.online_count = club.online_count - 1
+                extra.online_count = extra.online_count - 1
             end
         end
     end
@@ -283,8 +284,8 @@ function MSG.accept(adminid, roleid)
             a.pos = base.CLUB_POS_NONE
             a.online = true
             club.member[roleid] = a
-            club.member_count = club.member_count + 1
-            club.online_count = club.online_count + 1
+            extra.member_count = extra.member_count + 1
+            extra.online_count = extra.online_count + 1
             club.apply[roleid] = nil
             return "update_club_apply", {id=club.id, apply={id=roleid, del=true}}
         else
@@ -299,7 +300,7 @@ function MSG.accept(adminid, roleid)
             a.pos = base.CLUB_POS_NONE
             a.online = false
             club.member[roleid] = a
-            club.member_count = club.member_count + 1
+            extra.member_count = extra.member_count + 1
             club.apply[roleid] = nil
             return "update_club_apply", {id=club.id, apply={id=roleid, del=true}}
         end
@@ -338,8 +339,8 @@ function MSG.accept_all(adminid)
                     v.pos = base.CLUB_POS_NONE
                     v.online = true
                     member[v.id] = v
-                    club.member_count = club.member_count + 1
-                    club.online_count = club.online_count + 1
+                    extra.member_count = extra.member_count + 1
+                    extra.online_count = extra.online_count + 1
                     m[#m+1] = v
                 end
             else
@@ -349,7 +350,7 @@ function MSG.accept_all(adminid)
                     v.pos = base.CLUB_POS_NONE
                     v.online = false
                     member[v.id] = v
-                    club.member_count = club.member_count + 1
+                    extra.member_count = extra.member_count + 1
                     m[#m+1] = v
                 end
             end
@@ -447,9 +448,9 @@ function MSG.remove_member(adminid, roleid)
         skynet.call(club_role, "del", roleid, club.id)
     end
     club.member[roleid] = nil
-    club.member_count = club.member_count - 1
+    extra.member_count = extra.member_count - 1
     if role.online then
-        club.online_count = club.online_count - 1
+        extra.online_count = extra.online_count - 1
     end
     return "update_club_member", {id=club.id, member={id=roleid, del=true}}
 end
@@ -465,6 +466,9 @@ function MSG.promote(adminid, roleid)
     if admin.pos ~= base.CLUB_POS_CHIEF then
         error{code = error_code.CLUB_PERMIT_LIMIT}
     end
+    if extra.admin_count >= base.MAX_CLUB_ADMIN then
+        error{code = error_code.CLUB_ADMIN_LIMIT}
+    end
     local role = club.member[roleid]
     if not role then
         error{code = error_code.TARGET_NOT_IN_CLUB}
@@ -472,12 +476,13 @@ function MSG.promote(adminid, roleid)
     if role.pos == base.CLUB_POS_ADMIN then
         error{code = error_code.ALREADY_CLUB_ADMIN}
     end
-    -- TODO: check admin number
     local agent = skynet.call(role_mgr, "lua", "get", roleid)
     if agent then
         skynet.call(agent, "lua", "promote", club.id)
     end
     role.pos = base.CLUB_POS_ADMIN
+    extra.admin_count = extra.admin_count + 1
+    extar.admin[roleid] = role
     return "update_club_member", {id=club.id, member={id=roleid, pos=role.pos}}
 end
 
@@ -504,6 +509,8 @@ function MSG.demote(adminid, roleid)
         skynet.call(agent, "lua", "demote", club.id)
     end
     role.pos = base.CLUB_POS_NONE
+    extra.admin_count = extra.admin_count - 1
+    extra.admin[roleid] = nil
     return "update_club_member", {id=club.id, member={id=roleid, pos=role.pos}}
 end
 
@@ -531,6 +538,9 @@ function MSG.query_room(roleid)
     end
     return "room_list", {
         id = club.id, 
+        name = club.name,
+        member_count = extra.member_count,
+        online_count = extra.online_count,
         room = room,
     }
 end
@@ -543,19 +553,9 @@ function MSG.query_all(roleid)
     if not role then
         error{code = error_code.NOT_IN_CLUB}
     end
-    local room = {}
-    for k, v in pairs(role_room) do
-        local info = {
-            name = v.name,
-            number = v.number,
-            rule = v.rule,
-        }
-        local u = {}
-        for k1, v1 in pairs(v.role) do
-            u[#u+1] = v1
-        end
-        info.role = u
-        room[#room+1] = info
+    local admin = {}
+    for k, v in pairs(extra.admin) do
+        admin[#admin+1] = v
     end
     return "club_all", {
         id = club.id, 
@@ -565,10 +565,10 @@ function MSG.query_all(roleid)
         time = club.time,
         quick_game = club.quick_game,
         quick_rule = club.quick_rule,
-        member_count = club.member_count, 
-        online_count = club.online_count,
+        member_count = extra.member_count, 
+        online_count = extra.online_count,
         room_card = club.room_card,
-        room = room,
+        admin = admin,
     }
 end
 

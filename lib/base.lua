@@ -109,6 +109,7 @@ local base = {
     MAX_CLUB = 10,
     MAX_FOUND_CLUB = 5,
     FOUND_CLUB_ROOM_CARD = 400,
+    MAX_CLUB_ADMIN = 3,
 }
 
 base.P13_SPECIAL_SCORE = {

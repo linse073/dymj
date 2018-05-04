@@ -159,11 +159,15 @@ function proc.found_club(msg)
         time = now,
         sex = user.sex,
     }
-    club.member = {member}
-    club.member_count = 1
-    club.online_count = 1
+    club.member = {id=member}
     club.apply = {}
-    skynet.call(club.addr, "lua", "open", club, rand.randi(1, 300))
+    local extra = {
+        member_count = 1,
+        online_count = 0,
+        admin_count = 0,
+        admin = {},
+    }
+    skynet.call(club.addr, "lua", "open", club, extra, rand.randi(1, 300))
     skynet.call(club_role, "lua", "add", user.id, club.id, club.addr)
     local index = #club_info + 1
     local info = {

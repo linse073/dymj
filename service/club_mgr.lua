@@ -1,6 +1,7 @@
 local skynet = require "skynet"
 local util = require "util"
 local random = require "random"
+local sharedata = require "skynet.sharedata"
 
 local assert = assert
 local pcall = pcall
@@ -149,16 +150,27 @@ function CMD.open()
     local master = skynet.queryservice("mongo_master")
     club_db = skynet.call(master, "lua", "get", "club")
     local club_role = skynet.queryservice("club_role")
+    local base = sharedata.query("base")
     util.mongo_find(club_db, function(r)
         util.number_key(r, "member")
         util.number_key(r, "apply")
         -- NOTICE: repair
+        local extra = {
+            online_count = 0,
+            admin_count = 0,
+            admin = {},
+        }
         local m = {}
         local member = r.member
         for k, v in pairs(member) do
             v.online = false
             m[#m+1] = v.id
+            if v.pos == base.CLUB_POS_ADMIN then
+                extra.admin[v.id] = v
+                extra.admin_count = extra.admin_count + 1
+            end
         end
+        extra.member_count = #m
         local a = {}
         for k, v in pairs(r.apply) do
             if not member[v.id] then
@@ -169,7 +181,7 @@ function CMD.open()
         end
         r.apply = a
         local club = skynet.newservice("club")
-        skynet.call(club, "lua", "open", r, rand.randi(1, 300))
+        skynet.call(club, "lua", "open", r, extra, rand.randi(1, 300))
         local c = {
             id = r.id,
             key = r.key,
