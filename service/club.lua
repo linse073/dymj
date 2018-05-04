@@ -26,7 +26,7 @@ end
 
 local function delay_save()
     timer.del_once_routine("delay_save_club")
-    time.add_routine("save_club", save, 300)
+    timer.add_routine("save_club", save, 300)
 end
 
 local function del_timer()
@@ -44,7 +44,7 @@ end
 function CMD.open(info, ex, delay)
     club = info
     extra = ex
-    time.add_once_routine("delay_save_club", delay_save, delay)
+    timer.add_once_routine("delay_save_club", delay_save, delay)
 end
 
 function CMD.leave(roleid)
