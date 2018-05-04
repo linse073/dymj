@@ -81,6 +81,7 @@ end
 local CMD = {}
 
 function CMD.add(name, severid)
+    print("sssssssssssssssss", name, serverid)
     local key = util.gen_key(serverid, name)
     if not key_club[key] then
         -- NOTICE: set key_club first
