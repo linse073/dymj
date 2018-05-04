@@ -58,7 +58,6 @@ skynet.start(function()
     skynet.call(table_mgr, "lua", "open")
     skynet.uniqueservice("agent_mgr")
     skynet.uniqueservice("webd", skynet.getenv("web"))
-    skynet.call(club_mgr, "lua", "open")
 
 	local loginserver = skynet.newservice("logind")
     local gate = skynet.newservice("gated", loginserver)
@@ -67,6 +66,7 @@ skynet.start(function()
         local server = skynet.newservice("server", loginserver)
         skynet.call(server, "lua", "open", v, config.gate.servername)
     end
+    skynet.call(club_mgr, "lua", "open")
     
     skynet.exit()
 end)
