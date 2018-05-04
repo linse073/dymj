@@ -243,7 +243,9 @@
     quick_rule 7 : string
     member_count 8 : integer
     online_count 9 : integer
-    admin 10 : *club_member
+    day_card 10 : integer
+    notify_card 11 : integer
+    admin 12 : *club_member
 }
 
 .user_all {

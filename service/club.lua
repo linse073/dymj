@@ -568,6 +568,8 @@ function MSG.query_all(roleid)
         member_count = extra.member_count, 
         online_count = extra.online_count,
         room_card = club.room_card,
+        day_card = club.day_card,
+        notify_card = club.notify_card,
         admin = admin,
     }
 end
