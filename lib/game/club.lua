@@ -137,7 +137,6 @@ function proc.found_club(msg)
     if user.room_card < base.FOUND_CLUB_ROOM_CARD then
         error{code = error_code.ROOM_CARD_LIMIT}
     end
-    print("fffffffffffffffffff", msg.name, data.serverid)
     local club = skynet.call(club_mgr, "lua", "add", msg.name, data.serverid)
     if not club then
         error{code = error_code.CLUB_NAME_EXIST}
