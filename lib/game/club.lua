@@ -133,7 +133,7 @@ function proc.found_club(msg)
         error{code = error_code.CLUB_FOUND_LIMIT}
     end
     -- TODO: if check data.chess_table
-    local user = date.user
+    local user = data.user
     if user.room_card < base.FOUND_CLUB_ROOM_CARD then
         error{code = error_code.ROOM_CARD_LIMIT}
     end
@@ -357,7 +357,7 @@ function proc.charge_club(msg)
         error{code = error_code.CLUB_PERMIT_LIMIT}
     end
     cz.start()
-    local user = date.user
+    local user = data.user
     if user.room_card < msg.room_card then
         error{code = error_code.ROOM_CARD_LIMIT}
     end
