@@ -493,7 +493,7 @@ function MSG.promote(adminid, roleid)
     end
     local agent = skynet.call(role_mgr, "lua", "get", roleid)
     if agent then
-        skynet.call(agent, "lua", "promote", club.id)
+        skynet.call(agent, "lua", "action", "club", "promote", club.id)
     end
     role.pos = base.CLUB_POS_ADMIN
     extra.admin_count = extra.admin_count + 1
@@ -521,7 +521,7 @@ function MSG.demote(adminid, roleid)
     end
     local agent = skynet.call(role_mgr, "lua", "get", roleid)
     if agent then
-        skynet.call(agent, "lua", "demote", club.id)
+        skynet.call(agent, "lua", "action", "club", "demote", club.id)
     end
     role.pos = base.CLUB_POS_NONE
     extra.admin_count = extra.admin_count - 1
