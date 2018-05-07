@@ -313,7 +313,7 @@ function proc.club_top(msg)
         uc[j] = uc[i]
     end
     club_info[1] = club
-    c.index = 1
+    club.index = 1
     uc[1] = club.id
     cz.finish()
     return "club_top_ret", {id=msg.id}
