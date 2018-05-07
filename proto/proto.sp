@@ -178,6 +178,7 @@
     time 4 : integer
     sex 5 : integer
     del 6 : boolean
+    online 7 : boolean
 }
 
 .club_member_list {
