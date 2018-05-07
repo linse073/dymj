@@ -81,12 +81,13 @@ function CMD.disband(roleid)
                 end
             end
             local room_card = club.room_card
+            local id = club.id
             club = nil
             extra = nil
             room_list = {}
             role_room = {}
             del_timer()
-            skynet.call(club_db, "lua", "delete", {id=club.id})
+            skynet.call(club_db, "lua", "delete", {id=id})
             return room_card
         else
             skynet.error(string.format("Role %d disband club %d error.", roleid, club.id))
