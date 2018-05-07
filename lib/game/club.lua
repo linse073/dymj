@@ -5,6 +5,7 @@ local notify = require "notify"
 
 local floor = math.floor
 local table = table
+local tostring = tostring
 
 local role
 local game
@@ -159,13 +160,15 @@ function proc.found_club(msg)
         time = now,
         sex = user.sex,
     }
-    club.member = {[user.id] = member}
+    club.member = {[tostring(user.id)] = member}
     club.apply = {}
     local extra = {
         member_count = 1,
         online_count = 0,
         admin_count = 0,
         admin = {},
+        member = {[user.id] = member},
+        apply = {},
     }
     skynet.call(club.addr, "lua", "open", club, extra, rand.randi(1, 300))
     skynet.call(club_role, "lua", "add", user.id, club.id, club.addr)

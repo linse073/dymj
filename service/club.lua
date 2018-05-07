@@ -7,6 +7,7 @@ local queue = require "skynet.queue"
 
 local assert = assert
 local pairs = pairs
+local tostring = tostring
 
 local error_code
 local base
@@ -49,9 +50,10 @@ end
 
 function CMD.leave(roleid)
     if club then
-        local m = club.member[roleid]
+        local m = extra.member[roleid]
         if m and m.pos ~= base.CLUB_POS_CHIEF then
-            club.member[roleid] = nil
+            extra.member[roleid] = nil
+            club.member[tostring(roleid)] = nil
             extra.member_count = extra.member_count - 1
             if m.online then
                 extra.online_count = extra.online_count - 1
@@ -66,9 +68,9 @@ end
 
 function CMD.disband(roleid)
     if club then
-        local m = club.member[roleid]
+        local m = extra.member[roleid]
         if m and m.pos == base.CLUB_POS_CHIEF then
-            for k, v in pairs(club.member) do
+            for k, v in pairs(extra.member) do
                 if v.id ~= roleid then
                     local agent = skynet.call(role_mgr, "lua", "get", v.id)
                     if agent then
@@ -80,6 +82,9 @@ function CMD.disband(roleid)
             end
             local room_card = club.room_card
             club = nil
+            extra = nil
+            room_list = {}
+            role_room = {}
             del_timer()
             skynet.call(club_db, "lua", "delete", {id=club.id})
             return room_card
@@ -93,7 +98,7 @@ end
 
 function CMD.charge(roleid, room_card)
     if club then
-        local m = club.member[roleid]
+        local m = extra.member[roleid]
         if m and m.pos == base.CLUB_POS_CHIEF then
             club.room_card = club.room_card + room_card
             return club.room_card
@@ -107,7 +112,7 @@ end
 
 function CMD.config(roleid, config)
     if club then
-        local m = club.member[roleid]
+        local m = extra.member[roleid]
         if m and m.pos == base.CLUB_POS_CHIEF then
             club.name = config.name
             club.day_card = config.day_card
@@ -204,7 +209,7 @@ end
 
 function CMD.login(roleid)
     if club then
-        local m = club.member[roleid]
+        local m = extra.member[roleid]
         if m then
             return {
                 id = club.id,
@@ -221,7 +226,7 @@ end
 
 function CMD.online(roleid, online)
     if club then
-        local m = club.member[roleid]
+        local m = extra.member[roleid]
         if m and m.online ~= online then
             m.online = online
             if online then
@@ -239,13 +244,14 @@ function MSG.apply(info)
     if not club then
         error{code = error_code.NO_CLUB}
     end
-    if club.member[info.id] then
+    if extra.member[info.id] then
         error{code = error_code.ALREADY_IN_CLUB}
     end
-    if club.apply[info.id] then
+    if extra.apply[info.id] then
         error{code = error_code.ALREADY_APPLY_CLUB}
     end
-    club.apply[info.id] = info
+    extra.apply[info.id] = info
+    club.apply[tostring(info.id)] = info
     return "response", ""
 end
 
@@ -253,17 +259,17 @@ function MSG.accept(adminid, roleid)
     if not club then
         error{code = error_code.NO_CLUB}
     end
-    local admin = club.member[adminid]
+    local admin = extra.member[adminid]
     if not admin then
         error{code = error_code.NOT_IN_CLUB}
     end
     if admin.pos < base.CLUB_POS_ADMIN then
         error{code = error_code.CLUB_PERMIT_LIMIT}
     end
-    if club.member[roleid] then
+    if extra.member[roleid] then
         error{code = error_code.ALREADY_IN_CLUB}
     end
-    local a = club.apply[roleid]
+    local a = extra.apply[roleid]
     if not a then
         error{code = error_code.NOT_APPLY_CLUB}
     end
@@ -282,10 +288,12 @@ function MSG.accept(adminid, roleid)
             a.time = floor(skynet.time())
             a.pos = base.CLUB_POS_NONE
             a.online = true
-            club.member[roleid] = a
+            extra.member[roleid] = a
+            club.member[tostring(roleid)] = a
             extra.member_count = extra.member_count + 1
             extra.online_count = extra.online_count + 1
-            club.apply[roleid] = nil
+            extra.apply[roleid] = nil
+            club.apply[tostring(roleid)] = nil
             return "update_club_apply", {id=club.id, apply={id=roleid, del=true}}
         else
             error{code = error_code.CLUB_LIMIT}
@@ -298,9 +306,11 @@ function MSG.accept(adminid, roleid)
             a.time = floor(skynet.time())
             a.pos = base.CLUB_POS_NONE
             a.online = false
-            club.member[roleid] = a
+            extra.member[roleid] = a
+            club.member[tostring(roleid)] = a
             extra.member_count = extra.member_count + 1
-            club.apply[roleid] = nil
+            extra.apply[roleid] = nil
+            club.apply[tostring(roleid)] = nil
             return "update_club_apply", {id=club.id, apply={id=roleid, del=true}}
         end
     end
@@ -310,17 +320,17 @@ function MSG.accept_all(adminid)
     if not club then
         error{code = error_code.NO_CLUB}
     end
-    local admin = club.member[adminid]
+    local admin = extra.member[adminid]
     if not admin then
         error{code = error_code.NOT_IN_CLUB}
     end
     if admin.pos < base.CLUB_POS_ADMIN then
         error{code = error_code.CLUB_PERMIT_LIMIT}
     end
-    local member = club.member
+    local member = extra.member
     local m = {}
     local now = floor(skynet.time())
-    for k, v in pairs(club.apply) do
+    for k, v in pairs(extra.apply) do
         if not member[v.id] then
             local role = skynet.call(role_mgr, "lua", "get", v.id)
             if role then
@@ -355,6 +365,7 @@ function MSG.accept_all(adminid)
             end
         end
     end
+    extra.apply = {}
     club.apply = {}
     return "club_apply_list", {id=club.id}
 end
@@ -363,17 +374,18 @@ function MSG.refuse(adminid, roleid)
     if not club then
         error{code = error_code.NO_CLUB}
     end
-    local admin = club.member[adminid]
+    local admin = extra.member[adminid]
     if not admin then
         error{code = error_code.NOT_IN_CLUB}
     end
     if admin.pos < base.CLUB_POS_ADMIN then
         error{code = error_code.CLUB_PERMIT_LIMIT}
     end
-    if not club.apply[roleid] then
+    if not extra.apply[roleid] then
         error{code = error_code.NOT_APPLY_CLUB}
     end
-    club.apply[roleid] = nil
+    extra.apply[roleid] = nil
+    club.apply[tostring(roleid)] = nil
     return "update_club_apply", {id=club.id, apply={id=roleid, del=true}}
 end
 
@@ -381,13 +393,14 @@ function MSG.refuse_all(adminid)
     if not club then
         error{code = error_code.NO_CLUB}
     end
-    local admin = club.member[adminid]
+    local admin = extra.member[adminid]
     if not admin then
         error{code = error_code.NOT_IN_CLUB}
     end
     if admin.pos < base.CLUB_POS_ADMIN then
         error{code = error_code.CLUB_PERMIT_LIMIT}
     end
+    extra.apply = {}
     club.apply = {}
     return "club_apply_list", {id=club.id}
 end
@@ -396,7 +409,7 @@ function MSG.query_apply(adminid)
     if not club then
         error{code = error_code.NO_CLUB}
     end
-    local admin = club.member[adminid]
+    local admin = extra.member[adminid]
     if not admin then
         error{code = error_code.NOT_IN_CLUB}
     end
@@ -404,7 +417,7 @@ function MSG.query_apply(adminid)
         error{code = error_code.CLUB_PERMIT_LIMIT}
     end
     local a = {}
-    for k, v in pairs(club.apply) do
+    for k, v in pairs(extra.apply) do
         a[#a+1] = v
     end
     return "club_apply_list", {id=club.id, list=a}
@@ -414,12 +427,12 @@ function MSG.query_member(adminid)
     if not club then
         error{code = error_code.NO_CLUB}
     end
-    local admin = club.member[adminid]
+    local admin = extra.member[adminid]
     if not admin then
         error{code = error_code.NOT_IN_CLUB}
     end
     local m = {}
-    for k, v in pairs(club.member) do
+    for k, v in pairs(extra.member) do
         m[#m+1] = v
     end
     return "club_member_list", {id=club.id, list=m}
@@ -429,11 +442,11 @@ function MSG.remove_member(adminid, roleid)
     if not club then
         error{code = error_code.NO_CLUB}
     end
-    local admin = club.member[adminid]
+    local admin = extra.member[adminid]
     if not admin then
         error{code = error_code.NOT_IN_CLUB}
     end
-    local role = club.member[roleid]
+    local role = extra.member[roleid]
     if not role then
         error{code = error_code.TARGET_NOT_IN_CLUB}
     end
@@ -446,7 +459,8 @@ function MSG.remove_member(adminid, roleid)
     else
         skynet.call(club_role, "del", roleid, club.id)
     end
-    club.member[roleid] = nil
+    extra.member[roleid] = nil
+    club.member[tostring(roleid)] = nil
     extra.member_count = extra.member_count - 1
     if role.online then
         extra.online_count = extra.online_count - 1
@@ -458,7 +472,7 @@ function MSG.promote(adminid, roleid)
     if not club then
         error{code = error_code.NO_CLUB}
     end
-    local admin = club.member[adminid]
+    local admin = extra.member[adminid]
     if not admin then
         error{code = error_code.NOT_IN_CLUB}
     end
@@ -468,7 +482,7 @@ function MSG.promote(adminid, roleid)
     if extra.admin_count >= base.MAX_CLUB_ADMIN then
         error{code = error_code.CLUB_ADMIN_LIMIT}
     end
-    local role = club.member[roleid]
+    local role = extra.member[roleid]
     if not role then
         error{code = error_code.TARGET_NOT_IN_CLUB}
     end
@@ -481,7 +495,7 @@ function MSG.promote(adminid, roleid)
     end
     role.pos = base.CLUB_POS_ADMIN
     extra.admin_count = extra.admin_count + 1
-    extar.admin[roleid] = role
+    extra.admin[roleid] = role
     return "update_club_member", {id=club.id, member={id=roleid, pos=role.pos}}
 end
 
@@ -489,14 +503,14 @@ function MSG.demote(adminid, roleid)
     if not club then
         error{code = error_code.NO_CLUB}
     end
-    local admin = club.member[adminid]
+    local admin = extra.member[adminid]
     if not admin then
         error{code = error_code.NOT_IN_CLUB}
     end
     if admin.pos ~= base.CLUB_POS_CHIEF then
         error{code = error_code.CLUB_PERMIT_LIMIT}
     end
-    local role = club.member[roleid]
+    local role = extra.member[roleid]
     if not role then
         error{code = error_code.TARGET_NOT_IN_CLUB}
     end
@@ -517,7 +531,7 @@ function MSG.query_room(roleid)
     if not club then
         error{code = error_code.NO_CLUB}
     end
-    local role = club.member[roleid]
+    local role = extra.member[roleid]
     if not role then
         error{code = error_code.NOT_IN_CLUB}
     end
@@ -548,7 +562,7 @@ function MSG.query_all(roleid)
     if not club then
         error{code = error_code.NO_CLUB}
     end
-    local role = club.member[roleid]
+    local role = extra.member[roleid]
     if not role then
         error{code = error_code.NOT_IN_CLUB}
     end
@@ -577,7 +591,7 @@ function MSG.config_quick_start(roleid, game, rule)
     if not club then
         error{code = error_code.NO_CLUB}
     end
-    local role = club.member(roleid)
+    local role = extra.member(roleid)
     if not role then
         error{code = error_code.NOT_IN_CLUB}
     end

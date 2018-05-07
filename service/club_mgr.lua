@@ -152,18 +152,19 @@ function CMD.open()
     local club_role = skynet.queryservice("club_role")
     local base = sharedata.query("base")
     util.mongo_find(club_db, function(r)
-        util.number_key(r, "member")
-        util.number_key(r, "apply")
         -- NOTICE: repair
         local extra = {
             online_count = 0,
             admin_count = 0,
             admin = {},
+            member = {},
+            apply = {},
         }
         local m = {}
         local member = r.member
         for k, v in pairs(member) do
             v.online = false
+            extra.member[v.id] = v
             m[#m+1] = v.id
             if v.pos == base.CLUB_POS_ADMIN then
                 extra.admin[v.id] = v
@@ -175,6 +176,7 @@ function CMD.open()
         for k, v in pairs(r.apply) do
             if not member[v.id] then
                 a[k] = v
+                extra.apply[v.id] = v
             else
                 skynet.error(string.format("Apply role %d already in club %d.", v.id, r.id))
             end

@@ -319,9 +319,7 @@ function role.repair(user, now)
     if not user.invite_code then
         user.invite_code = 0
     end
-    if user.first_charge then
-        util.number_key(user, "first_charge")
-    else
+    if not user.first_charge then
         user.first_charge = {}
     end
     if not user.club then
@@ -361,8 +359,9 @@ function role.charge(p, inform, ret)
             if user.invite_code > 0 then
                 num = define.shop_item_2[cashFee]
                 local first_charge = user.first_charge
-                if not first_charge[cashFee] then
-                    first_charge[cashFee] = true
+                local feeStr = tostring(cashFee)
+                if not first_charge[feeStr] then
+                    first_charge[feeStr] = true
                     p.first_charge = {cashFee}
                     if cashFee == 600 then
                         num = num * 2
@@ -469,7 +468,7 @@ function proc.enter_game(msg)
     local first_charge = {}
     -- NOTICE: the type of mongo map key is string
     for k, v in pairs(user.first_charge) do
-        first_charge[#first_charge+1] = k
+        first_charge[#first_charge+1] = tonumber(k)
     end
     if #first_charge > 0 then
         ret.first_charge = first_charge
