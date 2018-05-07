@@ -164,7 +164,7 @@ function proc.found_club(msg)
     club.apply = {}
     local extra = {
         member_count = 1,
-        online_count = 0,
+        online_count = 1,
         admin_count = 0,
         admin = {},
         member = {[user.id] = member},
