@@ -443,7 +443,7 @@ function proc.config_quick_start(msg)
     if not club then
         error{code = error_code.NOT_IN_CLUB}
     end
-    if club.pos ~= base.CLUB_POS_ADMIN then
+    if club.pos < base.CLUB_POS_ADMIN then
         error{code = error_code.CLUB_PERMIT_LIMIT}
     end
     return skynet.call(club.addr, "lua", "config_quick_start", msg.game, msg.rule)
