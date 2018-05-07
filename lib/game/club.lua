@@ -364,7 +364,7 @@ function proc.charge_club(msg)
     if user.room_card < msg.room_card then
         error{code = error_code.ROOM_CARD_LIMIT}
     end
-    local p = updater_user()
+    local p = update_user()
     role.add_room_card(p, false, msg.room_card)
     local room_card = skynet.call(club.addr, "lua", "charge", data.id, msg.room_card)
     cz.finish()
