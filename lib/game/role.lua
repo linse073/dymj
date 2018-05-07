@@ -307,6 +307,7 @@ function role.btk(addr)
         -- skynet.fork(btk, addr)
         btk(addr)
     end
+    local id = data.id
     for k, v in ipairs(data.club_info) do
         skynet.call(v.addr, "lua", "online", id, true)
     end
