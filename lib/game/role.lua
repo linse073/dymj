@@ -677,7 +677,7 @@ function proc.get_club_user_record(msg)
 end
 
 function proc.get_club_record(msg)
-    if not msg.begin_time or msg.end_time then
+    if not msg.begin_time or not msg.end_time then
         error{code = error_code.ERROR_ARGS}
     end
     local data = game.data
