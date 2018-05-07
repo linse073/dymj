@@ -595,7 +595,7 @@ function MSG.config_quick_start(roleid, game, rule)
     if not club then
         error{code = error_code.NO_CLUB}
     end
-    local role = extra.member(roleid)
+    local role = extra.member[roleid]
     if not role then
         error{code = error_code.NOT_IN_CLUB}
     end
