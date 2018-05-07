@@ -280,9 +280,6 @@ function proc.query_club_member(msg)
     if not club then
         error{code = error_code.NOT_IN_CLUB}
     end
-    if club.pos < base.CLUB_POS_ADMIN then
-        error{code = error_code.CLUB_PERMIT_LIMIT}
-    end
     return skynet.call(club.addr, "lua", "query_member", data.id)
 end
 
