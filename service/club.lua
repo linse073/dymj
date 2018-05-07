@@ -554,6 +554,8 @@ function MSG.query_room(roleid)
         name = club.name,
         member_count = extra.member_count,
         online_count = extra.online_count,
+        quick_game = club.quick_game,
+        quick_rule = club.quick_rule,
         room = room,
     }
 end

@@ -229,7 +229,9 @@
     name 1 : string
     member_count 2 : integer
     online_count 3 : integer
-    room 4 : *room_info
+    quick_game 4 : string
+    quick_rule 5 : string
+    room 6 : *room_info
 }
 
 .club_all {
