@@ -470,13 +470,8 @@ function proc.enter_game(msg)
     for k, v in pairs(user.first_charge) do
         first_charge[#first_charge+1] = tonumber(k)
     end
-    if #first_charge > 0 then
-        ret.first_charge = first_charge
-    end
-    local club_info = data.club_info
-    if #club_info then
-        ret.club = club_info
-    end
+    ret.first_charge = first_charge
+    ret.club = data.club_info
     local chess_table = skynet.call(chess_mgr, "lua", "get", user.id)
     local code
     if chess_table then
