@@ -8,6 +8,7 @@ local queue = require "skynet.queue"
 local assert = assert
 local pairs = pairs
 local tostring = tostring
+local floor = math.floor
 
 local error_code
 local base
