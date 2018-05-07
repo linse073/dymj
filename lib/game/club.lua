@@ -328,7 +328,7 @@ function proc.leave_club(msg)
         error{code = error_code.NOT_IN_CLUB}
     end
     cz.start()
-    local index = info.index
+    local index = club.index
     local club_info = data.club_info
     table.remove(club_info, index)
     table.remove(data.user.club, index)
