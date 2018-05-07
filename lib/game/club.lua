@@ -151,6 +151,8 @@ function proc.found_club(msg)
     local uname = user.nick_name or user.account
     club.chief = uname
     club.room_card = base.FOUND_CLUB_ROOM_CARD
+    club.day_card = 100
+    club.notify_card = 300
     local member = {
         id = user.id,
         name = uname,
