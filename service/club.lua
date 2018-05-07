@@ -75,9 +75,9 @@ function CMD.disband(roleid)
                 if v.id ~= roleid then
                     local agent = skynet.call(role_mgr, "lua", "get", v.id)
                     if agent then
-                        skynet.call(agent, "action", "club", "leave", club.id)
+                        skynet.call(agent, "lua", "action", "club", "leave", club.id)
                     else
-                        skynet.call(club_role, "del", roleid, club.id)
+                        skynet.call(club_role, "lua", "del", roleid, club.id)
                     end
                 end
             end
@@ -457,9 +457,9 @@ function MSG.remove_member(adminid, roleid)
     end
     local agent = skynet.call(role_mgr, "lua", "get", roleid)
     if agent then
-        skynet.call(agent, "action", "club", "leave", club.id)
+        skynet.call(agent, "lua", "action", "club", "leave", club.id)
     else
-        skynet.call(club_role, "del", roleid, club.id)
+        skynet.call(club_role, "lua", "del", roleid, club.id)
     end
     extra.member[roleid] = nil
     club.member[tostring(roleid)] = nil
