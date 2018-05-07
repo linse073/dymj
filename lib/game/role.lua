@@ -296,9 +296,6 @@ local function btk(addr)
         p.user.ip = addr
         notify.add("update_user", {update=p})
     end
-    for k, v in ipairs(data.club_info) do
-        skynet.call(v.addr, "lua", "online", id, true)
-    end
 end
 function role.btk(addr)
     cz.start()
@@ -307,7 +304,11 @@ function role.btk(addr)
     data.user.ip = addr
     data.info.ip = addr
     if data.enter then
-        skynet.fork(btk, addr)
+        -- skynet.fork(btk, addr)
+        btk(addr)
+    end
+    for k, v in ipairs(data.club_info) do
+        skynet.call(v.addr, "lua", "online", id, true)
     end
     cz.finish()
 end
