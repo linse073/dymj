@@ -543,6 +543,8 @@ function MSG.query_room(roleid)
             name = v.name,
             number = v.number,
             rule = v.rule,
+            user = v.user,
+            time = v.time,
         }
         local u = {}
         for k1, v1 in pairs(v.role) do
