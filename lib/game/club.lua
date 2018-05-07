@@ -159,7 +159,7 @@ function proc.found_club(msg)
         time = now,
         sex = user.sex,
     }
-    club.member = {id=member}
+    club.member = {[user.id] = member}
     club.apply = {}
     local extra = {
         member_count = 1,
