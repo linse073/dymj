@@ -485,6 +485,10 @@
     id 0 : integer
 }
 
+.check_agent_ret {
+    agent 0 : boolean
+}
+
 .invited_user_detail {
     name 0 : string
     play_count 1 : integer

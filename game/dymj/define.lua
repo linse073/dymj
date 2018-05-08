@@ -19,6 +19,8 @@ local define = {
     init_card = 5,
 
     syn_user_url = "http://web.dyzx7.cn/dy/g/uinfo",
+    agent_url = "http://web.dyzx7.cn/dy/g/agent",
+
     intercommunion={
       sys_id = "dymj", --本游戏标识
       query_invite_url = "http://web.dyzx7.cn/act/god/invite", --查询邀请者

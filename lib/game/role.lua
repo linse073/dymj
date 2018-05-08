@@ -721,6 +721,27 @@ function proc.read_club_record(msg)
     return "response", ""
 end
 
+function proc.check_agent(msg)
+    local data = game.data
+    if data.unionid then
+        local now = floor(skynet.time())
+        local str = table.concat({data.id, data.unionid, now, web_sign}, "&")
+        local sign = md5.sumhexa(str)
+        local result, content = skynet.call(webclient, "lua", "request", 
+            define.agent_url, {id=data.id, unionid=data.unionid, time=now, sign=sign})
+        if not result then
+            error{code = error_code.INTERNAL_ERROR}
+        end
+        local content = cjson.decode(content)
+        if content.ret ~= "OK" then
+            error{code = error_code.INVITE_CODE_ERROR}
+        end
+        return "check_agent_ret", {agent=content.is_agent}
+    else
+        return "check_agent_ret", {agent=true}
+    end
+end
+
 function proc.review_record(msg)
     if not msg.id then
         error{code = error_code.ERROR_ARGS}
