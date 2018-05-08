@@ -1140,6 +1140,7 @@ function dymj:hu(id, msg)
         sr.clubid = self._club
         sr.read = false
         sr.record = {record_detail}
+        sr.winner = winner
         skynet.call(record_info_db, "lua", "safe_insert", sr)
     end
     info.last_hu = {

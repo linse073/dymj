@@ -923,6 +923,7 @@ function dy13:settle(info)
         sr.clubid = self._club
         sr.read = false
         sr.record = {record_detail}
+        sr.winner = win
         skynet.call(record_info_db, "lua", "safe_insert", sr)
     end
     self._old_banker = banker
