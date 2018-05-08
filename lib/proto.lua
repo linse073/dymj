@@ -104,6 +104,7 @@ local type_msg = {
         "club_record",
         "read_club_record",
         "check_agent",
+        "check_agent_ret",
     },
 
     [20000] = {
