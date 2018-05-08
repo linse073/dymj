@@ -97,6 +97,25 @@ local function jhbj6(rule)
     return r
 end
 
+local function dy4(rule)
+    local r = {pack=rule}
+    local o1, o2, o3, o4, o5, o6, o7 = string.unpack("BBBBBBB", rule)
+    r.aa_pay = (o1 == 1)
+    if o2 == 1 then
+        r.total_count, r.total_card, r.single_card = 4, 4, 1
+    elseif o2 == 2 then
+        r.total_count, r.total_card, r.single_card = 8, 8, 1
+    else
+        r.total_count, r.total_card, r.single_card = 16, 12, 1
+    end
+    r.ip = (o3 == 1)
+    r.alone_award = (o4 == 1)
+    r.split = (o5 == 1)
+    r.extra_king = (o6 == 1)
+    r.double = (o7 == 1)
+    return r
+end
+
 local option = {
     dymj = dymj,
     test_dymj = dymj,
@@ -106,6 +125,7 @@ local option = {
     dy13 = dy13,
     jhbj = jhbj,
     jhbj6 = jhbj6,
+    dy4 = dy4,
 }
 
 return option
