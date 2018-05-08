@@ -94,9 +94,9 @@ local function play_winner(role, winner) --大赢家
     end
 end
 
-local dymj = {}
+local dy4 = {}
 
-function dymj:init(number, rule, rand, server, card, club)
+function dy4:init(number, rule, rand, server, card, club)
     self._number = number
     self._rule = rule
     self._rand = rand
@@ -113,7 +113,7 @@ function dymj:init(number, rule, rand, server, card, club)
     self._close_index = 0
     self._record = {
         info = {
-            name = "dymj",
+            name = "dy4",
             number = number,
             rule = rule.pack,
         },
@@ -122,7 +122,7 @@ function dymj:init(number, rule, rand, server, card, club)
         local c = skynet.call(club_mgr, "lua", "get_by_id", club)
         if c then
             skynet.call(c, "lua", "add_room", {
-                name = "dymj",
+                name = "dy4",
                 number = number,
                 rule = rule.pack,
                 user = base.MJ_FOUR,
@@ -131,7 +131,7 @@ function dymj:init(number, rule, rand, server, card, club)
     end
 end
 
-function dymj:status(id, status, addr)
+function dy4:status(id, status, addr)
     local info = self._id[id]
     if info then
         if status~=info.status or (addr and addr~=info.ip) then
@@ -157,7 +157,7 @@ function dymj:status(id, status, addr)
     end
 end
 
-function dymj:destroy()
+function dy4:destroy()
     timer.del_once_routine("close_timer")
 end
 
@@ -165,7 +165,7 @@ local function finish()
     skynet.call(skynet.self(), "lua", "destroy")
     skynet.call(table_mgr, "lua", "free", skynet.self())
 end
-function dymj:finish()
+function dy4:finish()
     local role = self._role
 
     -- 大赢家
@@ -194,15 +194,15 @@ function dymj:finish()
     skynet.fork(finish)
 end
 
-function dymj:custom_card(name, card)
-    if name ~= "dymj" then
+function dy4:custom_card(name, card)
+    if name ~= "dy4" then
         error{code = error_code.ERROR_CHESS_NAME}
     end
     self._custom_card = card
     return "response", ""
 end
 
-function dymj:pack(id, ip, agent)
+function dy4:pack(id, ip, agent)
     local si = self._id[id]
     if si then
         si.ip = ip
@@ -215,7 +215,7 @@ function dymj:pack(id, ip, agent)
         local status = self._status
         if status == base.CHESS_STATUS_READY then
             local chess = {
-                name = "dymj",
+                name = "dy4",
                 number = self._number,
                 rule = self._rule.pack,
                 banker = self._banker,
@@ -273,7 +273,7 @@ function dymj:pack(id, ip, agent)
             return {info=chess, user=user, start_session=si.session}
         elseif status == base.CHESS_STATUS_START or status == base.CHESS_STATUS_DEAL then
             local chess = {
-                name = "dymj",
+                name = "dy4",
                 number = self._number,
                 rule = self._rule.pack,
                 banker = self._banker,
@@ -348,7 +348,7 @@ function dymj:pack(id, ip, agent)
     end
 end
 
-function dymj:enter(info, agent, index, location)
+function dy4:enter(info, agent, index, location)
     local role = self._role
     assert(not role[index], string.format("Seat %d already has role.", index))
     info.agent = agent
@@ -380,7 +380,7 @@ function dymj:enter(info, agent, index, location)
         user[#user+1] = role[i] -- role[i] can be nil
     end
     local chess = {
-        name = "dymj",
+        name = "dy4",
         number = self._number,
         rule = self._rule.pack,
         banker = self._banker,
@@ -396,7 +396,7 @@ function dymj:enter(info, agent, index, location)
     }}}
 end
 
-function dymj:join(info, room_card, agent, location)
+function dy4:join(info, room_card, agent, location)
     -- if self._status ~= base.CHESS_STATUS_READY then
     --     error{code = error_code.ERROR_OPERATION}
     -- end
@@ -445,7 +445,7 @@ function dymj:join(info, room_card, agent, location)
     return rmsg, rinfo
 end
 
-function dymj:leave(id, msg)
+function dy4:leave(id, msg)
     local info = self._id[id]
     if not info then
         error{code = error_code.NOT_IN_CHESS}
@@ -507,7 +507,7 @@ function dymj:leave(id, msg)
     end
 end
 
-function dymj:chat_info(id, msg)
+function dy4:chat_info(id, msg)
     local info = self._id[id]
     if not info then
         error{code = error_code.NOT_IN_CHESS}
@@ -519,7 +519,7 @@ function dymj:chat_info(id, msg)
     return session_msg(info, cu)
 end
 
-function dymj:location_info(id, msg)
+function dy4:location_info(id, msg)
     local info = self._id[id]
     if not info then
         error{code = error_code.NOT_IN_CHESS}
@@ -532,7 +532,7 @@ function dymj:location_info(id, msg)
     return session_msg(info, cu)
 end
 
-function dymj:is_all_agree()
+function dy4:is_all_agree()
     local count = 0
     for k, v in ipairs(self._role) do
         if v.agree then
@@ -542,7 +542,7 @@ function dymj:is_all_agree()
     return count >= 3
 end
 
-function dymj:reply(id, msg)
+function dy4:reply(id, msg)
     local info = self._id[id]
     if not info then
         error{code = error_code.NOT_IN_CHESS}
@@ -583,7 +583,7 @@ function dymj:reply(id, msg)
     return session_msg(info, cu, chess)
 end
 
-function dymj:is_all_ready()
+function dy4:is_all_ready()
     local role = self._role
     for i = 1, base.MJ_FOUR do
         local v = role[i]
@@ -594,7 +594,7 @@ function dymj:is_all_ready()
     return true
 end
 
-function dymj:op_check(id, status)
+function dy4:op_check(id, status)
     if self._status ~= status then
         error{code = error_code.ERROR_OPERATION}
     end
@@ -605,7 +605,7 @@ function dymj:op_check(id, status)
     return info
 end
 
-function dymj:ready(id, msg)
+function dy4:ready(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_READY)
     if info.ready then
         error{code = error_code.ALREADY_READY}
@@ -648,7 +648,7 @@ function dymj:ready(id, msg)
     return session_msg(info, {user}, chess)
 end
 
-function dymj:is_all_deal()
+function dy4:is_all_deal()
     local role = self._role
     for i = 1, base.MJ_FOUR do
         local v = role[i]
@@ -659,7 +659,7 @@ function dymj:is_all_deal()
     return true
 end
 
-function dymj:deal_end(id, msg)
+function dy4:deal_end(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_DEAL)
     if info.deal_end then
         error{code = error_code.ALREADY_DEAL_END}
@@ -680,7 +680,7 @@ local CHI_RULE = {
     {-1, 1, -1},
     {1, 2, 0},
 }
-function dymj:analyze(card, index)
+function dy4:analyze(card, index)
     self:clear_all_op()
     self._pass_status = base.PASS_STATUS_OUT
     local has_respond = false
@@ -717,7 +717,7 @@ function dymj:analyze(card, index)
     return has_respond
 end
 
-function dymj:is_out_magic(index)
+function dy4:is_out_magic(index)
     for k, v in ipairs(self._role) do
         if k ~= index and v.out_magic > 0 then
             return true
@@ -726,7 +726,7 @@ function dymj:is_out_magic(index)
     return false
 end
 
-function dymj:out_card(id, msg)
+function dy4:out_card(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     local index = info.index
     if index ~= self._can_out then
@@ -855,7 +855,7 @@ local function find_weave(type_card, weave_card, magic_count)
     return true
 end
 
-function dymj:check_hu(type_card, weave_card, magic_count)
+function dy4:check_hu(type_card, weave_card, magic_count)
     local clone = util.clone(type_card)
     if magic_count > 0 then
         local deal_card = self._deal_card
@@ -918,7 +918,7 @@ local function is_qidui(type_card, magic_count)
     return count==14, four_count, magic_count
 end
 
-function dymj:consume_card()
+function dy4:consume_card()
     local rule = self._rule
     if self._club then
         local club = skynet.call(club_mgr, "lua", "get_by_id", self._club)
@@ -941,7 +941,7 @@ function dymj:consume_card()
     skynet.send(activity_mgr, "lua", "consume_room_succ", {self._role[1].id,}) --有效创建房间
 end
 
-function dymj:hu(id, msg)
+function dy4:hu(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     local index = info.index
     if self._deal_index ~= index then
@@ -1162,7 +1162,7 @@ function dymj:hu(id, msg)
     return session_msg(info, user, ci)
 end
 
-function dymj:check_prior(index, op)
+function dy4:check_prior(index, op)
     local front = true
     local role = self._role
     for i = 1, base.MJ_FOUR-1 do
@@ -1183,7 +1183,7 @@ function dymj:check_prior(index, op)
     return false
 end
 
-function dymj:chi(id, msg)
+function dy4:chi(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     if self._pass_status ~= base.PASS_STATUS_OUT then
         error{code = error_code.ERROR_OPERATION}
@@ -1233,7 +1233,7 @@ function dymj:chi(id, msg)
     return session_msg(info, cu)
 end
 
-function dymj:chi_action(info, card)
+function dy4:chi_action(info, card)
     local index = info.index
     local out_card = self._out_card
     local out_index = self._out_index
@@ -1265,7 +1265,7 @@ function dymj:chi_action(info, card)
     return weave
 end
 
-function dymj:peng(id, msg)
+function dy4:peng(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     if self._pass_status ~= base.PASS_STATUS_OUT then
         error{code = error_code.ERROR_OPERATION}
@@ -1313,7 +1313,7 @@ function dymj:peng(id, msg)
     return session_msg(info, cu)
 end
 
-function dymj:gang(id, msg)
+function dy4:gang(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     if self._pass_status ~= base.PASS_STATUS_OUT then
         error{code = error_code.ERROR_OPERATION}
@@ -1362,7 +1362,7 @@ function dymj:gang(id, msg)
     }, chess)
 end
 
-function dymj:hide_gang(id, msg)
+function dy4:hide_gang(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     local index = info.index
     if index ~= self._can_out then
@@ -1421,7 +1421,7 @@ function dymj:hide_gang(id, msg)
     }, chess)
 end
 
-function dymj:pass(id, msg)
+function dy4:pass(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     local index = info.index
     local pass_status = self._pass_status
@@ -1479,7 +1479,7 @@ function dymj:pass(id, msg)
     end
 end
 
-function dymj:conclude(id, msg)
+function dy4:conclude(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     local index = info.index
     if self._deal_index ~= index then
@@ -1569,7 +1569,7 @@ function dymj:conclude(id, msg)
     return session_msg(info, user, ci)
 end
 
-function dymj:deal(info)
+function dy4:deal(info)
     local c = self._card[self._left]
     self._left = self._left - 1
     info.type_card[c] = info.type_card[c] + 1
@@ -1589,7 +1589,7 @@ function dymj:deal(info)
     return c
 end
 
-function dymj:clear_op(info)
+function dy4:clear_op(info)
     local respond = info.respond
     local op = info.op
     for i = 1, base.MJ_OP_COUNT do
@@ -1599,14 +1599,14 @@ function dymj:clear_op(info)
     info.pass = true
 end
 
-function dymj:clear_all_op()
+function dy4:clear_all_op()
     self._pass_status = 0
     for k, v in ipairs(self._role) do
         self:clear_op(v)
     end
 end
 
-function dymj:start()
+function dy4:start()
     local card
     if self._custom_card then
         card = util.clone(self._custom_card)
@@ -1688,7 +1688,7 @@ function dymj:start()
     self._left = left
     self._detail = {
         info = {
-            name = "dymj",
+            name = "dy4",
             number = self._number,
             rule = self._rule.pack,
             banker = self._banker,
@@ -1701,4 +1701,4 @@ function dymj:start()
     self:deal(role[self._banker])
 end
 
-return {__index=dymj}
+return {__index=dy4}
