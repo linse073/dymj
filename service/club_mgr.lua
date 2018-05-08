@@ -164,6 +164,10 @@ function CMD.open()
         local member = r.member
         for k, v in pairs(member) do
             v.online = false
+            -- NOTICE: repair member
+            if not v.day_card then
+                v.day_card = 0
+            end
             extra.member[v.id] = v
             m[#m+1] = v.id
             if v.pos == base.CLUB_POS_ADMIN then
