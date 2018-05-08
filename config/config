@@ -8,7 +8,7 @@ bootstrap = "snlua bootstrap"	-- The service for bootstrap
 lualoader = "lualib/loader.lua"
 luaservice = root.."service/?.lua;"..root.."cmd/?.lua;./service/?.lua"
 cpath = "./cservice/?.so"
-lua_path = root.."lib/?.lua;"..root.."lib/?/init.lua;"..root.."game/jdmj/?.lua;"..root.."game/jdmj/?/init.lua;./lualib/?.lua;./lualib/?/init.lua"
+lua_path = root.."lib/?.lua;"..root.."lib/?/init.lua;"..root.."game/dymj/?.lua;"..root.."game/dymj/?/init.lua;./lualib/?.lua;./lualib/?/init.lua"
 
 config = "config.config"
 debug_console = 8100
