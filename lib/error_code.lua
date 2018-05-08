@@ -74,6 +74,7 @@ local type_code = {
         NOT_CLUB_ADMIN="不是亲友团管理员",
         CLUB_ROOM_CARD_LIMIT="亲友团房卡不足",
         CLUB_ADMIN_LIMIT="亲友团管理员已达上限",
+        CLUB_DAY_CARD_LIMIT="亲友团每日每人消耗房卡已达上限",
     },
 }
 

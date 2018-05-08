@@ -34,6 +34,13 @@ end
 local function del_timer()
     timer.del_once_routine("delay_save_club")
     timer.del_routine("save_club")
+    timer.del_day_routine("clear_club_day_card")
+end
+
+local function clear_day_card()
+    for k, v in pairs(extra.member) do
+        v.day_card = 0
+    end
 end
 
 local CMD = {}
@@ -47,6 +54,7 @@ function CMD.open(info, ex, delay)
     club = info
     extra = ex
     timer.add_once_routine("delay_save_club", delay_save, delay)
+    timer.add_day_routine("clear_club_day_card", clear_day_card)
 end
 
 function CMD.leave(roleid)
@@ -135,11 +143,39 @@ function CMD.get_room_card()
     end
 end
 
-function CMD.consume_card(room_card)
+function CMD.check_role_day_card(roleid)
+    if club then
+        local m = extra.member[roleid]
+        if m then
+            if club.day_card then
+                return m.day_card < club.day_card
+            else
+                return true
+            end
+        else
+            skynet.error(string.format("No role %d when check day card.", roleid))
+        end
+    else
+        skynet.error(string.format("Check role %d day card error.", roleid))
+    end
+end
+
+function CMD.consume_card(number, room_card)
     if club then
         club.room_card = club.room_card - room_card
+        local room = room_list[number]
+        if room then
+            for k, v in pairs(room.role) do
+                local m = extra.member[v.id]
+                if m then
+                    m.day_card = m.day_card + 1
+                end
+            end
+        else
+            skynet.error(string.format("No room %d when consume club room card.", number))
+        end
     else
-        skynet.error("Consume club room card error.") 
+        skynet.error(string.format("Consume club room %d card error.", number)) 
     end
 end
 

@@ -554,6 +554,13 @@ function proc.new_chess(msg)
         if rc < rule.total_card then
             error{code = error_code.CLUB_ROOM_CARD_LIMIT}
         end
+        local cr = skynet.call(c.addr, "lua", "check_role_day_card", data.id)
+        if cr == nil then
+            error{code = error_code.NOT_IN_CLUB}
+        end
+        if not cr then
+            error{code = error_code.CLUB_DAY_CARD_LIMIT}
+        end
     else
         if rule.aa_pay then
             if user.room_card < rule.single_card then

@@ -406,7 +406,18 @@ function dymj:join(info, room_card, agent, location)
     --     error{code = error_code.ERROR_OPERATION}
     -- end
     local rule = self._rule
-    if not self._club then
+    if self._club then
+        local club = skynet.call(club_mgr, "lua", "get_by_id", self._club)
+        if club then
+            local cr = skynet.call(club, "lua", "check_role_day_card", info.id)
+            if cr == nil then
+                error{code = error_code.NOT_IN_CLUB}
+            end
+            if not cr then
+                error{code = error_code.CLUB_DAY_CARD_LIMIT}
+            end
+        end
+    else
         if rule.aa_pay and room_card < rule.single_card then
             error{code = error_code.ROOM_CARD_LIMIT}
         end
@@ -917,7 +928,7 @@ function dymj:consume_card()
     if self._club then
         local club = skynet.call(club_mgr, "lua", "get_by_id", self._club)
         if club then
-            skynet.call(club, "lua", "consume_card", rule.total_card)
+            skynet.call(club, "lua", "consume_card", self._number, rule.total_card)
         end
     else
         if rule.aa_pay then
