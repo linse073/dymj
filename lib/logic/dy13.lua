@@ -323,6 +323,7 @@ function dy13:enter(info, agent, index, location)
                 id = info.id,
                 name = info.nick_name or info.account,
                 head_img = info.head_img,
+                sex = info.sex,
             })
         end
     end
