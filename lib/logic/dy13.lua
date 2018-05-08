@@ -877,6 +877,15 @@ function dy13:settle(info)
         end
         user[k] = u
     end
+    local win = 0
+    if top_score > 0 then
+        local top_len = #top_role
+        if top_len == 1 then
+            win = top_role[1]
+        else
+            win = top_role[self._rand.randi(1, top_len)]
+        end
+    end
     local expire = bson.date(os.time())
     detail.time = now
     detail.expire = expire
@@ -888,7 +897,7 @@ function dy13:settle(info)
     if sr.id then
         skynet.call(record_info_db, "lua", "update", {id=sr.id}, {
             ["$push"] = {record=record_detail},
-            ["$set"] = {expire=expire, time=now},
+            ["$set"] = {expire=expire, time=now, winner=win},
         }, true)
     else
         record_id = skynet.call(self._server, "lua", "gen_record")
@@ -919,15 +928,6 @@ function dy13:settle(info)
     self._old_banker = banker
     self._banker = index
     user[index].pass = true
-    local win = 0
-    if top_score > 0 then
-        local top_len = #top_role
-        if top_len == 1 then
-            win = top_role[1]
-        else
-            win = top_role[self._rand.randi(1, top_len)]
-        end
-    end
     local ci = {
         status = self._status, 
         count = self._count, 

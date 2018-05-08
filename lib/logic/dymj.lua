@@ -1088,6 +1088,15 @@ function dymj:hu(id, msg)
         end
         user[k] = u
     end
+    local winner = 0
+    if top_score > 0 then
+        local top_len = #top_role
+        if top_len == 1 then
+            winner = top_role[1]
+        else
+            winner = top_role[self._rand.randi(1, top_len)]
+        end
+    end
     local win = user[index]
     win.hu_count = info.hu_count
     win.action = base.MJ_OP_HU
@@ -1105,7 +1114,7 @@ function dymj:hu(id, msg)
     if sr.id then
         skynet.call(record_info_db, "lua", "update", {id=sr.id}, {
             ["$push"] = {record=record_detail},
-            ["$set"] = {expire=expire, time=now},
+            ["$set"] = {expire=expire, time=now, winner=winner},
         }, true)
     else
         record_id = skynet.call(self._server, "lua", "gen_record")
@@ -1139,15 +1148,6 @@ function dymj:hu(id, msg)
     }
     self._old_banker = banker
     self._banker = index
-    local winner = 0
-    if top_score > 0 then
-        local top_len = #top_role
-        if top_len == 1 then
-            winner = top_role[1]
-        else
-            winner = top_role[self._rand.randi(1, top_len)]
-        end
-    end
     local ci = {
         status = self._status, 
         count = self._count, 

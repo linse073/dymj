@@ -128,6 +128,7 @@
     user 3 : *chess_user
     record 4 : *record_detail
     read 5 : boolean
+    winner 6 : integer
 }
 
 .record_all {
