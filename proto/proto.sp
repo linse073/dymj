@@ -214,6 +214,7 @@
     id 0 : integer
     name 1 : string
     head_img 2 : string
+    sex 3 : integer
 }
 
 .room_info {
