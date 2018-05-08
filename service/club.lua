@@ -290,6 +290,7 @@ function MSG.accept(adminid, roleid)
             a.time = floor(skynet.time())
             a.pos = base.CLUB_POS_NONE
             a.online = true
+            a.day_card = 0
             extra.member[roleid] = a
             club.member[tostring(roleid)] = a
             extra.member_count = extra.member_count + 1
@@ -308,6 +309,7 @@ function MSG.accept(adminid, roleid)
             a.time = floor(skynet.time())
             a.pos = base.CLUB_POS_NONE
             a.online = false
+            a.day_card = 0
             extra.member[roleid] = a
             club.member[tostring(roleid)] = a
             extra.member_count = extra.member_count + 1
@@ -349,7 +351,9 @@ function MSG.accept_all(adminid)
                     v.time = now
                     v.pos = base.CLUB_POS_NONE
                     v.online = true
+                    v.day_card = 0
                     member[v.id] = v
+                    club.member[tostring(v.id)] = v
                     extra.member_count = extra.member_count + 1
                     extra.online_count = extra.online_count + 1
                     m[#m+1] = v
@@ -360,7 +364,9 @@ function MSG.accept_all(adminid)
                     v.time = now
                     v.pos = base.CLUB_POS_NONE
                     v.online = false
+                    v.day_card = 0
                     member[v.id] = v
+                    club.member[tostring(v.id)] = v
                     extra.member_count = extra.member_count + 1
                     m[#m+1] = v
                 end

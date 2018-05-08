@@ -161,6 +161,7 @@ function proc.found_club(msg)
         online = true,
         time = now,
         sex = user.sex,
+        day_card = 0,
     }
     club.member = {[tostring(user.id)] = member}
     club.apply = {}
