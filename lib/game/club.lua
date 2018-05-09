@@ -387,8 +387,12 @@ function proc.config_club(msg)
         error{code = error_code.CLUB_PERMIT_LIMIT}
     end
     cz.start()
-    if club.name ~= msg.name and not skynet.call(club_mgr, "lua", "change_name", club.id, msg.name, data.serverid) then
-        error{code = error_code.CLUB_NAME_EXIST}
+    if club.name ~= msg.name then
+        local key = skynet.call(club_mgr, "lua", "change_name", club.id, msg.name, data.serverid)
+        if not key then
+            error{code = error_code.CLUB_NAME_EXIST}
+        end
+        msg.key = key
     end
     -- NOTICE: there is problem if other can modify club name.
     skynet.call(club.addr, "lua", "config", data.id, msg)

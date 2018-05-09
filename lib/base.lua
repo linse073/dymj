@@ -17,6 +17,7 @@ local base = {
     P13_COLOR = 4,
     PBJ_ROLE_CARD = 9,
     PBJ_FIVE = 5,
+    P4_FOUR = 4,
 
     PBJ_SIX = 6,
     POKER_CARD_FULL = 54,

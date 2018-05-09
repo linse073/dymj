@@ -33,6 +33,9 @@
     last_index 4 : integer
     weave_card 5 : *weave_card
     give_up 6 : boolean
+    grab_score 7 : integer
+    line_score 8 : integer
+    alone_award 9 : boolean
 }
 
 .chess_user {

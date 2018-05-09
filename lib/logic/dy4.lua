@@ -103,8 +103,7 @@ function dy4:init(number, rule, rand, server, card, club)
     self._server = server
     self._custom_card = card
     self._club = club
-    self._magic_card = 45
-    self._banker = rand.randi(1, base.MJ_FOUR)
+    self._banker = rand.randi(1, base.P4_FOUR)
     self._status = base.CHESS_STATUS_READY
     self._role = {}
     self._id = {}
@@ -125,7 +124,7 @@ function dy4:init(number, rule, rand, server, card, club)
                 name = "dy4",
                 number = number,
                 rule = rule.pack,
-                user = base.MJ_FOUR,
+                user = base.P4_FOUR,
             })
         end
     end
@@ -176,7 +175,7 @@ function dy4:finish()
 
     self._role = {}
     self._id = {}
-    for i = 1, base.MJ_FOUR do
+    for i = 1, base.P4_FOUR do
         local v = role[i]
         if v then
             skynet.call(chess_mgr, "lua", "del", v.id)
@@ -228,7 +227,7 @@ function dy4:pack(id, ip, agent)
                 record_id = self._record.id,
             }
             local user = {}
-            for i = 1, base.MJ_FOUR do
+            for i = 1, base.P4_FOUR do
                 local info = role[i]
                 if info then
                     local u = {
@@ -247,24 +246,22 @@ function dy4:pack(id, ip, agent)
                         status = info.status,
                         location = info.location,
                     }
-                    local type_card = info.type_card
-                    if type_card then
+                    local card_list = info.card_list
+                    if card_list then
                         local own_card = {}
-                        for k1, v1 in pairs(type_card) do
-                            for j = 1, v1 do
-                                own_card[#own_card+1] = k1
+                        for k1, v1 in ipairs(card_list) do
+                            for k2, v2 in ipairs(v1.card) do
+                                own_card[#own_card+1] = v2
                             end
                         end
                         local show_card = {
                             own_card = own_card,
                             score = info.last_score,
+                            grab_score = info.grab_score,
+                            line_score = info.line_score,
+                            last_index = info.last_index,
+                            alone_award = info.alone_award,
                         }
-                        if info.last_score > 0 then
-                            local last_hu = info.last_hu
-                            show_card.last_deal = last_hu.last_deal
-                            show_card.hu = last_hu.hu
-                        end
-                        u.weave_card = info.weave_card
                         u.show_card = show_card
                     end
                     user[#user+1] = u
@@ -280,8 +277,6 @@ function dy4:pack(id, ip, agent)
                 status = status,
                 count = self._count,
                 pause = self._pause,
-                left = self._left,
-                deal_index = self._deal_index,
                 out_card = self._out_card,
                 out_index = self._out_index,
                 close_index = self._close_index,
@@ -291,7 +286,7 @@ function dy4:pack(id, ip, agent)
                 record_id = self._record.id,
             }
             local user = {}
-            for i = 1, base.MJ_FOUR do
+            for i = 1, base.P4_FOUR do
                 local info = role[i]
                 local u = {
                     account = info.account,
@@ -376,7 +371,7 @@ function dy4:enter(info, agent, index, location)
         end
     end
     local user = {}
-    for i = 1, base.MJ_FOUR do
+    for i = 1, base.P4_FOUR do
         user[#user+1] = role[i] -- role[i] can be nil
     end
     local chess = {
@@ -419,7 +414,7 @@ function dy4:join(info, room_card, agent, location)
     end
     local role = self._role
     if rule.ip then
-        for i = 1, base.MJ_FOUR do
+        for i = 1, base.P4_FOUR do
             local r = role[i]
             if r and r.ip == info.ip then
                 error{code = error_code.IP_LIMIT}
@@ -427,7 +422,7 @@ function dy4:join(info, room_card, agent, location)
         end
     end
     local index
-    for i = 1, base.MJ_FOUR do
+    for i = 1, base.P4_FOUR do
         if not role[i] then
             index = i
             break
@@ -585,7 +580,7 @@ end
 
 function dy4:is_all_ready()
     local role = self._role
-    for i = 1, base.MJ_FOUR do
+    for i = 1, base.P4_FOUR do
         local v = role[i]
         if not v or not v.ready then
             return false
@@ -650,7 +645,7 @@ end
 
 function dy4:is_all_deal()
     local role = self._role
-    for i = 1, base.MJ_FOUR do
+    for i = 1, base.P4_FOUR do
         local v = role[i]
         if not v.deal_end then
             return false
@@ -673,57 +668,6 @@ function dy4:deal_end(id, msg)
     end
     broadcast({user}, chess, self._role, id)
     return session_msg(info, {user}, chess)
-end
-
-local CHI_RULE = {
-    {-2, -1, -2},
-    {-1, 1, -1},
-    {1, 2, 0},
-}
-function dy4:analyze(card, index)
-    self:clear_all_op()
-    self._pass_status = base.PASS_STATUS_OUT
-    local has_respond = false
-    for k, v in ipairs(self._role) do
-        if k ~= index and not self:is_out_magic(k) and v.chi_count[index] < base.MJ_CHI_COUNT then
-            local type_card = v.type_card
-            local chi = false
-            if k == index%base.MJ_FOUR+1 then
-                for k1, v1 in ipairs(CHI_RULE) do
-                    local c1, c2 = card+v1[1], card+v1[2]
-                    if valid_card(c1) and type_card[c1]>=1 
-                        and valid_card(c2) and type_card[c2]>=1 then
-                        chi = true
-                        break
-                    end
-                end
-            end
-            local peng = false
-            if type_card[card] >= 2 then
-                peng = true
-            end
-            local gang = false
-            if type_card[card] >= 3 then
-                gang = true
-            end
-            local respond = v.respond
-            respond[base.MJ_OP_CHI], respond[base.MJ_OP_PENG], respond[base.MJ_OP_GANG] = chi, peng, gang
-            if chi or peng or gang then
-                v.pass = false
-                has_respond = true
-            end
-        end
-    end
-    return has_respond
-end
-
-function dy4:is_out_magic(index)
-    for k, v in ipairs(self._role) do
-        if k ~= index and v.out_magic > 0 then
-            return true
-        end
-    end
-    return false
 end
 
 function dy4:out_card(id, msg)
@@ -767,7 +711,7 @@ function dy4:out_card(id, msg)
     local deal_id
     local role = self._role
     if not self:analyze(card, index) then
-        local deal_index = index%base.MJ_FOUR+1
+        local deal_index = index%base.P4_FOUR+1
         local r = role[deal_index]
         deal_id = r.id
         local c = self:deal(r)
@@ -782,140 +726,6 @@ function dy4:out_card(id, msg)
     }
     broadcast(cu, chess, role, id, deal_id)
     return session_msg(info, cu, chess)
-end
-
-local function dec(t, k, d)
-    local n = t[k]
-    if d >= n then
-        t[k] = nil
-        return n
-    else
-        t[k] = n - d
-        return d
-    end
-end
-
-local function inc(t, k, d)
-    local n = t[k]
-    if n then
-        t[k] = n + d
-    else
-        t[k] = d
-    end
-end
-
-local function find_weave(type_card, weave_card, magic_count)
-    for k, v in pairs(type_card) do
-        if v+magic_count >= 3 then
-            local n = dec(type_card, k, 3)
-            local weave = {k, k, k}
-            for i = n+1, 3 do
-                weave[i] = 0
-            end
-            weave_card[#weave_card+1] = weave
-            if find_weave(type_card, weave_card, magic_count-(3-n)) then
-                return true
-            end
-            weave_card[#weave_card] = nil
-            type_card[k] = v
-        end
-        for k1, v1 in ipairs(CHI_RULE) do
-            local weave = {k, k+v1[1], k+v1[2]}
-            if valid_card(weave[2]) and valid_card(weave[3]) then
-                local mc = 0
-                local mi = 0
-                for i = 2, 3 do
-                    if not type_card[weave[i]] then
-                        mc = mc + 1
-                        mi = i
-                    end
-                end
-                if mc <= 1 and magic_count >= mc then
-                    for i = 1, 3 do
-                        if i ~= mi then
-                            dec(type_card, weave[i], 1)
-                        end
-                    end
-                    weave[4] = mi
-                    weave_card[#weave_card+1] = weave
-                    if find_weave(type_card, weave_card, magic_count-mc) then
-                        return true
-                    end
-                    weave_card[#weave_card] = nil
-                    for i = 1, 3 do
-                        if i ~= mi then
-                            inc(type_card, weave[i], 1)
-                        end
-                    end
-                end
-            end
-        end
-        return false
-    end
-    return true
-end
-
-function dy4:check_hu(type_card, weave_card, magic_count)
-    local clone = util.clone(type_card)
-    if magic_count > 0 then
-        local deal_card = self._deal_card
-        if deal_card ~= self._magic_card then
-            local n = clone[deal_card]
-            dec(clone, deal_card, 1)
-            weave_card[#weave_card+1] = {deal_card, 0}
-            if find_weave(clone, weave_card, magic_count-1) then
-                return true
-            end
-            weave_card[#weave_card] = nil
-            clone[deal_card] = n
-        elseif magic_count >= 2 then
-            weave_card[#weave_card+1] = {deal_card, 0}
-            if find_weave(clone, weave_card, magic_count-2) then
-                return true
-            end
-            weave_card[#weave_card] = nil
-        end
-        for k, v in pairs(type_card) do
-            if k ~= deal_card then
-                dec(clone, k, 1)
-                weave_card[#weave_card+1] = {k, 0}
-                if find_weave(clone, weave_card, magic_count-1) then
-                    return true
-                end
-                weave_card[#weave_card] = nil
-                clone[k] = v
-            end
-        end
-    end
-    for k, v in pairs(type_card) do
-        if v >= 2 then
-            dec(clone, k, 2)
-            weave_card[#weave_card+1] = {k, k}
-            if find_weave(clone, weave_card, magic_count) then
-                return true
-            end
-            weave_card[#weave_card] = nil
-            clone[k] = v
-        end
-    end
-    return false
-end
-
-local function is_qidui(type_card, magic_count)
-    local four_count = 0
-    local count = 0
-    for k, v in pairs(type_card) do
-        count = count + v
-        if v == 1 or v == 3 then
-            if magic_count <= 0 then
-                return false
-            end
-            magic_count = magic_count - 1
-        elseif v == 4 then
-            four_count = four_count + 1
-        end
-    end
-    return count==14, four_count, magic_count
 end
 
 function dy4:consume_card()
@@ -1162,450 +972,6 @@ function dy4:hu(id, msg)
     return session_msg(info, user, ci)
 end
 
-function dy4:check_prior(index, op)
-    local front = true
-    local role = self._role
-    for i = 1, base.MJ_FOUR-1 do
-        local n = (self._out_index+i-1)%base.MJ_FOUR+1
-        if n == index then
-            front = false
-        else
-            local other = role[n]
-            if not other.pass then
-                for k, v in ipairs(other.respond) do
-                    if v and (k>op or (k==op and front)) then
-                        return true
-                    end
-                end
-            end
-        end
-    end
-    return false
-end
-
-function dy4:chi(id, msg)
-    local info = self:op_check(id, base.CHESS_STATUS_START)
-    if self._pass_status ~= base.PASS_STATUS_OUT then
-        error{code = error_code.ERROR_OPERATION}
-    end
-    if info.pass then
-        error{code = error_code.ALREADY_PASS}
-    end
-    local out_index = self._out_index
-    if info.chi_count[out_index] >= base.MJ_CHI_COUNT then
-        error{code = error_code.CHI_COUNT_LIMIT}
-    end
-    if info.op[base.MJ_OP_CHI] then
-        error{code = error_code.WAIT_FOR_OTHER}
-    end
-    if not info.respond[base.MJ_OP_CHI] then
-        error{code = error_code.ERROR_OPERATION}
-    end
-    local index = info.index
-    if index ~= out_index%base.MJ_FOUR+1 then
-        error{code = error_code.ERROR_OPERATION}
-    end
-    local valid = false
-    local type_card = info.type_card
-    local card = msg.card
-    local out_card = self._out_card
-    for i = card, card+2 do
-        if i == out_card then
-            valid = true
-        elseif not (type_card[i] >= 1) then
-            error{code = error_code.ERROR_OPERATION}
-        end
-    end
-    if not valid then
-        error{code = error_code.ERROR_OPERATION}
-    end
-    if self:check_prior(index, base.MJ_OP_CHI) then
-        info.op[base.MJ_OP_CHI] = card
-        return session_msg(info, {
-            {index=index, action=base.MJ_OP_CHI},
-        })
-    end
-    local weave = self:chi_action(info, card)
-    local cu = {
-        {index=index, weave_card={weave}},
-    }
-    broadcast(cu, nil, self._role, id)
-    return session_msg(info, cu)
-end
-
-function dy4:chi_action(info, card)
-    local index = info.index
-    local out_card = self._out_card
-    local out_index = self._out_index
-    local type_card = info.type_card
-    local record_action = self._detail.action
-    record_action[#record_action+1] = {
-        index = index,
-        op = base.MJ_OP_CHI,
-        card = card,
-    }
-    self:clear_all_op()
-    for i = card, card+2 do
-        if i ~= out_card then
-            type_card[i] = type_card[i] - 1
-        end
-    end
-    local weave = {
-        op = base.MJ_OP_CHI,
-        card = card,
-        index = out_index,
-        out_card = out_card,
-    }
-    info.weave_card[#info.weave_card+1] = weave
-    self._can_out = index
-    self._pass_status = base.PASS_STATUS_WEAVE
-    info.chi_count[out_index] = info.chi_count[out_index] + 1
-    local role_out = self._role[out_index].out_card
-    role_out[#role_out] = nil
-    return weave
-end
-
-function dy4:peng(id, msg)
-    local info = self:op_check(id, base.CHESS_STATUS_START)
-    if self._pass_status ~= base.PASS_STATUS_OUT then
-        error{code = error_code.ERROR_OPERATION}
-    end
-    if info.pass then
-        error{code = error_code.ALREADY_PASS}
-    end
-    local out_index = self._out_index
-    local index = info.index
-    if info.chi_count[out_index] >= base.MJ_CHI_COUNT then
-        error{code = error_code.CHI_COUNT_LIMIT}
-    end
-    if not info.respond[base.MJ_OP_PENG] then
-        error{code = error_code.ERROR_OPERATION}
-    end
-    local type_card = info.type_card
-    local out_card = self._out_card
-    if not (type_card[out_card] >= 2) then
-        error{code = error_code.ERROR_OPERATION}
-    end
-    local record_action = self._detail.action
-    record_action[#record_action+1] = {
-        index = index,
-        op = base.MJ_OP_PENG,
-        card = out_card,
-    }
-    self:clear_all_op()
-    type_card[out_card] = type_card[out_card] - 2
-    local weave = {
-        op = base.MJ_OP_PENG,
-        card = out_card,
-        index = out_index,
-        out_card = out_card,
-    }
-    info.weave_card[#info.weave_card+1] = weave
-    self._can_out = index
-    self._pass_status = base.PASS_STATUS_WEAVE
-    info.chi_count[out_index] = info.chi_count[out_index] + 1
-    local role_out = self._role[out_index].out_card
-    role_out[#role_out] = nil
-    local cu = {
-        {index=index, weave_card={weave}},
-    }
-    broadcast(cu, nil, self._role, id)
-    return session_msg(info, cu)
-end
-
-function dy4:gang(id, msg)
-    local info = self:op_check(id, base.CHESS_STATUS_START)
-    if self._pass_status ~= base.PASS_STATUS_OUT then
-        error{code = error_code.ERROR_OPERATION}
-    end
-    if info.pass then
-        error{code = error_code.ALREADY_PASS}
-    end
-    local index = info.index
-    local out_index = self._out_index
-    if info.chi_count[out_index] >= base.MJ_CHI_COUNT then
-        error{code = error_code.CHI_COUNT_LIMIT}
-    end
-    if not info.respond[base.MJ_OP_GANG] then
-        error{code = error_code.ERROR_OPERATION}
-    end
-    local type_card = info.type_card
-    local out_card = self._out_card
-    if not (type_card[out_card] >= 3) then
-        error{code = error_code.ERROR_OPERATION}
-    end
-    local record_action = self._detail.action
-    record_action[#record_action+1] = {
-        index = index,
-        op = base.MJ_OP_GANG,
-        card = out_card,
-    }
-    type_card[out_card] = type_card[out_card] - 3
-    local weave = {
-        op = base.MJ_OP_GANG,
-        card = out_card,
-        index = out_index,
-        out_card = out_card,
-    }
-    info.weave_card[#info.weave_card+1] = weave
-    info.gang_count = info.gang_count + 1
-    info.chi_count[out_index] = info.chi_count[out_index] + 1
-    local role_out = self._role[out_index].out_card
-    role_out[#role_out] = nil
-    local c = self:deal(info)
-    local chess = {deal_index=index, left=self._left}
-    broadcast({
-        {index=index, weave_card={weave}},
-    }, chess, self._role, id)
-    return session_msg(info, {
-        {index=index, weave_card={weave}, last_deal=c},
-    }, chess)
-end
-
-function dy4:hide_gang(id, msg)
-    local info = self:op_check(id, base.CHESS_STATUS_START)
-    local index = info.index
-    if index ~= self._can_out then
-        error{code = error_code.ERROR_OPERATION}
-    end
-    if self:is_out_magic(index) then
-        error{code = error_code.ERROR_OPERATION}
-    end
-    local card = msg.card
-    if card == self._magic_card then
-        error{code = error_code.ERROR_OPERATION}
-    end
-    local type_card = info.type_card
-    local weave_card = info.weave_card
-    local card_count = type_card[card]
-    local weave
-    if card_count >= 4 then
-        type_card[card] = card_count - 4
-        weave = {
-            op = base.MJ_OP_HIDE_GANG,
-            card = card,
-            index = index,
-            out_card = card,
-        }
-        weave_card[#weave_card+1] = weave
-    elseif card_count >= 1 then
-        for k, v in ipairs(weave_card) do
-            if v.op == base.MJ_OP_PENG and v.card == card then
-                weave = v
-                weave.old = k
-                break
-            end
-        end
-        if not weave then
-            error{code = error_code.ERROR_OPERATION}
-        end
-        type_card[card] = card_count - 1
-        weave.op = base.MJ_OP_GANG
-    else
-        error{code = error_code.ERROR_OPERATION}
-    end
-    local record_action = self._detail.action
-    record_action[#record_action+1] = {
-        index = index,
-        op = base.MJ_OP_HIDE_GANG,
-        card = card,
-    }
-    info.gang_count = info.gang_count + 1
-    local c = self:deal(info)
-    local chess = {deal_index=index, left=self._left}
-    broadcast({
-        {index=index, weave_card={weave}},
-    }, chess, self._role, id)
-    return session_msg(info, {
-        {index=index, weave_card={weave}, last_deal=c},
-    }, chess)
-end
-
-function dy4:pass(id, msg)
-    local info = self:op_check(id, base.CHESS_STATUS_START)
-    local index = info.index
-    local pass_status = self._pass_status
-    if pass_status == base.PASS_STATUS_OUT then
-        if info.pass then
-            error{code = error_code.ALREADY_PASS}
-        end
-        info.pass = true
-        local chess
-        local user = {index=index, action=base.MJ_OP_PASS}
-        local all_pass = true
-        local role = self._role
-        local out_index = self._out_index
-        for k, v in ipairs(role) do
-            if not v.pass then
-                all_pass = false
-                -- NOTICE: only check MJ_OP_CHI
-                local card = v.op[base.MJ_OP_CHI]
-                if card and not self:check_prior(k, base.MJ_OP_CHI) then
-                    local weave = self:chi_action(v, card)
-                    broadcast({
-                        {index=k, weave_card={weave}},
-                    }, nil, role, id)
-                    return session_msg(info, {
-                        {index=k, weave_card={weave}}, 
-                        user,
-                    })
-                end
-            end
-        end
-        if all_pass then
-            local deal_index = out_index%base.MJ_FOUR+1
-            local r = role[deal_index]
-            local c = self:deal(r)
-            chess = {deal_index=deal_index, left=self._left}
-            if r.id == id then
-                user.last_deal = c
-            else
-                send(r, {
-                    {index=deal_index, last_deal=c},
-                }, chess)
-            end
-            broadcast(nil, chess, role, id, r.id)
-        end
-        return session_msg(info, {user}, chess)
-    elseif pass_status == base.PASS_STATUS_DEAL or pass_status == base.PASS_STATUS_WEAVE then
-        if info.pass then
-            error{code = error_code.ALREADY_PASS}
-        end
-        info.pass = true
-        local user = {index=index, action=base.MJ_OP_PASS}
-        return session_msg(info, {user})
-    else
-        error{code = error_code.ERROR_OPERATION}
-    end
-end
-
-function dy4:conclude(id, msg)
-    local info = self:op_check(id, base.CHESS_STATUS_START)
-    local index = info.index
-    if self._deal_index ~= index then
-        error{code = error_code.ERROR_DEAL_INDEX}
-    end
-    if self._left > 20 then
-        error{code = error_code.CONCLUDE_CARD_LIMIT}
-    end
-    self._count = self._count + 1
-    if self._count == self._rule.total_count then
-        self._status = base.CHESS_STATUS_FINISH
-    else
-        self._status = base.CHESS_STATUS_READY
-    end
-    if self._count == 1 then
-        self:consume_card()
-    end
-    local user = {}
-    local role = self._role
-    for k, v in ipairs(role) do
-        v.ready = false
-        v.deal_end = false
-        v.last_score = 0
-        local own_card = {}
-        for k1, v1 in pairs(v.type_card) do
-            for i = 1, v1 do
-                own_card[#own_card+1] = k1
-            end
-        end
-        user[k] = {
-            index = k,
-            ready = v.ready,
-            deal_end = v.deal_end,
-            show_card = {
-                own_card = own_card,
-                score = 0,
-            },
-        }
-    end
-    local detail = self._detail
-    detail.id = skynet.call(self._server, "lua", "gen_record_detail")
-    local record_detail = {
-        id = detail.id,
-        time = detail.time,
-    }
-    skynet.call(record_detail_db, "lua", "safe_insert", detail)
-    local sr = self._record
-    local record_id
-    if sr.id then
-        skynet.call(record_info_db, "lua", "update", {id=sr.id}, {["$push"]={record=record_detail}}, true)
-    else
-        record_id = skynet.call(self._server, "lua", "gen_record")
-        sr.id = record_id
-        local record_user = {}
-        for k, v in ipairs(role) do
-            record_user[k] = {
-                account = v.account,
-                id = v.id,
-                sex = v.sex,
-                nick_name = v.nick_name,
-                head_img = v.head_img,
-                ip = v.ip,
-                index = v.index,
-            }
-            if self._club then
-                skynet.call(user_record_db, "lua", "update", {id=v.id}, {["$push"]={club_record=record_id}}, true)
-            else
-                skynet.call(user_record_db, "lua", "update", {id=v.id}, {["$push"]={record=record_id}}, true)
-            end
-        end
-        sr.user = record_user
-        sr.clubid = self._club
-        sr.read = false
-        sr.record = {record_detail}
-        skynet.call(record_info_db, "lua", "safe_insert", sr)
-    end
-    local ci = {
-        status=self._status, count=self._count, record_id=record_id,
-    }
-
-    play(role,0) -- 完成一牌局
-
-    broadcast(user, ci, role, id)
-    if self._status == base.CHESS_STATUS_FINISH then
-        self:finish()
-    end
-    return session_msg(info, user, ci)
-end
-
-function dy4:deal(info)
-    local c = self._card[self._left]
-    self._left = self._left - 1
-    info.type_card[c] = info.type_card[c] + 1
-    info.last_deal = c
-    local index = info.index
-    self._deal_index = index
-    self._can_out = index
-    self._deal_card = c
-    self:clear_all_op()
-    self._pass_status = base.PASS_STATUS_DEAL
-    info.pass = false
-    local record_action = self._detail.action
-    record_action[#record_action+1] = {
-        index = index,
-        deal_card = c,
-    }
-    return c
-end
-
-function dy4:clear_op(info)
-    local respond = info.respond
-    local op = info.op
-    for i = 1, base.MJ_OP_COUNT do
-        respond[i] = false
-        op[i] = nil
-    end
-    info.pass = true
-end
-
-function dy4:clear_all_op()
-    self._pass_status = 0
-    for k, v in ipairs(self._role) do
-        self:clear_op(v)
-    end
-end
-
 function dy4:start()
     local card
     if self._custom_card then
@@ -1644,8 +1010,8 @@ function dy4:start()
     local left = #card
     local role = self._role
     local record_user = {}
-    for j = 1, base.MJ_FOUR do
-        local index = (self._banker+j-2)%base.MJ_FOUR+1
+    for j = 1, base.P4_FOUR do
+        local index = (self._banker+j-2)%base.P4_FOUR+1
         local v = role[index]
         local type_card = {}
         for i = 1, base.MJ_CARD_INDEX do
@@ -1659,7 +1025,7 @@ function dy4:start()
         v.op = {}
         v.out_card = {}
         local chi_count = {}
-        for i = 1, base.MJ_FOUR do
+        for i = 1, base.P4_FOUR do
             chi_count[i] = 0
         end
         v.chi_count = chi_count
@@ -1667,7 +1033,7 @@ function dy4:start()
         v.out_magic = 0
         local deal_card = {}
         for i = 1, base.MJ_ROLE_CARD do
-            local c = card[left+1-((i-1)*base.MJ_FOUR+j)]
+            local c = card[left+1-((i-1)*base.P4_FOUR+j)]
             type_card[c] = type_card[c] + 1
             deal_card[i] = c
         end
@@ -1684,7 +1050,7 @@ function dy4:start()
             own_card = deal_card,
         }
     end
-	left = left - base.MJ_FOUR * base.MJ_ROLE_CARD
+	left = left - base.P4_FOUR * base.MJ_ROLE_CARD
     self._left = left
     self._detail = {
         info = {

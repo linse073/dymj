@@ -124,6 +124,9 @@ function CMD.config(roleid, config)
     if club then
         local m = extra.member[roleid]
         if m and m.pos == base.CLUB_POS_CHIEF then
+            if config.key then
+                club.key = config.key
+            end
             club.name = config.name
             club.day_card = config.day_card
             club.notify_card = config.notify_card

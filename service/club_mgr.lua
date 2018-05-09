@@ -114,7 +114,7 @@ function CMD.change_name(id, name, serverid)
             key_club[c.key] = nil
             c.key = key
             key_club[key] = c
-            return true
+            return key
         end
     else
         skynet.error(string.format("Change club %d name error.", id))
