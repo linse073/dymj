@@ -68,6 +68,8 @@
     pass 26 : boolean
     give_up 27 : boolean
     location 28 : binary
+    grab_score 29 : integer
+    line_score 30 : integer
 }
 
 .chess_info {
@@ -92,6 +94,7 @@
     gang_card 18 : integer
     gang_index 19 : integer
     win 20 : integer
+    score 21 : integer
 }
 
 .chess_all {
@@ -542,4 +545,8 @@
 
 .update_gzh {
     bind_gzh 0 : boolean
+}
+
+.p4_out {
+    out_card 0 : *integer
 }

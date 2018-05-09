@@ -23,6 +23,57 @@ local offline_mgr
 local club_mgr
 local activity_mgr
 
+local function sort_card(l, r)
+    return l > r
+end
+
+local function sort_line(l, r)
+    if l.line ~= r.line then
+        return l.line > r.line
+    end
+    local lc, rc = l.card, r.card
+    local i = 1
+    while true do
+        local lv, rv = lc[i] or 0, rc[i] or 0
+        if lv == 0 and rv == 0 then
+            return false
+        end
+        if lv ~= rv then
+            return lv > rv
+        end
+        i = i + 1
+    end
+end
+
+local function poker_info(c)
+    if c <= base.POKER_CARD then
+        local tc = c - 1
+        return tc//base.POKER_VALUE+1, tc%base.POKER_VALUE+1
+    else
+        return 0, c
+    end
+end
+
+local function poker_line(tc)
+    local len = #tc.card
+    if tc.value > base.POKER_CARD then
+        if tc.king4 then
+            tc.line = len * 2
+        else
+            if len >= 4 then
+                tc.line = len + 3
+            else
+                tc.line = len
+            end
+        end
+    else
+        tc.line = len
+    end
+end
+
+local king_1 = {53, 54, 55}
+local king_2 = {54, 55}
+
 skynet.init(function()
     base = share.base
     error_code = share.error_code
@@ -221,7 +272,6 @@ function dy4:pack(id, ip, agent)
                 status = status,
                 count = self._count,
                 pause = self._pause,
-                old_banker = self._old_banker,
                 close_index = self._close_index,
                 close_time = self._close_time,
                 record_id = self._record.id,
@@ -277,13 +327,11 @@ function dy4:pack(id, ip, agent)
                 status = status,
                 count = self._count,
                 pause = self._pause,
-                out_card = self._out_card,
-                out_index = self._out_index,
                 close_index = self._close_index,
                 close_time = self._close_time,
-                pass_status = self._pass_status,
                 can_out = self._can_out,
                 record_id = self._record.id,
+                score = self._score,
             }
             local user = {}
             for i = 1, base.P4_FOUR do
@@ -300,41 +348,23 @@ function dy4:pack(id, ip, agent)
                     ready = info.ready,
                     deal_end = info.deal_end,
                     agree = info.agree,
-                    out_magic = info.out_magic>0,
                     top_score = info.top_score,
                     hu_count = info.hu_count,
                     status = info.status,
                     location = info.location,
+                    grab_score = info.grab_score,
+                    line_score = info.line_score,
+                    pass = info.pass,
+                    out_card = info.out_card,
                 }
-                local out_card = info.out_card
-                if out_card and #out_card > 0 then
-                    u.out_card = out_card
-                end
-                local weave_card = info.weave_card
-                if weave_card and #weave_card > 0 then
-                    u.weave_card = weave_card
-                end
-                if info.op[base.MJ_OP_CHI] then
-                    u.action = base.MJ_OP_CHI
-                end
                 if info.id == id then
                     local own_card = {}
-                    for k, v in pairs(info.type_card) do
-                        for i = 1, v do
-                            own_card[#own_card+1] = k
+                    for k1, v1 in ipairs(info.card_list) do
+                        for k2, v2 in ipairs(v1.card) do
+                            own_card[#own_card+1] = v2
                         end
                     end
                     u.own_card = own_card
-                    u.own_count = #own_card
-                    u.last_deal = info.last_deal
-                    u.chi_count = info.chi_count
-                    u.pass = info.pass
-                else
-                    local count = 0
-                    for k, v in pairs(info.type_card) do
-                        count = count + v
-                    end
-                    u.own_count = count
                 end
                 user[#user+1] = u
             end
@@ -615,25 +645,29 @@ function dy4:ready(id, msg)
         local now = floor(skynet.time())
         chess = {
             status = self._status,
-            left = self._left,
-            deal_index = self._deal_index,
             rand = now,
+            can_out = self._can_out,
         }
         self._detail.info.rand = now
-        user.own_card = info.deal_card
-        if index == self._banker then
-            user.last_deal = info.last_deal
+        local own_card = {}
+        for k1, v1 in ipairs(info.card_list) do
+            for k2, v2 in ipairs(v1.card) do
+                own_card[#own_card+1] = v2
+            end
         end
+        user.own_card = own_card
         -- other
         for k, v in ipairs(self._role) do
             if v.id ~= id then
-                local last_deal
-                if k == self._banker then
-                    last_deal = v.last_deal
+                local oc = {}
+                for k1, v1 in ipairs(v.card_list) do
+                    for k2, v2 in ipairs(v1.card) do
+                        oc[#oc+1] = v2
+                    end
                 end
                 send(v, {
                     {index=index, ready=true}, 
-                    {index=k, own_card=v.deal_card, last_deal=last_deal},
+                    {index=k, own_card=oc},
                 }, chess)
             end
         end
@@ -670,12 +704,19 @@ function dy4:deal_end(id, msg)
     return session_msg(info, {user}, chess)
 end
 
-function dy4:out_card(id, msg)
+function dy4:p4_out(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
     local index = info.index
     if index ~= self._can_out then
         error{code = error_code.ERROR_OUT_INDEX}
     end
+    local out_card = msg.out_card
+    if not out_card or #out_card == 0 then
+        error{code = error_code.ERROR_ARGS}
+    end
+    table.sort(out_card, sort_card)
+    local pc, pv = poker_info(out_card[1])
+
     local type_card = info.type_card
     local card = msg.card
     if not type_card[card] then
@@ -977,67 +1018,94 @@ function dy4:start()
     if self._custom_card then
         card = util.clone(self._custom_card)
     else
-        card = {
-            01,02,03,04,05,06,07,08,09,
-            01,02,03,04,05,06,07,08,09,
-            01,02,03,04,05,06,07,08,09,
-            01,02,03,04,05,06,07,08,09,
-            11,12,13,14,15,16,17,18,19,
-            11,12,13,14,15,16,17,18,19,
-            11,12,13,14,15,16,17,18,19,
-            11,12,13,14,15,16,17,18,19,
-            21,22,23,24,25,26,27,28,29,
-            21,22,23,24,25,26,27,28,29,
-            21,22,23,24,25,26,27,28,29,
-            21,22,23,24,25,26,27,28,29,
-            31,33,35,37,
-            31,33,35,37,
-            31,33,35,37,
-            31,33,35,37,
-            41,43,45,
-            41,43,45,
-            41,43,45,
-            41,43,45,
-        }
+        card = {}
+        for i = 1, base.P4_POKER do
+            for j = 1, base.POKER_CARD do
+                card[#card+1] = j
+            end
+        end
+        local king
+        if self._rule.extra_king then
+            king = king_1
+        else
+            king = king_2
+        end
+        for i = 1, base.P4_POKER do
+            for k, v in ipairs(king) do
+                card[#card+1] = v
+            end
+        end
         util.shuffle(card, self._rand)
     end
     self._card = card
     self._status = base.CHESS_STATUS_DEAL
-    self._out_card = nil
-    self._out_index = nil
-    self._old_banker = nil
-    self._can_out = nil
+    self._can_out = self._banker
+    self._score = 0
     local left = #card
+    local role_card = left // base.P4_FOUR
     local role = self._role
     local record_user = {}
+    local start_index = rand.randi(1, base.P4_FOUR)
     for j = 1, base.P4_FOUR do
-        local index = (self._banker+j-2)%base.P4_FOUR+1
+        local index = (start_index+j-2)%base.P4_FOUR+1
         local v = role[index]
+        v.out_card = nil
+        v.pass = false
+        v.grab_score = 0
+        v.line_score = 0
         local type_card = {}
-        for i = 1, base.MJ_CARD_INDEX do
-            if not mj_invalid_card[i] then
-                type_card[i] = 0
+        local deal_card = {}
+        for i = 1, role_card do
+            local c = card[left+1-((i-1)*base.P4_FOUR+j)]
+            deal_card[#deal_card+1] = c
+            local pc, pv = poker_info(c)
+            local tc = type_card[pv]
+            if tc then
+                tc.card[#tc.card+1] = c
+            else
+                tc = {card={c}, value=pv}
+                type_card[pv] = tc
             end
         end
+        local king = {}
+        local king4 = false
+        for k1, v1 in ipairs(king_1) do
+            local tc = type_card[v1]
+            if tc then
+                for k2, v2 in ipairs(tc.card) do
+                    king[#king+1] = v2
+                end
+                if #tc.card >= base.P4_POKER then
+                    king4 = true
+                end
+            end
+        end
+        if #king >= base.P4_POKER then
+            local tc = {card=king, king4=king4, value=55}
+            for k1, v1 in ipairs(king_1) do
+                if type_card[v1] then
+                    type_card[v1] = tc
+                end
+            end
+        end
+        local temp_card = {}
+        local card_list = {}
+        for k1, v1 in pairs(type_card) do
+            if not temp_card[v1] then
+                temp_card[v1] = true
+                card_list[#card_list+1] = v1
+            end
+        end
+        for k1, v1 in ipairs(card_list) do
+            table.sort(v1.card, sort_card)
+            poker_line(v1)
+        end
+        table.sort(card_list, sort_line)
+        for k1, v1 in ipairs(card_list) do
+            v1.index = k1
+        end
         v.type_card = type_card
-        v.weave_card = {}
-        v.respond = {}
-        v.op = {}
-        v.out_card = {}
-        local chi_count = {}
-        for i = 1, base.P4_FOUR do
-            chi_count[i] = 0
-        end
-        v.chi_count = chi_count
-        v.gang_count = 0
-        v.out_magic = 0
-        local deal_card = {}
-        for i = 1, base.MJ_ROLE_CARD do
-            local c = card[left+1-((i-1)*base.P4_FOUR+j)]
-            type_card[c] = type_card[c] + 1
-            deal_card[i] = c
-        end
-        v.deal_card = deal_card
+        v.card_list = card_list
         record_user[index] = {
             account = v.account,
             id = v.id,
@@ -1050,21 +1118,17 @@ function dy4:start()
             own_card = deal_card,
         }
     end
-	left = left - base.P4_FOUR * base.MJ_ROLE_CARD
-    self._left = left
     self._detail = {
         info = {
             name = "dy4",
             number = self._number,
             rule = self._rule.pack,
             banker = self._banker,
-            left = left,
             count = self._count,
         },
         user = record_user,
         action = {},
     }
-    self:deal(role[self._banker])
 end
 
 return {__index=dy4}
