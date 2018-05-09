@@ -1505,6 +1505,16 @@ function dymj:conclude(id, msg)
     end
     local user = {}
     local role = self._role
+    local detail = self._detail
+    local now = floor(skynet.time())
+    detail.id = skynet.call(self._server, "lua", "gen_record_detail")
+    local show_card = {}
+    local record_detail = {
+        id = detail.id,
+        time = now,
+        show_card = show_card,
+        banker = self._banker,
+    }
     for k, v in ipairs(role) do
         v.ready = false
         v.deal_end = false
@@ -1515,27 +1525,34 @@ function dymj:conclude(id, msg)
                 own_card[#own_card+1] = k1
             end
         end
-        user[k] = {
+        local sc = {
+            own_card = own_card,
+            score = 0,
+            weave_card = v.weave_card,
+        }
+        local u = {
             index = k,
             ready = v.ready,
             deal_end = v.deal_end,
-            show_card = {
-                own_card = own_card,
-                score = 0,
-            },
+            show_card = sc,
         }
+        detail.user[k].show_card = sc
+        show_card[k] = sc
+        user[k] = u
     end
-    local detail = self._detail
-    detail.id = skynet.call(self._server, "lua", "gen_record_detail")
-    local record_detail = {
-        id = detail.id,
-        time = detail.time,
-    }
+    local expire = bson.date(os.time())
+    detail.time = now
+    detail.expire = expire
     skynet.call(record_detail_db, "lua", "safe_insert", detail)
     local sr = self._record
+    sr.expire = expire
+    sr.time = now
     local record_id
     if sr.id then
-        skynet.call(record_info_db, "lua", "update", {id=sr.id}, {["$push"]={record=record_detail}}, true)
+        skynet.call(record_info_db, "lua", "update", {id=sr.id}, {
+            ["$push"]={record=record_detail},
+            ["$set"] = {expire=expire, time=now},
+        }, true)
     else
         record_id = skynet.call(self._server, "lua", "gen_record")
         sr.id = record_id
