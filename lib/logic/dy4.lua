@@ -718,20 +718,79 @@ function dy4:p4_out(id, msg)
     local pc, pv = poker_info(out_card[1])
     local tc = {card=out_card, value=pv}
     poker_line(tc)
-    if self._out_card then
+    if self._out_card and not sort_line(self._out_card, tc) then
+        error{code = error_code.SMALL_POKER}
     end
-    local self_card = info.type_card[pv]
+    local type_card = info.type_card
+    local self_card = type_card[pv]
     if not self_card then
         error{code = error_code.INVALID_CARD}
     end
-    if #self_card.card == #out_card then
+    local self_len = #self_card.card
+    local out_len = #out_card
+    local card_list = info.card_list
+    if self_len == out_len then
         for k, v in ipairs(self_card.card) do
             if v ~= out_card[k] then
                 error{code = error_code.INVALID_CARD}
             end
         end
     else
+        if not self._rule.split then
+            error{code = error_code.CAN_NOT_SPLIT_POKER}
+        end
+        if card_list[1].line >= 4 then
+            error{code = error_code.SPLIT_POKER_LIMIT}
+        end
+        local diff = self_len - out_len
+        for k, v in ipairs(out_card) do
+            if v ~= self_card.card[k+diff] then
+                error{code = error_code.INVALID_CARD}
+            end
+        end
     end
+    self._out_index = index
+    self._out_card = tc
+    info.out_card = out_card
+    if self_len == out_len then
+        table.remove(card_list, self_card.index)
+        for i = self_card.index, #card_list do
+            card_list[i].index = i
+        end
+        if pv > base.POKER_CARD then
+            for k, v in ipairs(king_1) do
+                if type_card[v] == self_card then
+                    type_card[v] = nil
+                end
+            end
+        else
+            type_card[pv] = nil
+        end
+    else
+        for i = self_len-out_len+1, self_len do
+            self_card.card[i] = nil
+        end
+        poker_line(self_card)
+        local change_index = #card_list
+        for i = self_card.index, #card_list-1 do
+            local nc = card_list[i+1]
+            if sort_line(self_card, nc) then
+                change_index = i
+                break
+            else
+                card_list[i] = nc
+                nc.index = i
+            end
+        end
+        card_list[change_index] = self_card
+        self_card.index = change_index
+    end
+    local record_action = self._detail.action
+    record_action[#record_action+1] = {
+        index = index,
+        card = out_card,
+    }
+
 
     local type_card = info.type_card
     local card = msg.card
@@ -1059,11 +1118,13 @@ function dy4:start()
     self._score = 0
     self._out_index = nil
     self._out_card = nil
+    self._none_index = 1
     local left = #card
     local role_card = left // base.P4_FOUR
     local role = self._role
     local record_user = {}
     local start_index = rand.randi(1, base.P4_FOUR)
+    local line7 = {}
     for j = 1, base.P4_FOUR do
         local index = (start_index+j-2)%base.P4_FOUR+1
         local v = role[index]
@@ -1071,6 +1132,7 @@ function dy4:start()
         v.pass = false
         v.grab_score = 0
         v.line_score = 0
+        v.alone_award = false
         local type_card = {}
         local deal_card = {}
         for i = 1, role_card do
@@ -1119,6 +1181,9 @@ function dy4:start()
             poker_line(v1)
         end
         table.sort(card_list, sort_line)
+        if card_list[1].line >= 7 then
+            line7[#line7+1] = index
+        end
         for k1, v1 in ipairs(card_list) do
             v1.index = k1
         end
@@ -1135,6 +1200,9 @@ function dy4:start()
             score = v.score,
             own_card = deal_card,
         }
+    end
+    if #line7 == 1 and self._rule.alone_award then
+        role[line7[1]].alone_award = true
     end
     self._detail = {
         info = {

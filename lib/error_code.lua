@@ -76,6 +76,12 @@ local type_code = {
         CLUB_ADMIN_LIMIT="亲友团管理员已达上限",
         CLUB_DAY_CARD_LIMIT="亲友团每日每人消耗房卡已达上限",
     },
+
+    [6000] = {
+        SMALL_POKER="牌太小",
+        CAN_NOT_SPLIT_POKER="不能拆牌",
+        SPLIT_POKER_LIMIT="还有炸弹，不能拆牌",
+    },
 }
 
 local code = {}
