@@ -716,6 +716,22 @@ function dy4:p4_out(id, msg)
     end
     table.sort(out_card, sort_card)
     local pc, pv = poker_info(out_card[1])
+    local tc = {card=out_card, value=pv}
+    poker_line(tc)
+    if self._out_card then
+    end
+    local self_card = info.type_card[pv]
+    if not self_card then
+        error{code = error_code.INVALID_CARD}
+    end
+    if #self_card.card == #out_card then
+        for k, v in ipairs(self_card.card) do
+            if v ~= out_card[k] then
+                error{code = error_code.INVALID_CARD}
+            end
+        end
+    else
+    end
 
     local type_card = info.type_card
     local card = msg.card
@@ -1041,6 +1057,8 @@ function dy4:start()
     self._status = base.CHESS_STATUS_DEAL
     self._can_out = self._banker
     self._score = 0
+    self._out_index = nil
+    self._out_card = nil
     local left = #card
     local role_card = left // base.P4_FOUR
     local role = self._role
