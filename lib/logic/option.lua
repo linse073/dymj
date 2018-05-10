@@ -99,7 +99,7 @@ end
 
 local function dy4(rule)
     local r = {pack=rule}
-    local o1, o2, o3, o4, o5, o6, o7 = string.unpack("BBBBBBB", rule)
+    local o1, o2, o3, o4, o5, o6 = string.unpack("BBBBBB", rule)
     r.aa_pay = (o1 == 1)
     if o2 == 1 then
         r.total_count, r.total_card, r.single_card = 4, 4, 1
@@ -112,7 +112,6 @@ local function dy4(rule)
     r.alone_award = (o4 == 1)
     r.split = (o5 == 1)
     r.extra_king = (o6 == 1)
-    r.double = (o7 == 1)
     return r
 end
 

@@ -79,8 +79,9 @@ local type_code = {
 
     [6000] = {
         SMALL_POKER="牌太小",
-        CAN_NOT_SPLIT_POKER="不能拆牌",
+        CAN_NOT_SPLIT_POKER="没有拆牌规则",
         SPLIT_POKER_LIMIT="还有炸弹，不能拆牌",
+        ILLEGAL_POKER="出牌错误",
     },
 }
 

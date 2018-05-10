@@ -74,6 +74,12 @@ end
 local king_1 = {53, 54, 55}
 local king_2 = {54, 55}
 
+local score_card = {
+    [3] = 5,
+    [8] = 10,
+    [11] = 10,
+}
+
 skynet.init(function()
     base = share.base
     error_code = share.error_code
@@ -298,10 +304,13 @@ function dy4:pack(id, ip, agent)
                     }
                     local card_list = info.card_list
                     if card_list then
-                        local own_card = {}
-                        for k1, v1 in ipairs(card_list) do
-                            for k2, v2 in ipairs(v1.card) do
-                                own_card[#own_card+1] = v2
+                        local own_card 
+                        if #card_list > 0 then
+                            own_card = {}
+                            for k1, v1 in ipairs(card_list) do
+                                for k2, v2 in ipairs(v1.card) do
+                                    own_card[#own_card+1] = v2
+                                end
                             end
                         end
                         local show_card = {
@@ -718,8 +727,13 @@ function dy4:p4_out(id, msg)
     local pc, pv = poker_info(out_card[1])
     local tc = {card=out_card, value=pv}
     poker_line(tc)
-    if self._out_card and not sort_line(self._out_card, tc) then
-        error{code = error_code.SMALL_POKER}
+    if self._out_card then
+        if tc.line < 4 and tc.line ~= self._out_card.line then
+            error{code = error_code.ILLEGAL_POKER}
+        end
+        if not sort_line(tc, self._out_card) then
+            error{code = error_code.SMALL_POKER}
+        end
     end
     local type_card = info.type_card
     local self_card = type_card[pv]
@@ -790,58 +804,93 @@ function dy4:p4_out(id, msg)
         index = index,
         card = out_card,
     }
-
-
-    local type_card = info.type_card
-    local card = msg.card
-    if not type_card[card] then
-        error{code = error_code.INVALID_CARD}
+    local sc = score_card[pv]
+    if sc then
+        self._score = self._score + out_len * sc
     end
-    if type_card[card] == 0 then
-        error{code = error_code.NO_OUT_CARD}
-    end
-    if self:is_out_magic(index) and card ~= self._deal_card then
-        error{code = error_code.OUT_CARD_LIMIT}
-    end
-    self._can_out = nil
-    type_card[card] = type_card[card] - 1
-    if card == self._magic_card then
-        info.out_magic = info.out_magic + 1
-    else
-        info.out_magic = 0
-        info.gang_count = 0
-    end
-    self._out_card = card
-    self._out_index = index
-    info.out_card[#info.out_card+1] = card
-    local record_action = self._detail.action
-    record_action[#record_action+1] = {
-        index = index,
-        card = card,
-        out_index = msg.index,
-    }
-    if self._left <= 20 then
-        return self:conclude(id)
-    end
-    local chess
-    local deal_id
+    local user = {index=index, out_card=out_card}
+    local all_user = {user}
     local role = self._role
-    if not self:analyze(card, index) then
-        local deal_index = index%base.P4_FOUR+1
-        local r = role[deal_index]
-        deal_id = r.id
-        local c = self:deal(r)
-        chess = {deal_index=deal_index, left=self._left}
-        send(r, {
-            {index=index, out_card={card}, out_index=msg.index},
-            {index=deal_index, last_deal=c},
-        }, chess)
+    if tc.line >= 7 then
+        local line_score = (tc.line - 6) * 30
+        if info.alone_award then
+            line_score = line_score * 2
+        end
+        for k, v in ipairs(role) do
+            if k ~= index then
+                v.line_score = v.line_score - line_score
+                all_user[#all_user+1] = {index=k, line_score=v.line_score}
+            end
+        end
+        info.line_score = info.line_score + line_score * 3
+        user.line_score = info.line_score
     end
-    local cu = {
-        {index=index, out_card={card}, out_index=msg.index},
-    }
-    broadcast(cu, chess, role, id, deal_id)
-    return session_msg(info, cu, chess)
+    if #card_list == 0 then
+        info.last_index = self._none_index
+        user.last_index = info.last_index
+        self._none_index = self._none_index + 1
+        if self._none_index == base.P4_FOUR then
+            return self:settle(info, tc, all_user)
+        end
+    end
+    local next_out = index
+    for i = 1, base.P4_FOUR-1 do
+        local ni = (index+i-1)%base.P4_FOUR+1
+        local r = role[ni]
+        if not r.last_index then
+            local rc = r.card_list
+            local cl = rc[1]
+            if sort_line(cl, tc) then
+                if cl.line < 4 then
+                    if cl.line == tc.line then
+                        next_out = ni
+                        break
+                    else
+                        if self._rule.split then
+                            for k, v in ipairs(rc) do
+                                if v.line >= tc.line then
+                                    if v.value > tc.line then
+                                        next_out = ni
+                                        break
+                                    end
+                                else
+                                    break
+                                end
+                            end
+                            if next_out ~= index then
+                                break
+                            end
+                        end
+                    end
+                else
+                    next_out = ni
+                    break
+                end
+            end
+            r.pass = true
+            all_user[#all_user+1] = {index=r.index, pass=r.pass}
+        end
+    end
+    local chess = {}
+    if next_out == index then
+        if info.last_index then
+            for i = 1, base.P4_FOUR-1 do
+                local ni = (index+i-1)%base.P4_FOUR+1
+                local r = role[ni]
+                if not r.last_index then
+                    next_out = ni
+                    break
+                end
+            end
+        end
+        info.grab_score = info.grab_score + self._score
+        all_user[#all_user+1] = {index=index, grab_score=info.grab_score}
+        self._score = 0
+        chess.score = self._score
+    end
+    chess.can_out = next_out
+    broadcast(all_user, chess, role, id)
+    return session_msg(info, all_user, chess)
 end
 
 function dy4:consume_card()
@@ -867,82 +916,11 @@ function dy4:consume_card()
     skynet.send(activity_mgr, "lua", "consume_room_succ", {self._role[1].id,}) --有效创建房间
 end
 
-function dy4:hu(id, msg)
-    local info = self:op_check(id, base.CHESS_STATUS_START)
+function dy4:settle(info, tc, all_user)
     local index = info.index
-    if self._deal_index ~= index then
-        error{code = error_code.ERROR_OPERATION}
-    end
-    if self._pass_status ~= base.PASS_STATUS_DEAL then
-        error{code = error_code.ERROR_OPERATION}
-    end
-    if info.pass then
-        error{code = error_code.ALREADY_PASS}
-    end
-    if self._can_out ~= index then
-        error{code = error_code.ERROR_OPERATION}
-    end
-    local type_card = info.type_card
-    local magic_card = self._magic_card
-    local deal_card = self._deal_card
-    local mul = 1
-    local tc = {}
-    for k, v in pairs(type_card) do
-        if v > 0 then
-            tc[k] = v
-        end
-    end
-    local magic_count = tc[magic_card] or 0
-    tc[magic_card] = nil
-    local hu, four_count, mc = is_qidui(tc, magic_count)
-    local hu_type
-    if hu then
-        hu_type = base.HU_DUIZI
-        mul = 2^(four_count+1)
-        if mc > 0 or (deal_card ~= magic_card and tc[deal_card]%2 == 1) then
-            mul = mul * 2^(info.out_magic+1)
-        elseif magic_count == 0 then
-            mul = mul * 2
-        end
-    else
-        local weave_card = {}
-        if not self:check_hu(tc, weave_card, magic_count) then
-            error{code = error_code.ERROR_OPERATION}
-        end
-        hu_type = base.HU_NONE
-        local head = weave_card[1]
-        if head[1] == deal_card and head[2] == 0 then
-            if info.gang_count > 0 then
-                hu_type = base.HU_GANGBAO
-            else
-                hu_type = base.HU_BAOTOU
-            end
-            mul = 2^info.gang_count
-            mul = mul * 2^(info.out_magic+1)
-        else
-            local out_card = info.out_card
-            local len = #out_card
-            if len == 0 or out_card[len] ~= magic_card then
-                if info.gang_count > 0 then
-                    hu_type = base.HU_GANGKAI
-                end
-                mul = 2^info.gang_count
-            end
-        end
-    end
-    local banker = self._banker
-    local scores
-    if index == banker then
-        local ts = -mul * 8
-        scores = {ts, ts, ts, ts}
-        scores[index] = mul * 24
-    else
-        scores = {-mul, -mul, -mul, -mul}
-        scores[banker] = -mul * 8
-        scores[index] = mul * 10
-    end
-    self:clear_all_op()
-    info.hu_count = info.hu_count + 1
+    info.grab_score = info.grab_score + self._score
+    all_user[#all_user+1] = {index=index, grab_score=info.grab_score}
+    self._score = 0
     self._count = self._count + 1
     if self._count == self._rule.total_count then
         self._status = base.CHESS_STATUS_FINISH
@@ -952,14 +930,8 @@ function dy4:hu(id, msg)
     if self._count == 1 then
         self:consume_card()
     end
-    local user = {}
     local role = self._role
     local detail = self._detail
-    local record_action = detail.action
-    record_action[#record_action+1] = {
-        index = index,
-        op = base.MJ_OP_HU,
-    }
     local now = floor(skynet.time())
     detail.id = skynet.call(self._server, "lua", "gen_record_detail")
     local show_card = {}
@@ -967,15 +939,36 @@ function dy4:hu(id, msg)
         id = detail.id,
         time = now,
         show_card = show_card,
-        banker = banker,
+        banker = self._banker,
     }
+    local tail_score = 0
+    local rank = {}
+    for k, v in ipairs(role) do
+        for k1, v1 in ipairs(v.card_list) do
+            local score = score_value[v1.value]
+            if score then
+                tail_score = tail_score + #v1.card * score
+            end
+        end
+        if v.last_index then
+            rank[v.last_index] = v
+        else
+            rank[base.P4_FOUR] = v
+        end
+        v.last_score = v.grab_score + v.line_score - 100
+    end
+    local r1 = rank[1]
+    r1.last_score = r1.last_score + tail_score + 30
+    local r4 = rank[4]
+    r4.last_score = r4.last_score - 30
     local top_score, top_role
     for k, v in ipairs(role) do
         v.ready = false
         v.deal_end = false
-        local score = scores[k]
-        v.last_score = score
-        local rc = v.score + score
+        if v.last_score > 0 then
+            v.hu_count = v.hu_count + 1
+        end
+        local rc = v.score + v.last_score
         v.score = rc
         if not top_score or rc > top_score then
             top_score = rc
@@ -983,16 +976,23 @@ function dy4:hu(id, msg)
         elseif rc == top_score then
             top_role[#top_role+1] = k
         end
-        local own_card = {}
-        for k1, v1 in pairs(v.type_card) do
-            for i = 1, v1 do
-                own_card[#own_card+1] = k1
+        local card_list = v.card_list
+        local own_card 
+        if #card_list > 0 then
+            own_card = {}
+            for k1, v1 in ipairs(card_list) do
+                for k2, v2 in ipairs(v1.card) do
+                    own_card[#own_card+1] = v2
+                end
             end
         end
         local sc = {
             own_card = own_card,
-            score = score,
-            weave_card = v.weave_card,
+            score = v.last_score,
+            grab_score = v.grab_score,
+            line_score = v.line_score,
+            last_index = v.last_index,
+            alone_award = v.alone_award,
         }
         local u = {
             index = k,
@@ -1003,18 +1003,21 @@ function dy4:hu(id, msg)
         }
         detail.user[k].show_card = sc
         show_card[k] = sc
-        if score > v.top_score then
-            v.top_score = score
-            u.top_score = score
+        if v.last_score > v.top_score then
+            v.top_score = v.last_score
+            u.top_score = v.last_score
         end
-        user[k] = u
+        all_user[#all_user+1] = u
     end
-    local win = user[index]
-    win.hu_count = info.hu_count
-    win.action = base.MJ_OP_HU
-    local ws = win.show_card
-    ws.last_deal = info.last_deal
-    ws.hu = hu_type
+    local winner = 0
+    if top_score > 0 then
+        local top_len = #top_role
+        if top_len == 1 then
+            winner = top_role[1]
+        else
+            winner = top_role[self._rand.randi(1, top_len)]
+        end
+    end
     local expire = bson.date(os.time())
     detail.time = now
     detail.expire = expire
@@ -1026,7 +1029,7 @@ function dy4:hu(id, msg)
     if sr.id then
         skynet.call(record_info_db, "lua", "update", {id=sr.id}, {
             ["$push"] = {record=record_detail},
-            ["$set"] = {expire=expire, time=now},
+            ["$set"] = {expire=expire, time=now, winner=winner},
         }, true)
     else
         record_id = skynet.call(self._server, "lua", "gen_record")
@@ -1052,40 +1055,29 @@ function dy4:hu(id, msg)
         sr.clubid = self._club
         sr.read = false
         sr.record = {record_detail}
+        sr.winner = winner
         skynet.call(record_info_db, "lua", "safe_insert", sr)
     end
-    info.last_hu = {
-        last_deal = info.last_deal,
-        hu = hu_type,
-    }
-    self._old_banker = banker
-    self._banker = index
-    local winner = 0
-    if top_score > 0 then
-        local top_len = #top_role
-        if top_len == 1 then
-            winner = top_role[1]
-        else
-            winner = top_role[self._rand.randi(1, top_len)]
-        end
-    end
+    self._old_banker = self._banker
+    self._banker = r1.index
     local ci = {
         status = self._status, 
         count = self._count, 
         banker = self._banker, 
         record_id = record_id,
         win = winner,
+        score = self._score,
     }
 
     self.win_idx = winner
     
     play(role) -- 完成一牌局
 
-    broadcast(user, ci, role, id)
+    broadcast(all_user, ci, role, id)
     if self._status == base.CHESS_STATUS_FINISH then
         self:finish()
     end
-    return session_msg(info, user, ci)
+    return session_msg(info, all_user, ci)
 end
 
 function dy4:start()
@@ -1133,6 +1125,7 @@ function dy4:start()
         v.grab_score = 0
         v.line_score = 0
         v.alone_award = false
+        v.last_index = nil
         local type_card = {}
         local deal_card = {}
         for i = 1, role_card do
