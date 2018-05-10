@@ -956,6 +956,10 @@ function dy4:settle(info, tc, all_user)
             rank[base.P4_FOUR] = v
         end
         v.last_score = v.grab_score + v.line_score - 100
+        if v.last_score%10 == 5 then
+            v.last_score = v.last_score - 5
+            tail_score = tail_score + 5
+        end
     end
     local r1 = rank[1]
     r1.last_score = r1.last_score + tail_score + 30
