@@ -830,7 +830,7 @@ function dy4:p4_out(id, msg)
         user.last_index = info.last_index
         self._none_index = self._none_index + 1
         if self._none_index == base.P4_FOUR then
-            return self:settle(info, tc, all_user)
+            return self:settle(info, all_user)
         end
     end
     local next_out = index
@@ -916,7 +916,7 @@ function dy4:consume_card()
     skynet.send(activity_mgr, "lua", "consume_room_succ", {self._role[1].id,}) --有效创建房间
 end
 
-function dy4:settle(info, tc, all_user)
+function dy4:settle(info, all_user)
     local index = info.index
     info.grab_score = info.grab_score + self._score
     all_user[#all_user+1] = {index=index, grab_score=info.grab_score}
@@ -950,11 +950,10 @@ function dy4:settle(info, tc, all_user)
                 tail_score = tail_score + #v1.card * score
             end
         end
-        if v.last_index then
-            rank[v.last_index] = v
-        else
-            rank[base.P4_FOUR] = v
+        if not v.last_index then
+            v.last_index = self._none_index
         end
+        rank[v.last_index] = v
         v.last_score = v.grab_score + v.line_score - 100
         if v.last_score%10 == 5 then
             v.last_score = v.last_score - 5
