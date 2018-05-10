@@ -18,7 +18,7 @@ local base = {
     PBJ_ROLE_CARD = 9,
     PBJ_FIVE = 5,
     P4_FOUR = 4,
-    P4_POKER = 4
+    P4_POKER = 4,
 
     PBJ_SIX = 6,
     POKER_CARD_FULL = 54,
