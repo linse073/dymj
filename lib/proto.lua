@@ -126,6 +126,7 @@ local type_msg = {
         "bj_out",
         "give_up",
         "location_info",
+        "p4_out",
     },
 }
 
