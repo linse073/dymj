@@ -100,7 +100,7 @@ end
 local function dy4(rule)
     local r = {pack=rule}
     local o1, o2, o3, o4, o5, o6 = string.unpack("BBBBBB", rule)
-    r.aa_pay = (o1 == 1)
+    r.aa_pay = (o1 ~= 1)
     if o2 == 1 then
         r.total_count, r.total_card, r.single_card = 4, 4, 1
     elseif o2 == 2 then

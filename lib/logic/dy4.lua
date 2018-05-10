@@ -365,6 +365,7 @@ function dy4:pack(id, ip, agent)
                     line_score = info.line_score,
                     pass = info.pass,
                     out_card = info.out_card,
+                    last_index = info.last_index,
                 }
                 if info.id == id then
                     local own_card = {}
