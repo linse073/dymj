@@ -767,6 +767,7 @@ function dy4:p4_out(id, msg)
     self._out_index = index
     self._out_card = tc
     info.out_card = out_card
+    info.pass = false
     if self_len == out_len then
         table.remove(card_list, self_card.index)
         for i = self_card.index, #card_list do
@@ -869,6 +870,7 @@ function dy4:p4_out(id, msg)
                 end
             end
             r.pass = true
+            r.out_card = nil
             all_user[#all_user+1] = {index=r.index, pass=r.pass}
         end
     end
@@ -888,6 +890,10 @@ function dy4:p4_out(id, msg)
         all_user[#all_user+1] = {index=index, grab_score=info.grab_score}
         self._score = 0
         chess.score = self._score
+        for k, v in ipairs(role) do
+            v.pass = false
+            v.out_card = nil
+        end
     end
     chess.can_out = next_out
     broadcast(all_user, chess, role, id)
