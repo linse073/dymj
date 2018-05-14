@@ -341,6 +341,7 @@ function dy4:pack(id, ip, agent)
                 can_out = self._can_out,
                 record_id = self._record.id,
                 score = self._score,
+                out_index = self._out_index,
             }
             local user = {}
             for i = 1, base.P4_FOUR do
@@ -1177,11 +1178,9 @@ function dy4:start()
             if not temp_card[v1] then
                 temp_card[v1] = true
                 card_list[#card_list+1] = v1
+                table.sort(v1.card, sort_card)
+                poker_line(v1)
             end
-        end
-        for k1, v1 in ipairs(card_list) do
-            table.sort(v1.card, sort_card)
-            poker_line(v1)
         end
         table.sort(card_list, sort_line)
         if card_list[1].line >= 7 then
