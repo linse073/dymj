@@ -1153,24 +1153,28 @@ function dy4:start()
                 type_card[pv] = tc
             end
         end
-        local king = {}
-        local king4 = false
+        local king = {
+            card = {},
+            king4 = false,
+            count = 0,
+            value = 55,
+        }
         for k1, v1 in ipairs(king_1) do
             local tc = type_card[v1]
             if tc then
                 for k2, v2 in ipairs(tc.card) do
-                    king[#king+1] = v2
+                    king.card[#king.card+1] = v2
                 end
                 if #tc.card >= base.P4_POKER then
-                    king4 = true
+                    tc.king4 = true
+                    king.king4 = true
                 end
             end
         end
-        if #king >= base.P4_POKER then
-            local tc = {card=king, king4=king4, value=55}
+        if king.count > 1 and #king.card >= base.P4_POKER then
             for k1, v1 in ipairs(king_1) do
                 if type_card[v1] then
-                    type_card[v1] = tc
+                    type_card[v1] = king
                 end
             end
         end
