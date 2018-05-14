@@ -895,6 +895,8 @@ function dy4:p4_out(id, msg)
             v.pass = false
             v.out_card = nil
         end
+        self._out_card = nil
+        self._out_index = nil
     end
     chess.can_out = next_out
     broadcast(all_user, chess, role, id)
