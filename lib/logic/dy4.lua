@@ -31,18 +31,19 @@ local function sort_line(l, r)
     if l.line ~= r.line then
         return l.line > r.line
     end
-    local lc, rc = l.card, r.card
-    local i = 1
-    while true do
-        local lv, rv = lc[i] or 0, rc[i] or 0
-        if lv == 0 and rv == 0 then
-            return false
-        end
-        if lv ~= rv then
-            return lv > rv
-        end
-        i = i + 1
-    end
+    return l.value > r.value
+    -- local lc, rc = l.card, r.card
+    -- local i = 1
+    -- while true do
+    --     local lv, rv = lc[i] or 0, rc[i] or 0
+    --     if lv == 0 and rv == 0 then
+    --         return false
+    --     end
+    --     if lv ~= rv then
+    --         return lv > rv
+    --     end
+    --     i = i + 1
+    -- end
 end
 
 local function poker_info(c)
@@ -69,6 +70,39 @@ local function poker_line(tc)
     else
         tc.line = len
     end
+end
+
+local function analyze(out)
+    local tc = {card=out}
+    local o1 = out[1]
+    if o1 > base.POKER_CARD then
+        tc.count = 0
+        local c, mc = 0, 0
+        for k, v in ipairs(out) do
+            c = c + 1
+            if v ~= out[k+1] then
+                if c > mc then
+                    mc = c
+                end
+                c = 0
+                tc.count = tc.count + 1
+            end
+        end
+        if mc >= base.P4_POKER then
+            tc.king4 = true
+        end
+        if tc.count > 1 then
+            tc.value = 55
+        else
+            local pc, pv = poker_info(o1)
+            tc.value = pv
+        end
+    else
+        local pc, pv = poker_info(o1)
+        tc.value = pv
+    end
+    poker_line(tc)
+    return tc
 end
 
 local king_1 = {53, 54, 55}
@@ -726,9 +760,7 @@ function dy4:p4_out(id, msg)
         error{code = error_code.ERROR_ARGS}
     end
     table.sort(out_card, sort_card)
-    local pc, pv = poker_info(out_card[1])
-    local tc = {card=out_card, value=pv}
-    poker_line(tc)
+    local tc = analyze(out_card)
     if self._out_card then
         if tc.line < 4 and tc.line ~= self._out_card.line then
             error{code = error_code.ILLEGAL_POKER}
@@ -738,7 +770,7 @@ function dy4:p4_out(id, msg)
         end
     end
     local type_card = info.type_card
-    local self_card = type_card[pv]
+    local self_card = type_card[tc.value]
     if not self_card then
         error{code = error_code.INVALID_CARD}
     end
@@ -774,14 +806,14 @@ function dy4:p4_out(id, msg)
         for i = self_card.index, #card_list do
             card_list[i].index = i
         end
-        if pv > base.POKER_CARD then
+        if tc.value > base.POKER_CARD then
             for k, v in ipairs(king_1) do
                 if type_card[v] == self_card then
                     type_card[v] = nil
                 end
             end
         else
-            type_card[pv] = nil
+            type_card[tc.value] = nil
         end
     else
         for i = self_len-out_len+1, self_len do
@@ -807,7 +839,7 @@ function dy4:p4_out(id, msg)
         index = index,
         card = out_card,
     }
-    local sc = score_card[pv]
+    local sc = score_card[tc.value]
     if sc then
         self._score = self._score + out_len * sc
     end
@@ -1169,6 +1201,7 @@ function dy4:start()
                     tc.king4 = true
                     king.king4 = true
                 end
+                king.count = king.count + 1
             end
         end
         if king.count > 1 and #king.card >= base.P4_POKER then
