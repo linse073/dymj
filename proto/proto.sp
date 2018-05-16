@@ -70,6 +70,7 @@
     location 28 : binary
     grab_score 29 : integer
     line_score 30 : integer
+    last_index 31 : integer
 }
 
 .chess_info {
