@@ -1207,9 +1207,7 @@ function dy4:start()
         end
         if king.count > 1 and #king.card >= base.P4_POKER then
             for k1, v1 in ipairs(king_1) do
-                if type_card[v1] then
-                    type_card[v1] = king
-                end
+                type_card[v1] = king
             end
         end
         local temp_card = {}
