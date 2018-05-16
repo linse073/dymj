@@ -1160,7 +1160,7 @@ function dy4:start()
     local role_card = left // base.P4_FOUR
     local role = self._role
     local record_user = {}
-    local start_index = rand.randi(1, base.P4_FOUR)
+    local start_index = self._rand.randi(1, base.P4_FOUR)
     local line7 = {}
     for j = 1, base.P4_FOUR do
         local index = (start_index+j-2)%base.P4_FOUR+1
