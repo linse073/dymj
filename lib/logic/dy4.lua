@@ -988,7 +988,7 @@ function dy4:settle(info, all_user)
     local rank = {}
     for k, v in ipairs(role) do
         for k1, v1 in ipairs(v.card_list) do
-            local score = score_value[v1.value]
+            local score = score_card[v1.value]
             if score then
                 tail_score = tail_score + #v1.card * score
             end
