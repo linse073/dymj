@@ -884,7 +884,7 @@ function dy4:p4_out(id, msg)
                         if self._rule.split then
                             for k, v in ipairs(rc) do
                                 if v.line >= tc.line then
-                                    if v.value > tc.line then
+                                    if v.value > tc.value then
                                         next_out = ni
                                         break
                                     end
