@@ -930,6 +930,7 @@ function dy4:p4_out(id, msg)
         self._out_card = nil
         self._out_index = nil
     end
+    self._can_out = next_out
     chess.can_out = next_out
     broadcast(all_user, chess, role, id)
     return session_msg(info, all_user, chess)
