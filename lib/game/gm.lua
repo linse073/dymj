@@ -142,4 +142,21 @@ function proc.act_pay(msg)
     return "response", ""
 end
 
+function proc.dy4_card(msg)
+    local data = game.data
+    if data.user.gm_level == 0 then
+        error{code = error_code.ROLE_NO_PERMIT}
+    end
+    local card = msg.card
+    if card then
+        card = util.reverse(card)
+    end
+    data.dy4_card = card
+    if data.chess_table then
+        return skynet.call(data.chess_table, "lua", "custom_card", "dy4", card)
+    else
+        return "response", ""
+    end
+end
+
 return gm
