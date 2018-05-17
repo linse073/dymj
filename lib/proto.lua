@@ -51,6 +51,7 @@ local type_msg = {
         "jd13_card",
         "dy13_card",
         "jhbj_card",
+        "dy4_card",
     },
 
     [2300] = {
