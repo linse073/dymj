@@ -1012,9 +1012,6 @@ function dy4:settle(info, all_user)
     for k, v in ipairs(role) do
         v.ready = false
         v.deal_end = false
-        if v.last_score > 0 then
-            v.hu_count = v.hu_count + 1
-        end
         local rc = v.score + v.last_score
         v.score = rc
         if not top_score or rc > top_score then
@@ -1048,6 +1045,10 @@ function dy4:settle(info, all_user)
             score = rc,
             show_card = sc,
         }
+        if v.last_score > 0 then
+            v.hu_count = v.hu_count + 1
+            u.hu_count = v.hu_count
+        end
         detail.user[k].show_card = sc
         show_card[k] = sc
         if v.last_score > v.top_score then
