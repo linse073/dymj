@@ -960,6 +960,7 @@ function dy4:consume_card()
 end
 
 function dy4:settle(info, all_user)
+    local id = info.id
     local index = info.index
     info.grab_score = info.grab_score + self._score
     all_user[#all_user+1] = {index=index, grab_score=info.grab_score}
