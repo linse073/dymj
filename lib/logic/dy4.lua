@@ -923,8 +923,8 @@ function dy4:p4_out(id, msg)
             info.grab_score = info.grab_score + self._score
             all_user[#all_user+1] = {index=index, grab_score=info.grab_score}
             self._score = 0
-            chess.score = self._score
         end
+        chess.score = self._score
         for k, v in ipairs(role) do
             v.pass = false
             v.out_card = nil
