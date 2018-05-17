@@ -919,10 +919,12 @@ function dy4:p4_out(id, msg)
                 end
             end
         end
-        info.grab_score = info.grab_score + self._score
-        all_user[#all_user+1] = {index=index, grab_score=info.grab_score}
-        self._score = 0
-        chess.score = self._score
+        if self._score > 0 then
+            info.grab_score = info.grab_score + self._score
+            all_user[#all_user+1] = {index=index, grab_score=info.grab_score}
+            self._score = 0
+            chess.score = self._score
+        end
         for k, v in ipairs(role) do
             v.pass = false
             v.out_card = nil
@@ -962,9 +964,11 @@ end
 function dy4:settle(info, all_user)
     local id = info.id
     local index = info.index
-    info.grab_score = info.grab_score + self._score
-    all_user[#all_user+1] = {index=index, grab_score=info.grab_score}
-    self._score = 0
+    if self._score > 0 then
+        info.grab_score = info.grab_score + self._score
+        all_user[#all_user+1] = {index=index, grab_score=info.grab_score}
+        self._score = 0
+    end
     self._count = self._count + 1
     if self._count == self._rule.total_count then
         self._status = base.CHESS_STATUS_FINISH
