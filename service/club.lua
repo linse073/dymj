@@ -163,7 +163,7 @@ function CMD.check_role_day_card(roleid)
     end
 end
 
-function CMD.consume_card(number, room_card)
+function CMD.consume_card(number, room_card, single_card)
     if club then
         club.room_card = club.room_card - room_card
         local room = room_list[number]
@@ -171,7 +171,7 @@ function CMD.consume_card(number, room_card)
             for k, v in pairs(room.role) do
                 local m = extra.member[v.id]
                 if m then
-                    m.day_card = m.day_card + 1
+                    m.day_card = m.day_card + single_card
                 end
             end
         else

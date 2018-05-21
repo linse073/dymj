@@ -947,7 +947,7 @@ function dy4:consume_card()
     if self._club then
         local club = skynet.call(club_mgr, "lua", "get_by_id", self._club)
         if club then
-            skynet.call(club, "lua", "consume_card", self._number, rule.total_card)
+            skynet.call(club, "lua", "consume_card", self._number, rule.total_card, rule.single_card)
         end
     else
         if rule.aa_pay then
