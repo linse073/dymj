@@ -119,6 +119,7 @@ function dy13:init(number, rule, rand, server, card, club)
             name = "dy13",
             number = number,
             rule = rule.pack,
+            club = club,
         },
     }
     if club then
@@ -221,6 +222,7 @@ function dy13:pack(id, ip, agent)
                 close_index = self._close_index,
                 close_time = self._close_time,
                 record_id = self._record.id,
+                club = self._club,
             }
             local user = {}
             for i = 1, rule.user do
@@ -266,6 +268,7 @@ function dy13:pack(id, ip, agent)
                 close_index = self._close_index,
                 close_time = self._close_time,
                 record_id = self._record.id,
+                club = self._club,
             }
             local user = {}
             for i = 1, rule.user do
@@ -341,6 +344,7 @@ function dy13:enter(info, agent, index, location)
         count = self._count,
         pause = self._pause,
         close_index = self._close_index,
+        club = self._club,
     }
     return "update_user", {update={chess={
         info = chess,
@@ -1327,6 +1331,7 @@ function dy13:start()
             rule = rule.pack,
             banker = self._banker,
             count = self._count,
+            club = self._club,
         },
         user = record_user,
         action = {},

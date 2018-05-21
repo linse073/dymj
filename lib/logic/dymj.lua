@@ -121,6 +121,7 @@ function dymj:init(number, rule, rand, server, card, club)
             name = "dymj",
             number = number,
             rule = rule.pack,
+            club = club,
         },
     }
     if club then
@@ -231,6 +232,7 @@ function dymj:pack(id, ip, agent)
                 close_index = self._close_index,
                 close_time = self._close_time,
                 record_id = self._record.id,
+                club = self._club,
             }
             local user = {}
             for i = 1, base.MJ_FOUR do
@@ -294,6 +296,7 @@ function dymj:pack(id, ip, agent)
                 pass_status = self._pass_status,
                 can_out = self._can_out,
                 record_id = self._record.id,
+                club = self._club,
             }
             local user = {}
             for i = 1, base.MJ_FOUR do
@@ -393,6 +396,7 @@ function dymj:enter(info, agent, index, location)
         count = self._count,
         pause = self._pause,
         close_index = self._close_index,
+        club = self._club,
     }
     return "update_user", {update={chess={
         info = chess,
@@ -1717,6 +1721,7 @@ function dymj:start()
             banker = self._banker,
             left = left,
             count = self._count,
+            club = self._club,
         },
         user = record_user,
         action = {},

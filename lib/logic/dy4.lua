@@ -206,6 +206,7 @@ function dy4:init(number, rule, rand, server, card, club)
             name = "dy4",
             number = number,
             rule = rule.pack,
+            club = club,
         },
     }
     if club then
@@ -315,6 +316,7 @@ function dy4:pack(id, ip, agent)
                 close_index = self._close_index,
                 close_time = self._close_time,
                 record_id = self._record.id,
+                club = self._club,
             }
             local user = {}
             for i = 1, base.P4_FOUR do
@@ -376,6 +378,7 @@ function dy4:pack(id, ip, agent)
                 record_id = self._record.id,
                 score = self._score,
                 out_index = self._out_index,
+                club = self._club,
             }
             local user = {}
             for i = 1, base.P4_FOUR do
@@ -458,6 +461,7 @@ function dy4:enter(info, agent, index, location)
         count = self._count,
         pause = self._pause,
         close_index = self._close_index,
+        club = self._club,
     }
     return "update_user", {update={chess={
         info = chess,
@@ -1257,6 +1261,7 @@ function dy4:start()
             rule = self._rule.pack,
             banker = self._banker,
             count = self._count,
+            club = self._club,
         },
         user = record_user,
         action = {},

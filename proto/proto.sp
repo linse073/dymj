@@ -96,6 +96,7 @@
     gang_index 19 : integer
     win 20 : integer
     score 21 : integer
+    club 22 : integer
 }
 
 .chess_all {
@@ -119,6 +120,7 @@
     info 2 : chess_info
     user 3 : *chess_user
     aciton 4 : *chess_action
+    club 5 : integer
 }
 
 .chess_record {
@@ -136,6 +138,7 @@
     record 4 : *record_detail
     read 5 : boolean
     winner 6 : integer
+    club 7 : integer
 }
 
 .record_all {
