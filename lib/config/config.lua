@@ -39,7 +39,7 @@ config.mongo = {
         "iap_log",
         "charge_log",
         "invite_info",
-        "invite_user_detail",        
+        "invite_user_detail",
         "club",
     },
     index = {
@@ -58,7 +58,7 @@ config.mongo = {
         {"charge_log", {"id", unique=true}},
         {"invite_info", {"id", unique=true}},
         {"invite_user_detail", {"id", unique=true}},
-        {"invite_user_detail", {"belong_id"}},        
+        {"invite_user_detail", {"belong_id"}},
         {"club", {"id", unique=true}},
     },
 }
