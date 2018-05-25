@@ -92,7 +92,7 @@ iptables -F
 /sbin/iptables -t mangle -A PREROUTING -p udp -j DROP  
 
 ### 6: Drop ICMP (you usually don't need this protocol) ### 
-### /sbin/iptables -t mangle -A PREROUTING -p icmp -j DROP  
+# /sbin/iptables -t mangle -A PREROUTING -p icmp -j DROP  
 ### Limiting the incoming icmp ping request
 iptables -A INPUT -p icmp -m limit --limit 1/s --limit-burst 1 -j ACCEPT
 iptables -A INPUT -p icmp -j DROP
