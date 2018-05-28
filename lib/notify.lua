@@ -1,5 +1,6 @@
 local skynet = require "skynet"
 local share = require "share"
+local util = require "util"
 
 local error = error
 local assert = assert
@@ -33,6 +34,8 @@ local function pack()
             if sproto:exist_type(m) then
                 c = sproto:pencode(m, c)
             end
+            skynet.error("notify message : ", m)
+            util.dump(c)
             local id = assert(name_msg[m], string.format("No protocol %s.", m))
             c = string.pack(">s2", string.pack(">I2", id) .. c)
             content = content .. c
