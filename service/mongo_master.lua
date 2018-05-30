@@ -11,7 +11,11 @@ local CMD = {}
 function CMD.open(conf)
     for k, v in ipairs(conf.name) do
         local slave = skynet.newservice("mongo_slave")
-        skynet.call(slave, "lua", "open", {host=conf.host}, v)
+        skynet.call(slave, "lua", "open", {
+            host = conf.host,
+            username = conf.username,
+            password = conf.password,
+        }, v)
         slave_list[v] = slave
     end
     for k, v in ipairs(conf.index) do
