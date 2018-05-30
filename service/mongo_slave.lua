@@ -13,7 +13,11 @@ local db
 local cursor = {}
 
 function CMD.open(conf, name)
-    local d = mongo.client({host=conf.host})
+    local d = mongo.client({
+        host = conf.host,
+        username = conf.username,
+        password = conf.password,
+    })
     db = d[database][name]
     util.cmd_wrap(CMD, db)
 end

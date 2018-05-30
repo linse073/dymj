@@ -24,7 +24,9 @@ config.gate = {
 -- }
 
 config.mongo = {
-    host = "127.0.0.1",
+    host = "10.66.250.39",
+    username = "mongouser",
+    password = "2TGpxZzw4JEEhbG",
     name = {
 	    "account",
         "user",
