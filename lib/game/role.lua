@@ -242,7 +242,7 @@ end
 function role.update_day(od, nd)
     local user = game.data.user
     update_day(user, od, nd)
-    notify.add("update_day", {})
+    notify.add("update_day", "")
 end
 
 function role.test_update_day()
