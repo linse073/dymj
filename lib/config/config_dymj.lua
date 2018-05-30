@@ -15,13 +15,13 @@ config.gate = {
     servername = "gate01",
 }
 
-config.redis = {
-    host = "127.0.0.1",
-    port = 6379,
-    base = 10,
-    name = {
-    },
-}
+-- config.redis = {
+--     host = "127.0.0.1",
+--     port = 6379,
+--     base = 10,
+--     name = {
+--     },
+-- }
 
 config.mongo = {
     host = "127.0.0.1",
