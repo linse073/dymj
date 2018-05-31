@@ -12,8 +12,8 @@ cpath = "./cservice/?.so"
 lua_path = root.."lib/?.lua;"..root.."lib/?/init.lua;"..root.."game/dymj/?.lua;"..root.."game/dymj/?/init.lua;./lualib/?.lua;./lualib/?/init.lua"
 
 config = "config.config_dymj"
-debug_console = 10100
-login = 10001
+debug_console = 9100
+login = 9001
 web = 9200
 web_sign = "7SgHmw7fg357mGrzp5320pD8P2w4IQ8H"
 start_time = "2016-05-10 00:00:00"
