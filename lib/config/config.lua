@@ -16,16 +16,18 @@ config.gate = {
     servername = "gate01",
 }
 
-config.redis = {
-    host = "127.0.0.1",
-    port = 6379,
-    base = 0,
-    name = {
-    },
-}
+-- config.redis = {
+    -- host = "127.0.0.1",
+    -- port = 6379,
+    -- base = 0,
+    -- name = {
+    -- },
+-- }
 
 config.mongo = {
-    host = "127.0.0.1",
+    info = {
+        host = "127.0.0.1",
+    },
     name = {
 	    "account",
         "user",
