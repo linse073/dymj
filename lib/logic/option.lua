@@ -26,6 +26,19 @@ local function dymj(rule)
     return r
 end
 
+local function test_dymj(rule)
+    local r = {pack=rule}
+    local p, c, i = string.unpack("BBB", rule)
+    r.aa_pay = (p ~= 1)
+    if c == 1 then
+        r.total_count, r.total_card, r.single_card = 8, 0, 0
+    else
+        r.total_count, r.total_card, r.single_card = 16, 0, 0
+    end
+    r.ip = (i == 1)
+    return r
+end
+
 local function jd13(rule)
     local r = {pack=rule}
     local p, c, n, kt, k = string.unpack("BBBBB", rule)
@@ -117,7 +130,7 @@ end
 
 local option = {
     dymj = dymj,
-    test_dymj = dymj,
+    test_dymj = test_dymj,
     jdmj = jdmj,
     test_jdmj = jdmj,
     jd13 = jd13,
