@@ -364,10 +364,10 @@ function dymj:join(info, room_card, agent)
     -- if self._status ~= base.CHESS_STATUS_READY then
     --     error{code = error_code.ERROR_OPERATION}
     -- end
-    local rule = self._rule
-    if rule.aa_pay and room_card < rule.single_card then
-        error{code = error_code.ROOM_CARD_LIMIT}
-    end
+    -- local rule = self._rule
+    -- if rule.aa_pay and room_card < rule.single_card then
+    --     error{code = error_code.ROOM_CARD_LIMIT}
+    -- end
     local role = self._role
     local index
     for i = 1, base.MJ_FOUR do
@@ -767,19 +767,19 @@ local function is_qidui(type_card, magic_count)
     return count==14, four_count, magic_count
 end
 
-function dymj:consume_card()
-    local rule = self._rule
-    if rule.aa_pay then
-        local count = -rule.single_card
-        for k, v in ipairs(self._role) do
-            skynet.call(offline_mgr, "lua", "add", v.id, "role", "add_room_card", count)
-        end
-    else
-        local id = self._role[1].id
-        local count = -rule.total_card
-        skynet.call(offline_mgr, "lua", "add", id, "role", "add_room_card", count)
-    end
-end
+-- function dymj:consume_card()
+--     local rule = self._rule
+--     if rule.aa_pay then
+--         local count = -rule.single_card
+--         for k, v in ipairs(self._role) do
+--             skynet.call(offline_mgr, "lua", "add", v.id, "role", "add_room_card", count)
+--         end
+--     else
+--         local id = self._role[1].id
+--         local count = -rule.total_card
+--         skynet.call(offline_mgr, "lua", "add", id, "role", "add_room_card", count)
+--     end
+-- end
 
 function dymj:hu(id, msg)
     local info = self:op_check(id, base.CHESS_STATUS_START)
@@ -864,9 +864,9 @@ function dymj:hu(id, msg)
     else
         self._status = base.CHESS_STATUS_READY
     end
-    if self._count == 1 then
-        self:consume_card()
-    end
+    -- if self._count == 1 then
+    --     self:consume_card()
+    -- end
     local user = {}
     local role = self._role
     local top_score, top_role
@@ -1288,9 +1288,9 @@ function dymj:conclude(id, msg)
     else
         self._status = base.CHESS_STATUS_READY
     end
-    if self._count == 1 then
-        self:consume_card()
-    end
+    -- if self._count == 1 then
+    --     self:consume_card()
+    -- end
     local user = {}
     local role = self._role
     for k, v in ipairs(role) do
