@@ -249,7 +249,7 @@ function role.test_update_day()
     local user = game.data.user
     local now = floor(skynet.time())
     local nd = game_day(now)
-    update_user(user, nd, nd)
+    update_day(user, nd, nd)
     return "update_day", ""
 end
 
