@@ -77,8 +77,12 @@ function server.kick_handler(id)
 end
 
 function server.shutdown_handler()
+    local agents = {}
     for k, v in pairs(users) do
-        skynet.call(v.agent, "lua", "logout")
+        agents[#agents+1] = v.agent
+    end
+    for k, v in ipairs(agents) do
+        skynet.call(v, "lua", "logout")
     end
 end
 
