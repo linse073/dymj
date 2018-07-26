@@ -304,7 +304,7 @@ function dy4:pack(id, ip, agent, location)
 		end
         local role = self._role
         broadcast({
-            {index=si.index, status=si.status, ip=ip, location=si.location},
+            {index=si.index, status=si.status, ip=ip, location=location},
         }, nil, role, id)
         local status = self._status
         if status == base.CHESS_STATUS_READY then
