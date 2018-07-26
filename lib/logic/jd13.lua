@@ -145,12 +145,15 @@ function jd13:custom_card(name, card)
     return "response", ""
 end
 
-function jd13:pack(id, ip, agent)
+function jd13:pack(id, ip, agent, location)
     local si = self._id[id]
     if si then
         si.ip = ip
         si.status = base.USER_STATUS_ONLINE
         si.agent = agent
+		if location then
+			si.location = location
+		end
         local role = self._role
         broadcast({
             {index=si.index, status=si.status, ip=ip},

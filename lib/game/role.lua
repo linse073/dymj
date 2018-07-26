@@ -478,7 +478,7 @@ function proc.enter_game(msg)
     local code
     if chess_table then
         data.chess_table = chess_table
-        ret.chess = skynet.call(chess_table, "lua", "pack", user.id, user.ip, skynet.self())
+        ret.chess = skynet.call(chess_table, "lua", "pack", user.id, user.ip, skynet.self(), msg.location)
     elseif msg.number then
         chess_table = skynet.call(table_mgr, "lua", "get", msg.number)
         if chess_table then
