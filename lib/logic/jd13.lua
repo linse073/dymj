@@ -156,7 +156,7 @@ function jd13:pack(id, ip, agent, location)
 		end
         local role = self._role
         broadcast({
-            {index=si.index, status=si.status, ip=ip},
+            {index=si.index, status=si.status, ip=ip, location=si.location},
         }, nil, role, id)
         local status = self._status
         local rule = self._rule

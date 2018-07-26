@@ -219,7 +219,7 @@ function dymj:pack(id, ip, agent, location)
 		end
         local role = self._role
         broadcast({
-            {index=si.index, status=si.status, ip=ip},
+            {index=si.index, status=si.status, ip=ip, location=si.location},
         }, nil, role, id)
         local status = self._status
         if status == base.CHESS_STATUS_READY then
