@@ -366,6 +366,7 @@
 
 .enter_game {
     number 0 : integer
+    location 1 : binary
 }
 
 .review_record {
